@@ -87,6 +87,11 @@ abstract class MyRecyclerViewAdapter(val activity: BaseSimpleActivity, val recyc
                 }
 
                 actBarTextView!!.setTextColor(bgColor.getContrastColor())
+                // MochiPic: 右下の小さな三角＝押すとすべて選択（もう一度押すと選択をやめる）
+                actBarTextView!!.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    null, null, resources.getColoredDrawableWithColor(R.drawable.mochi_select_all_corner, bgColor.getContrastColor()), null
+                )
+                actBarTextView!!.compoundDrawablePadding = (6 * resources.displayMetrics.density).toInt()
                 activity.updateMenuItemColors(menu, baseColor = bgColor)
                 onActionModeCreated()
 

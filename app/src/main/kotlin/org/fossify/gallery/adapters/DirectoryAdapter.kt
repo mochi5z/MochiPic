@@ -29,6 +29,9 @@ import org.fossify.commons.dialogs.RenameItemsDialog
 import org.fossify.commons.dialogs.SecurityDialog
 import org.fossify.commons.extensions.applyColorFilter
 import org.fossify.commons.extensions.beGone
+import org.fossify.commons.extensions.needsStupidWritePermissions
+import org.fossify.gallery.extensions.saveRotatedImageToFile
+import org.fossify.gallery.extensions.shareMediaPaths
 import org.fossify.commons.extensions.internalStoragePath
 import org.fossify.commons.extensions.formatDate
 import org.fossify.commons.extensions.beVisible
@@ -197,6 +200,15 @@ class DirectoryAdapter(
 
             checkHideBtnVisibility(this, selectedPaths)
             checkPinBtnVisibility(this, selectedPaths)
+
+            // MochiPic: 1 つなら 削除・共有・回転、2 つ以上なら 削除・除外・すべて選択（QP-Gallery と同じ）
+            val multi = selectedPaths.size > 1
+            findItem(R.id.cab_share).isVisible = !multi
+            findItem(R.id.cab_rotate).isVisible = !multi
+            val bar = android.view.MenuItem.SHOW_AS_ACTION_ALWAYS
+            val overflow = android.view.MenuItem.SHOW_AS_ACTION_NEVER
+            findItem(R.id.cab_exclude).setShowAsAction(if (multi) bar else overflow)
+            findItem(R.id.cab_select_all).setShowAsAction(if (multi) bar else overflow)
         }
     }
 
@@ -225,6 +237,10 @@ class DirectoryAdapter(
             R.id.cab_select_all -> selectAll()
             R.id.cab_create_shortcut -> tryCreateShortcut()
             R.id.cab_delete -> askConfirmDelete()
+            R.id.cab_share -> shareFolderMedia()
+            R.id.cab_rotate_right -> rotateFolderMedia(90)
+            R.id.cab_rotate_left -> rotateFolderMedia(270)
+            R.id.cab_rotate_one_eighty -> rotateFolderMedia(180)
             R.id.cab_select_photo -> tryChangeAlbumCover(false)
             R.id.cab_use_default -> tryChangeAlbumCover(true)
         }
@@ -798,6 +814,43 @@ class DirectoryAdapter(
         config.albumCovers = Gson().toJson(albumCovers)
         finishActMode()
         listener?.refreshItems()
+    }
+
+    // ---------------------------------------------------------------- MochiPic: 選択したフォルダの中の画像を共有・回転（QP-Gallery と同じ）
+
+    /** 選択したフォルダの直下の写真・動画（隠しファイルを除く）。 */
+    private fun selectedFolderMedia(): ArrayList<String> = getSelectedPaths().flatMap { dir ->
+        java.io.File(dir).listFiles()
+            ?.filter { it.isFile && !it.name.startsWith(".") && it.name.isMediaFile() }
+            ?.map { it.absolutePath }
+            .orEmpty()
+    }.toCollection(ArrayList())
+
+    private fun shareFolderMedia() {
+        val paths = selectedFolderMedia()
+        if (paths.isNotEmpty()) activity.shareMediaPaths(paths)
+    }
+
+    private fun rotateFolderMedia(degrees: Int) {
+        val paths = selectedFolderMedia().filter { it.isImageFast() }
+        if (paths.isEmpty()) return
+        val run = {
+            var left = paths.size
+            activity.toast(org.fossify.commons.R.string.saving)
+            ensureBackgroundThread {
+                paths.forEach { path ->
+                    activity.saveRotatedImageToFile(path, path, degrees, true) {
+                        left--
+                        if (left == 0) activity.runOnUiThread {
+                            listener?.refreshItems()
+                            finishActMode()
+                        }
+                    }
+                }
+            }
+        }
+        val needsSaf = paths.firstOrNull { activity.needsStupidWritePermissions(it) }
+        if (needsSaf != null) activity.handleSAFDialog(needsSaf) { if (it) run() } else run()
     }
 
     private fun getSelectedItems() = selectedKeys.mapNotNull { getItemWithKey(it) } as ArrayList<Directory>
