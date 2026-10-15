@@ -57,12 +57,12 @@ class MediaFetcher(val context: Context) {
             if (curMedia.isEmpty()) {
                 val newMedia = getMediaInFolder(
                     curPath, isPickImage, isPickVideo, filterMedia, getProperDateTaken, getProperLastModified, getProperFileSize,
-                    favoritePaths, getVideoDurations, lastModifieds.clone() as HashMap<String, Long>, dateTakens.clone() as HashMap<String, Long>
+                    favoritePaths, getVideoDurations, lastModifieds, dateTakens  // MochiPic: 読むだけなのでコピーしない
                 )
 
                 if (curPath == FAVORITES && isRPlus() && !isExternalStorageManager()) {
                     val files =
-                        getAndroid11FolderMedia(isPickImage, isPickVideo, favoritePaths, true, getProperDateTaken, dateTakens.clone() as HashMap<String, Long>)
+                        getAndroid11FolderMedia(isPickImage, isPickVideo, favoritePaths, true, getProperDateTaken, dateTakens)
                     newMedia.forEach { newMedium ->
                         for ((folder, media) in files) {
                             media.forEach { medium ->
@@ -304,6 +304,7 @@ class MediaFetcher(val context: Context) {
         val showPortraits = filterMedia and TYPE_PORTRAITS != 0
         val fileSizes = if (checkProperFileSize || checkFileExistence) getFolderSizes(folder) else HashMap()
 
+        val favoriteSet = favoritePaths.toHashSet()  // MochiPic: 1 件ずつの線形検索をやめる
         val files = when (folder) {
             FAVORITES -> favoritePaths.filter { showHidden || !it.contains("/.") }.map { File(it) }.toMutableList() as ArrayList<File>
             RECYCLE_BIN -> deletedMedia.map { File(it.path) }.toMutableList() as ArrayList<File>
@@ -382,7 +383,7 @@ class MediaFetcher(val context: Context) {
                 }
             } else {
                 var lastModified: Long
-                var newLastModified = lastModifieds.remove(path)
+                var newLastModified = lastModifieds[path]
                 if (newLastModified == null) {
                     newLastModified = if (getProperLastModified) {
                         file.lastModified()
@@ -396,7 +397,7 @@ class MediaFetcher(val context: Context) {
                 val videoDuration = if (getVideoDurations && isVideo) context.getDuration(path) ?: 0 else 0
 
                 if (getProperDateTaken) {
-                    var newDateTaken = dateTakens.remove(path)
+                    var newDateTaken = dateTakens[path]
                     if (newDateTaken == null) {
                         newDateTaken = if (getProperLastModified) {
                             lastModified
@@ -416,7 +417,7 @@ class MediaFetcher(val context: Context) {
                     else -> TYPE_IMAGES
                 }
 
-                val isFavorite = favoritePaths.contains(path)
+                val isFavorite = favoriteSet.contains(path)
                 val medium = Medium(null, filename, path, file.parent, lastModified, dateTaken, size, type, videoDuration, isFavorite, 0L, 0L)
                 media.add(medium)
             }
@@ -513,7 +514,7 @@ class MediaFetcher(val context: Context) {
                 var dateTaken = cursor.getLongValue(Images.Media.DATE_TAKEN)
 
                 if (getProperDateTaken) {
-                    dateTaken = dateTakens.remove(path) ?: lastModified
+                    dateTaken = dateTakens[path] ?: lastModified
                 }
 
                 if (dateTaken == 0L) {
@@ -659,7 +660,7 @@ class MediaFetcher(val context: Context) {
         val uri = Files.getContentUri("external")
 
         try {
-            context.queryCursor(uri, projection) { cursor ->
+            context.queryCursor(uri, projection, MEDIA_ONLY_SELECTION) { cursor ->
                 try {
                     val dateTaken = cursor.getLongValue(Images.Media.DATE_TAKEN)
                     if (dateTaken != 0L) {
@@ -718,7 +719,7 @@ class MediaFetcher(val context: Context) {
         val uri = Files.getContentUri("external")
 
         try {
-            context.queryCursor(uri, projection) { cursor ->
+            context.queryCursor(uri, projection, MEDIA_ONLY_SELECTION) { cursor ->
                 try {
                     val lastModified = cursor.getLongValue(Images.Media.DATE_MODIFIED) * 1000
                     if (lastModified != 0L) {
@@ -911,5 +912,94 @@ class MediaFetcher(val context: Context) {
             else -> R.string.portraits
         }
         return context.getString(stringId)
+    }
+
+    // ---------------------------------------------------------------- MochiPic: 変化のないときは読み直さない
+
+    /**
+     * Android の画像の一覧（MediaStore）の今の状態。前回の読み込み時と同じなら、フォルダを調べ直す必要がない。
+     * Android 10 以前は世代番号がないので null（毎回調べる）。
+     */
+    fun currentScanState(settings: String): ScanState? {
+        if (!isRPlus()) return null
+        return try {
+            val volumes = HashMap<String, Long>()
+            MediaStore.getExternalVolumeNames(context).forEach { volumes[it] = MediaStore.getGeneration(context, it) }
+            ScanState(MediaStore.getVersion(context), settings, volumes)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    /**
+     * 前回から変わったフォルダ（小文字の場所）。null なら全部調べ直す。
+     * 追加・変更されたファイルのフォルダに加え、Android の一覧での枚数が保存済みと違うフォルダ（削除・移動元）も入れる。
+     */
+    fun changedFoldersSince(old: ScanState, now: ScanState, cachedCounts: Map<String, Int>): Set<String>? {
+        if (old.version != now.version || old.settings != now.settings || old.volumes.keys != now.volumes.keys) return null
+        val filterMedia = context.config.filterMedia
+        val extSelection = getSelectionQuery(filterMedia)
+        val extArgs = getSelectionArgsQuery(filterMedia)
+        val changed = HashSet<String>()
+        return try {
+            for ((volume, generation) in now.volumes) {
+                val oldGeneration = old.volumes[volume] ?: return null
+                if (oldGeneration == generation) continue
+                val uri = Files.getContentUri(volume)
+                val selection = "(${extSelection}) AND ${MediaStore.MediaColumns.GENERATION_MODIFIED} > ?"
+                val args = (extArgs + oldGeneration.toString()).toTypedArray()
+                context.contentResolver.query(uri, arrayOf(Images.Media.DATA), selection, args, null)?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val path = cursor.getString(0) ?: continue
+                        changed.add(path.substringBeforeLast('/').lowercase(Locale.ROOT))
+                    }
+                }
+            }
+
+            // 消えたファイル・移動元は上の問い合わせに出てこないので、フォルダごとの枚数で見つける
+            val counts = HashMap<String, Int>()
+            context.contentResolver.query(Files.getContentUri("external"), arrayOf(Images.Media.DATA), extSelection, extArgs.toTypedArray(), null)?.use { cursor ->
+                while (cursor.moveToNext()) {
+                    val path = cursor.getString(0) ?: continue
+                    val parent = path.substringBeforeLast('/').lowercase(Locale.ROOT)
+                    counts[parent] = (counts[parent] ?: 0) + 1
+                }
+            }
+            // 枚数が違うフォルダは調べ直す（Android の一覧に載らない .nomedia などのフォルダも、ここで毎回調べ直しになる）
+            cachedCounts.forEach { (folder, count) ->
+                if ((counts[folder] ?: 0) != count) changed.add(folder)
+            }
+            counts.keys.filter { it !in cachedCounts }.forEach { changed.add(it) }
+            changed
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    class ScanState(val version: String, val settings: String, val volumes: Map<String, Long>) {
+        fun encode() = buildString {
+            append(version).append('\n').append(settings).append('\n')
+            volumes.forEach { (k, v) -> append(k).append('=').append(v).append(';') }
+        }
+
+        override fun equals(other: Any?) = other is ScanState && other.encode() == encode()
+        override fun hashCode() = encode().hashCode()
+
+        companion object {
+            fun decode(text: String?): ScanState? {
+                val parts = text?.split('\n') ?: return null
+                if (parts.size < 3) return null
+                val volumes = parts[2].split(';').filter { it.contains('=') }.associate {
+                    it.substringBefore('=') to (it.substringAfter('=').toLongOrNull() ?: -1L)
+                }
+                return ScanState(parts[0], parts[1], volumes)
+            }
+        }
+    }
+
+    companion object {
+        /** 画像と動画だけ（端末の全ファイルを読まない）。 */
+        private val MEDIA_ONLY_SELECTION =
+            "${Files.FileColumns.MEDIA_TYPE} IN (${Files.FileColumns.MEDIA_TYPE_IMAGE}, ${Files.FileColumns.MEDIA_TYPE_VIDEO})"
     }
 }

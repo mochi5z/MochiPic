@@ -251,7 +251,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
             padBottomImeAndSystem = listOf(binding.directoriesGrid)
         )
 
-        binding.directoriesRefreshLayout.setOnRefreshListener { getDirectories() }
+        binding.directoriesRefreshLayout.setOnRefreshListener { mochiForceRescan = true; getDirectories() }
         org.fossify.gallery.mochipic.MochiCache.attachLazyLoad(this, binding.directoriesGrid)
         storeStateVariables()
         checkWhatsNewDialog()
@@ -1200,6 +1200,29 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         // cached folders have been loaded, recheck folders one by one starting with the first displayed
         mLastMediaFetcher?.shouldStop = true
         mLastMediaFetcher = MediaFetcher(applicationContext)
+
+        // MochiPic: Android の画像の一覧に前回から変化がなければ、フォルダを調べ直さない。変化があれば変わったフォルダだけ調べる
+        val mochiStateNow = mLastMediaFetcher!!.currentScanState(mochiScanSettings())
+        val mochiStateOld = MediaFetcher.ScanState.decode(mochiPrefs.lastScanState)
+        val mochiForce = mochiForceRescan
+        mochiForceRescan = false
+        var mochiChanged: Set<String>? = null
+        if (!mochiForce && mochiStateNow != null && mochiStateOld != null && dirs.isNotEmpty()) {
+            if (mochiStateNow == mochiStateOld) {
+                mLoadedInitialPhotos = true
+                runOnUiThread {
+                    binding.directoriesRefreshLayout.isRefreshing = false
+                    checkPlaceholderVisibility(dirs)
+                }
+                if (config.appRunCount > 1) {
+                    checkLastMediaChanged()
+                }
+                return
+            }
+            val cachedCounts = dirs.filter { !it.isRecycleBin() && !it.areFavorites() }
+                .associate { it.path.lowercase(java.util.Locale.ROOT) to it.mediaCnt }
+            mochiChanged = mLastMediaFetcher!!.changedFoldersSince(mochiStateOld, mochiStateNow, cachedCounts)
+        }
         val getImages = mIsPickImageIntent || mIsGetImageContentIntent
         val getVideos = mIsPickVideoIntent || mIsGetVideoContentIntent
         val getImagesOnly = getImages && !getVideos
@@ -1259,6 +1282,13 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
             for (directory in dirs) {
                 if (mShouldStopFetching || isDestroyed || isFinishing) {
                     return
+                }
+
+                if (
+                    mochiChanged != null && !directory.isRecycleBin() && !directory.areFavorites()
+                    && directory.path.lowercase(java.util.Locale.ROOT) !in mochiChanged
+                ) {
+                    continue  // MochiPic: 変化のないフォルダは調べない
                 }
 
                 val sorting = config.getFolderSorting(directory.path)
@@ -1321,7 +1351,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
                     sortValue = getDirectorySortingValue(curMedia, path, name, size, mediaCnt)
                 }
 
-                setupAdapter(dirs)
+                setupAdapterThrottled(dirs)
 
                 // update directories and media files in the local db, delete invalid items. Intentionally creating a new thread
                 updateDBDirectory(directory)
@@ -1351,6 +1381,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
                 }
             }
 
+            flushPendingSetup(dirs)
             if (dirPathsToRemove.isNotEmpty()) {
                 val dirsToRemove = dirs.filter { dirPathsToRemove.contains(it.path) }
                 dirsToRemove.forEach {
@@ -1435,7 +1466,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
                 noMediaFolders = noMediaFolders
             )
             dirs.add(newDir)
-            setupAdapter(dirs)
+            setupAdapterThrottled(dirs)
 
             // make sure to create a new thread for these operations, dont just use the common bg thread
             Thread {
@@ -1449,7 +1480,11 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
             }.start()
         }
 
+        flushPendingSetup(dirs)
         mLoadedInitialPhotos = true
+        if (mochiStateNow != null) {
+            mochiPrefs.lastScanState = mochiStateNow.encode()  // 最後まで調べ終えたときだけ覚える
+        }
         if (config.appRunCount > 1) {
             checkLastMediaChanged()
         }
@@ -1804,7 +1839,46 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     }
 
     override fun refreshItems() {
+        mochiForceRescan = true  // ファイルを操作した後は必ず調べ直す
         getDirectories()
+    }
+
+    // ---------------------------------------------------------------- MochiPic: 読み込みの高速化
+
+    /** 次の読み込みでは、変化の有無にかかわらず全フォルダを調べ直す。 */
+    @Volatile
+    private var mochiForceRescan = false
+    private var mochiLastSetup = 0L
+    @Volatile
+    private var mochiPendingSetup = false
+
+    /** 一覧の作り直しを 300ms に 1 回までにまとめる（フォルダを 1 つ調べるたびに作り直すと遅い）。 */
+    private fun setupAdapterThrottled(dirs: ArrayList<Directory>) {
+        val now = android.os.SystemClock.uptimeMillis()
+        if (now - mochiLastSetup >= 300) {
+            mochiLastSetup = now
+            mochiPendingSetup = false
+            setupAdapter(dirs)
+        } else {
+            mochiPendingSetup = true
+        }
+    }
+
+    private fun flushPendingSetup(dirs: ArrayList<Directory>) {
+        if (mochiPendingSetup) {
+            mochiPendingSetup = false
+            setupAdapter(dirs)
+        }
+    }
+
+    /** 読み込む範囲に関わる設定。変わったら全部調べ直す。 */
+    private fun mochiScanSettings(): String {
+        val prefs = mochiPrefs
+        return listOf(
+            config.filterMedia, config.shouldShowHidden, config.showRecycleBinAtFolders,
+            config.excludedFolders.sorted(), config.includedFolders.sorted(),
+            prefs.scanFolders.sorted(), prefs.skipAppFolders, isPickIntent(intent) || isGetAnyContentIntent(intent),
+        ).joinToString("|").hashCode().toString()
     }
 
     override fun recheckPinnedFolders() {

@@ -210,6 +210,7 @@ fun AppCompatActivity.hideSystemUI() {
 }
 
 fun BaseSimpleActivity.addNoMedia(path: String, callback: () -> Unit) {
+    invalidateNoMediaCache()
     val file = File(path, NOMEDIA)
     if (getDoesFilePathExist(file.absolutePath)) {
         callback()
@@ -262,6 +263,7 @@ fun BaseSimpleActivity.addNoMediaIntoMediaStore(path: String) {
 }
 
 fun BaseSimpleActivity.removeNoMedia(path: String, callback: (() -> Unit)? = null) {
+    invalidateNoMediaCache()
     val file = File(path, NOMEDIA)
     if (!getDoesFilePathExist(file.absolutePath)) {
         callback?.invoke()

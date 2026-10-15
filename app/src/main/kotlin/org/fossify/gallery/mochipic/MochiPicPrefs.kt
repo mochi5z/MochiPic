@@ -25,6 +25,11 @@ class MochiPicPrefs(context: Context) {
         get() = prefs.getBoolean("show_hidden_folders", true)
         set(value) = prefs.edit().putBoolean("show_hidden_folders", value).apply()
 
+    /** 前回フォルダを調べ終えたときの Android の画像の一覧の状態（変化がなければ調べ直さないため）。 */
+    var lastScanState: String?
+        get() = prefs.getString("last_scan_state", null)
+        set(value) = prefs.edit().putString("last_scan_state", value).apply()
+
     /** 探索フォルダー（空ならストレージ全体を探す）。 */
     var scanFolders: Set<String>
         get() = prefs.getStringSet("scan_folders", emptySet())!!.toSet()

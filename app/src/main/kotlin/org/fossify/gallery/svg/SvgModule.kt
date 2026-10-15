@@ -15,6 +15,12 @@ import java.io.InputStream
 class SvgModule : AppGlideModule() {
     override fun registerComponents(context: Context, glide: Glide, registry: Registry) {
         registry.register(SVG::class.java, PictureDrawable::class.java, SvgDrawableTranscoder()).append(InputStream::class.java, SVG::class.java, SvgDecoder())
+        // MochiPic: 一覧のサムネイルは Android が持っているサムネイルから読む
+        registry.prepend(
+            org.fossify.gallery.mochipic.MediaStoreThumb::class.java,
+            android.graphics.Bitmap::class.java,
+            org.fossify.gallery.mochipic.MediaStoreThumbLoader.Factory(context)
+        )
     }
 
     override fun isManifestParsingEnabled() = false

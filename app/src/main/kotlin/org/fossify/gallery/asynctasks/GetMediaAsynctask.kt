@@ -34,8 +34,18 @@ class GetMediaAsynctask(
         val getProperFileSize = folderSorting and SORT_BY_SIZE != 0
         val favoritePaths = context.getFavoritePaths()
         val getVideoDurations = context.config.showThumbnailVideoDuration
-        val lastModifieds = if (getProperLastModified) mediaFetcher.getLastModifieds() else HashMap()
-        val dateTakens = if (getProperDateTaken) mediaFetcher.getDateTakens() else HashMap()
+        // MochiPic: 1 つのフォルダを開くときは、そのフォルダの分だけを Android に問い合わせる（端末全体を読まない）
+        val singleFolder = !showAll && mPath != FAVORITES && mPath != RECYCLE_BIN
+        val lastModifieds = when {
+            !getProperLastModified -> HashMap()
+            singleFolder -> mediaFetcher.getFolderLastModifieds(mPath)
+            else -> mediaFetcher.getLastModifieds()
+        }
+        val dateTakens = when {
+            !getProperDateTaken -> HashMap()
+            singleFolder -> mediaFetcher.getFolderDateTakens(mPath)
+            else -> mediaFetcher.getDateTakens()
+        }
 
         val media = if (showAll) {
             val foldersToScan = mediaFetcher.getFoldersToScan().filter { it != RECYCLE_BIN && it != FAVORITES && !context.config.isFolderProtected(it) }
@@ -43,7 +53,7 @@ class GetMediaAsynctask(
             foldersToScan.forEach {
                 val newMedia = mediaFetcher.getFilesFrom(
                     it, isPickImage, isPickVideo, getProperDateTaken, getProperLastModified, getProperFileSize,
-                    favoritePaths, getVideoDurations, lastModifieds, dateTakens.clone() as HashMap<String, Long>, null
+                    favoritePaths, getVideoDurations, lastModifieds, dateTakens, null
                 )
                 media.addAll(newMedia)
             }

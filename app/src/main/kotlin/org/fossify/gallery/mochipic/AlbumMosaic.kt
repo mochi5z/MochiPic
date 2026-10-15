@@ -23,6 +23,7 @@ import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.commons.views.MySquareImageView
 import org.fossify.gallery.adapters.GridDirectoryItemMosaicBinding
 import org.fossify.gallery.extensions.loadImage
+import org.fossify.gallery.extensions.mediaDB
 import org.fossify.gallery.helpers.ROUNDED_CORNERS_NONE
 import org.fossify.gallery.helpers.TYPE_GIFS
 import org.fossify.gallery.helpers.TYPE_IMAGES
@@ -46,21 +47,33 @@ object AlbumMosaic {
 
     fun cacheKey(dir: Directory) = "${dir.path}|${dir.modified}|${dir.mediaCnt}|${dir.tmb}"
 
-    /** フォルダ直下のメディアを新しい順に最大 4 件（表紙を先頭に）。 */
-    fun pickPaths(dir: Directory): List<String> {
-        val others = try {
-            File(dir.path).listFiles { f -> f.isFile && !f.name.startsWith(".") && f.absolutePath.isMediaFile() }
-                ?.sortedByDescending { it.lastModified() }
-                ?.asSequence()
-                ?.map { it.absolutePath }
-                ?.filter { it != dir.tmb }
-                ?.take(CELLS - 1)
-                ?.toList()
-                .orEmpty()
+    /**
+     * フォルダ直下のメディアを新しい順に最大 4 件（表紙を先頭に）。
+     * 保存済みの画像の一覧（アプリのデータベース）から取る。まだ入っていないフォルダだけ、フォルダの中身を直接見る。
+     */
+    fun pickPaths(context: android.content.Context, dir: Directory): List<String> {
+        val fromDb = try {
+            context.mediaDB.getLatestPaths(dir.path, CELLS + 1)
+                .filter { it != dir.tmb && !it.substringAfterLast('/').startsWith(".") }
+                .take(CELLS - 1)
         } catch (e: Exception) {
             emptyList()
         }
+        val others = if (fromDb.isNotEmpty() || dir.mediaCnt <= 1) fromDb else listFolder(dir)
         return (listOf(dir.tmb) + others).filter { it.isNotEmpty() }.take(CELLS)
+    }
+
+    private fun listFolder(dir: Directory): List<String> = try {
+        File(dir.path).listFiles { f -> f.isFile && !f.name.startsWith(".") && f.absolutePath.isMediaFile() }
+            ?.sortedByDescending { it.lastModified() }
+            ?.asSequence()
+            ?.map { it.absolutePath }
+            ?.filter { it != dir.tmb }
+            ?.take(CELLS - 1)
+            ?.toList()
+            .orEmpty()
+    } catch (e: Exception) {
+        emptyList()
     }
 
     fun typeOf(path: String) = when {
@@ -105,7 +118,7 @@ object AlbumMosaic {
         // 一覧が届くまでは表紙だけを全体に出しておく
         show(activity, b, dir, listOf(dir.tmb), animateGifs, cropThumbnails)
         ensureBackgroundThread {
-            val paths = pickPaths(dir)
+            val paths = pickPaths(activity, dir)
             cache.put(key, paths)
             activity.runOnUiThread {
                 if (b.binding.mosaicGrid.tag == key && paths.size > 1) {
@@ -173,7 +186,7 @@ object AlbumMosaic {
         tagView.tag = key
         cache.get(key)?.let { onReady(it); return }
         ensureBackgroundThread {
-            val paths = pickPaths(dir)
+            val paths = pickPaths(activity, dir)
             cache.put(key, paths)
             activity.runOnUiThread { if (tagView.tag == key) onReady(paths) }
         }

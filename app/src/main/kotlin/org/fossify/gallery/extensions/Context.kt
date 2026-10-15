@@ -493,7 +493,26 @@ fun Context.getNoMediaFolders(callback: (folders: ArrayList<String>) -> Unit) {
     }
 }
 
+// MochiPic: 1 回の読み込みの中で何度も呼ばれるので、数秒間は前の結果を使う
+@Volatile
+private var noMediaCache: Pair<Long, ArrayList<String>>? = null
+
+/** フォルダを隠した・戻したときに呼ぶ。 */
+fun invalidateNoMediaCache() {
+    noMediaCache = null
+}
+
 fun Context.getNoMediaFoldersSync(): ArrayList<String> {
+    val now = android.os.SystemClock.uptimeMillis()
+    noMediaCache?.let { (time, folders) ->
+        if (now - time < 5000) return ArrayList(folders)
+    }
+    val result = getNoMediaFoldersUncached()
+    noMediaCache = now to ArrayList(result)
+    return result
+}
+
+private fun Context.getNoMediaFoldersUncached(): ArrayList<String> {
     val folders = ArrayList<String>()
 
     val uri = Files.getContentUri("external")
@@ -687,7 +706,7 @@ fun Context.loadImageBase(
         .skipMemoryCache(skipMemoryCacheAtPaths?.contains(path) == true)
         .priority(Priority.LOW)
         .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
-        .format(DecodeFormat.PREFER_ARGB_8888)
+        .format(DecodeFormat.PREFER_RGB_565)  // MochiPic: サムネイルは軽い形式で（透過のある画像は Glide が自動で ARGB_8888 にする）
 
     if (cropThumbnails) {
         options.optionalTransform(CenterCrop())
@@ -756,6 +775,20 @@ fun Context.loadImageBase(
             isFirstResource: Boolean,
         ) = false
     })
+
+    // MochiPic: まず Android が持っているサムネイルを使い、なければ（隠しフォルダなど）元の画像から作る
+    val useStoreThumb = org.fossify.gallery.mochipic.MediaStoreThumb.isSupported
+            && !(animate && (path.isGif() || path.isWebP()))
+            && path.startsWith("/storage/")
+    if (useStoreThumb) {
+        Glide.with(applicationContext)
+            .load(org.fossify.gallery.mochipic.MediaStoreThumb(path))
+            .apply(options)
+            .transition(getOptionalCrossFadeTransition(crossFadeDuration))
+            .error(builder)
+            .into(target)
+        return
+    }
 
     builder.into(target)
 }
