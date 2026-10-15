@@ -84,6 +84,7 @@ class SettingsActivity : SimpleActivity() {
         setupFileLoadingPriority()
         setupManageIncludedFolders()
         setupManageExcludedFolders()
+        setupMochiScanFolders()
         setupManageHiddenFolders()
         setupSearchAllFiles()
         setupShowHiddenItems()
@@ -242,6 +243,24 @@ class SettingsActivity : SimpleActivity() {
             } else {
                 startActivity(Intent(this, IncludedFoldersActivity::class.java))
             }
+        }
+    }
+
+    private fun setupMochiScanFolders() {
+        val prefs = org.fossify.gallery.mochipic.MochiPicPrefs(this)
+        val folders = prefs.scanFolders
+        binding.settingsMochiScanFolders.text = when (folders.size) {
+            0 -> getString(R.string.mochipic_scan_folders_all)
+            1 -> folders.first()
+            else -> getString(R.string.mochipic_scan_folders_count, folders.size)
+        }
+        binding.settingsMochiScanFoldersHolder.setOnClickListener {
+            startActivity(Intent(this, org.fossify.gallery.mochipic.ScanFoldersActivity::class.java))
+        }
+        binding.settingsMochiSkipAppFolders.isChecked = prefs.skipAppFolders
+        binding.settingsMochiSkipAppFoldersHolder.setOnClickListener {
+            binding.settingsMochiSkipAppFolders.toggle()
+            prefs.skipAppFolders = binding.settingsMochiSkipAppFolders.isChecked
         }
     }
 

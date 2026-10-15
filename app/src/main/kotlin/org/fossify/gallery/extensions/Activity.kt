@@ -315,7 +315,8 @@ fun BaseSimpleActivity.tryCopyMoveFilesTo(fileDirItems: ArrayList<FileDirItem>, 
     }
 
     val source = fileDirItems[0].getParentPath()
-    PickDirectoryDialog(this, source, true, false, true, false) {
+    // MochiPic: QP-Gallery と同じコピー・移動先の画面。選ぶとすぐに始める
+    org.fossify.gallery.mochipic.CopyTargetActivity.open(this, source, isCopyOperation) {
         val destination = it
         handleSAFDialog(source) {
             if (it) {

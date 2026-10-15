@@ -528,7 +528,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         binding.mainMenu.requireToolbar().setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.mochi_search -> org.fossify.gallery.mochipic.QpTopBar.handleMenuClick(this, binding.mainMenu, menuItem)
-                R.id.mochi_include_folder -> startActivity(Intent(this, IncludedFoldersActivity::class.java))
+                R.id.mochi_include_folder -> showAddIncludedFolderDialog { refreshItems() }
                 R.id.sort -> showQpSortMenu() // MochiPic: QP 風の短いメニュー
                 R.id.filter -> showFilterMediaDialog()
                 R.id.open_camera -> launchCamera()

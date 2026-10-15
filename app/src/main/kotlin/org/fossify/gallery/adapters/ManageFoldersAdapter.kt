@@ -14,7 +14,9 @@ import org.fossify.gallery.extensions.config
 
 class ManageFoldersAdapter(
     activity: BaseSimpleActivity, var folders: ArrayList<String>, val isShowingExcludedFolders: Boolean, val listener: RefreshRecyclerViewListener?,
-    recyclerView: MyRecyclerView, itemClick: (Any) -> Unit
+    recyclerView: MyRecyclerView,
+    private val onRemove: ((String) -> Unit)? = null,  // MochiPic: 探索フォルダーなど、別の一覧から外すとき
+    itemClick: (Any) -> Unit,
 ) : MyRecyclerViewAdapter(activity, recyclerView, itemClick) {
 
     private val config = activity.config
@@ -115,7 +117,9 @@ class ManageFoldersAdapter(
 
         getSelectedItems().forEach {
             removeFolders.add(it)
-            if (isShowingExcludedFolders) {
+            if (onRemove != null) {
+                onRemove.invoke(it)
+            } else if (isShowingExcludedFolders) {
                 config.removeExcludedFolder(it)
             } else {
                 config.removeIncludedFolder(it)
@@ -124,7 +128,7 @@ class ManageFoldersAdapter(
 
         folders.removeAll(removeFolders)
         removeSelectedItems(positions)
-        if (folders.isEmpty()) {
+        if (folders.isEmpty() || onRemove != null) {
             listener?.refreshItems()
         }
     }

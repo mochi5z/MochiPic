@@ -208,6 +208,18 @@
             android:label="@string/mochipic_menu_explorer" />
 
         <activity
+            android:name=".mochipic.CopyTargetActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:exported="false" />
+
+        <activity
+            android:name=".mochipic.ScanFoldersActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/mochipic_scan_folders"
+            android:parentActivityName=".activities.SettingsActivity" />
+
+        <activity
             android:name=".mochipic.ButtonLayoutActivity"
             android:configChanges="orientation"
             android:exported="false"

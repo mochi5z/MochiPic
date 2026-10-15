@@ -44,6 +44,7 @@ data class FolderTile(
     val modified: Long,
     val path: String = key,
     val showDate: Boolean = true,
+    val subtitle: String? = null,
 )
 
 /**
@@ -54,6 +55,7 @@ class FolderTileAdapter(
     private val activity: Activity,
     private val mosaic: Boolean,
     private val labelAtStart: Boolean,
+    private val forceList: Boolean = false,
     private val onClick: (FolderTile) -> Unit,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -63,7 +65,7 @@ class FolderTileAdapter(
             notifyDataSetChanged()
         }
 
-    private val isGrid get() = activity.config.viewTypeFolders == VIEW_TYPE_GRID
+    private val isGrid get() = !forceList && activity.config.viewTypeFolders == VIEW_TYPE_GRID
 
     override fun getItemCount() = items.size
 
@@ -118,6 +120,12 @@ class FolderTileAdapter(
 
     private fun bindList(b: DirectoryItemListBinding, tile: FolderTile) {
         listOf(b.dirLock, b.dirCheck, b.dirPath, b.photoCnt, b.dirIconHolder).forEach { it.beGone() }
+        tile.subtitle?.let {
+            // コピー・移動先の一覧: 2 行目にフォルダの場所（QP-Gallery と同じ）
+            b.dirPath.text = it
+            b.dirPath.setTextColor(textColor)
+            b.dirPath.visibility = View.VISIBLE
+        }
         b.dirName.text = AlbumMosaic.label(tile.name, tile.count, textColor)
         b.dirName.setTextColor(textColor)
         b.dirDate.beVisibleIf(tile.showDate)

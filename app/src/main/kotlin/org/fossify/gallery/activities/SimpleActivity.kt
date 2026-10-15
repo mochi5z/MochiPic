@@ -91,7 +91,8 @@ open class SimpleActivity : BaseSimpleActivity() {
     }
 
     protected fun showAddIncludedFolderDialog(callback: () -> Unit) {
-        FilePickerDialog(this, config.lastFilepickerPath, false, config.shouldShowHidden, false, true) {
+        // MochiPic: QP-Gallery と同じく、システムのエクスプローラーでフォルダを選ぶ
+        pickFolderWithSystem {
             config.lastFilepickerPath = it
             config.addIncludedFolder(it)
             callback()
@@ -99,6 +100,35 @@ open class SimpleActivity : BaseSimpleActivity() {
                 scanPathRecursively(it)
             }
         }
+    }
+
+    private var mochiFolderPicked: ((String) -> Unit)? = null
+
+    /** MochiPic: システムのフォルダ選択画面を開き、選んだフォルダの場所を返す。 */
+    fun pickFolderWithSystem(callback: (String) -> Unit) {
+        mochiFolderPicked = callback
+        try {
+            @Suppress("DEPRECATION")
+            startActivityForResult(org.fossify.gallery.mochipic.SystemFolderPicker.intent(), org.fossify.gallery.mochipic.SystemFolderPicker.REQUEST_CODE)
+        } catch (e: Exception) {
+            mochiFolderPicked = null
+            showErrorToast(e)
+        }
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, resultData: android.content.Intent?) {
+        if (requestCode == org.fossify.gallery.mochipic.SystemFolderPicker.REQUEST_CODE) {
+            val callback = mochiFolderPicked
+            mochiFolderPicked = null
+            if (resultCode == RESULT_OK && callback != null) {
+                val path = org.fossify.gallery.mochipic.SystemFolderPicker.pathOf(this, resultData?.data)
+                if (path == null) toast(R.string.mochipic_folder_unsupported) else callback(path)
+            }
+            return
+        }
+        @Suppress("DEPRECATION")
+        super.onActivityResult(requestCode, resultCode, resultData)
     }
 
     protected fun requestMediaPermissions(enableRationale: Boolean = false, onGranted: () -> Unit) {

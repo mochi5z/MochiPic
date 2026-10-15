@@ -113,4 +113,18 @@
     <string name="mochipic_edit_resolution">Resolution</string>
     <string name="mochipic_edit_selection">Selection</string>
     <string name="mochipic_edit_ratio_free">Free</string>
+    <string name="mochipic_copy_to">Copy:</string>
+    <string name="mochipic_move_to">Move:</string>
+    <string name="mochipic_copy_new_folder">Choose or create a folder</string>
+    <string name="mochipic_copy_show_hidden">Show hidden folders</string>
+    <string name="mochipic_sort_date_desc">Date (newest first)</string>
+    <string name="mochipic_sort_date_asc">Date (oldest first)</string>
+    <string name="mochipic_sort_name_asc">Name (A to Z)</string>
+    <string name="mochipic_sort_name_desc">Name (Z to A)</string>
+    <string name="mochipic_folder_unsupported">This location can\'t be used. Choose a folder in the internal storage or on the SD card</string>
+    <string name="mochipic_scan_folders">Folders to scan</string>
+    <string name="mochipic_scan_folders_all">Whole storage</string>
+    <string name="mochipic_scan_folders_count">%d folders</string>
+    <string name="mochipic_scan_folders_empty">No folders added, so the whole storage is scanned.\nAdd folders with + to scan only them.</string>
+    <string name="mochipic_skip_app_folders">Skip app folders (Android/data etc.) and cache folders</string>
 </resources>

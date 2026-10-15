@@ -114,4 +114,18 @@
     <string name="mochipic_edit_ratio_free">自由</string>
     <!-- QP-Gallery と同じ表記に（Fossify の訳は「他で使う」） -->
     <string name="set_as">セット…</string>
+    <string name="mochipic_copy_to">コピー：</string>
+    <string name="mochipic_move_to">移動：</string>
+    <string name="mochipic_copy_new_folder">フォルダを選ぶ・作る</string>
+    <string name="mochipic_copy_show_hidden">隠しフォルダを表示</string>
+    <string name="mochipic_sort_date_desc">日付（新しい順）</string>
+    <string name="mochipic_sort_date_asc">日付（古い順）</string>
+    <string name="mochipic_sort_name_asc">名前（昇順）</string>
+    <string name="mochipic_sort_name_desc">名前（降順）</string>
+    <string name="mochipic_folder_unsupported">この場所は使えません。内部ストレージか SD カードのフォルダを選んでください</string>
+    <string name="mochipic_scan_folders">探索フォルダー</string>
+    <string name="mochipic_scan_folders_all">ストレージ全体</string>
+    <string name="mochipic_scan_folders_count">%d 個のフォルダ</string>
+    <string name="mochipic_scan_folders_empty">フォルダがないので、ストレージ全体を探します。\n＋ でフォルダを足すと、その中だけを探します。</string>
+    <string name="mochipic_skip_app_folders">アプリ用のフォルダ（Android/data など）とキャッシュを読み込まない</string>
 </resources>

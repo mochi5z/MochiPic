@@ -4,6 +4,7 @@ import android.content.Context
 
 /** MochiPic で追加した設定（Fossify の設定とは別のファイルに保存）。 */
 class MochiPicPrefs(context: Context) {
+    private val appContext = context.applicationContext
     private val prefs = context.applicationContext.getSharedPreferences("mochipic_settings", Context.MODE_PRIVATE)
 
     /** オン: 1 回タップで拡大・縮小、2 回タップでバーの表示切り替え（QP-Gallery の設定）。初期値はオフ。 */
@@ -23,6 +24,22 @@ class MochiPicPrefs(context: Context) {
     var showHiddenFolders: Boolean
         get() = prefs.getBoolean("show_hidden_folders", true)
         set(value) = prefs.edit().putBoolean("show_hidden_folders", value).apply()
+
+    /** 探索フォルダー（空ならストレージ全体を探す）。 */
+    var scanFolders: Set<String>
+        get() = prefs.getStringSet("scan_folders", emptySet())!!.toSet()
+        set(value) {
+            prefs.edit().putStringSet("scan_folders", value).apply()
+            ScanRules.load(appContext)
+        }
+
+    /** オン: アプリ用のフォルダ（Android/data など）とキャッシュ用の隠しフォルダを読み込まない。 */
+    var skipAppFolders: Boolean
+        get() = prefs.getBoolean("skip_app_folders", true)
+        set(value) {
+            prefs.edit().putBoolean("skip_app_folders", value).apply()
+            ScanRules.load(appContext)
+        }
 
     /** オン: 表示画面で開いた画像（プレビュー）を端末に保存しておき、次に開くときに速く出す。 */
     var previewCache: Boolean

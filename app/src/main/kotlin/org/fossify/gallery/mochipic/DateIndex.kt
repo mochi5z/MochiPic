@@ -65,6 +65,7 @@ object DateIndex {
                     val path = c.getString(iPath) ?: continue
                     if (!showHidden && path.contains("/.")) continue
                     if (excluded.any { path.startsWith(it) }) continue
+                    if (!ScanRules.isAllowed(path.substringBeforeLast('/'))) continue
                     val taken = if (iTaken >= 0) c.getLong(iTaken) else 0L
                     val time = if (taken > 0) taken else c.getLong(iModified) * 1000L
                     result.add(Item(path, time))

@@ -23,6 +23,11 @@ fun String.shouldFolderBeVisible(
         return false
     }
 
+    // MochiPic: 探索フォルダー・アプリ用フォルダの除外（Fossify の「読み込むフォルダ」に入れたものは除く）
+    if (!isThisOrParentIncluded(includedPaths) && !org.fossify.gallery.mochipic.ScanRules.isAllowed(this)) {
+        return false
+    }
+
     val file = File(this)
     val filename = file.name
     if (filename.startsWith("img_", true) && file.isDirectory) {
