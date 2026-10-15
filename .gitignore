@@ -13,3 +13,10 @@ keystore.properties
 fastlane/fastlane.json
 fastlane/report.xml
 .kotlin/
+
+# MochiPic
+/_tools/
+/dist/
+/logs/
+keystore.properties
+*.jks
