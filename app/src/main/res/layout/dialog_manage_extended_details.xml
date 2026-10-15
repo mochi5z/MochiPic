@@ -37,6 +37,15 @@
             android:paddingBottom="@dimen/activity_margin"
             android:text="@string/size" />
 
+        <!-- MochiPic: 解像度と日時を 1 行で -->
+        <org.fossify.commons.views.MyAppCompatCheckbox
+            android:id="@+id/manage_extended_details_mochi_summary"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/activity_margin"
+            android:paddingBottom="@dimen/activity_margin"
+            android:text="@string/mochipic_details_summary" />
+
         <org.fossify.commons.views.MyAppCompatCheckbox
             android:id="@+id/manage_extended_details_resolution"
             android:layout_width="match_parent"

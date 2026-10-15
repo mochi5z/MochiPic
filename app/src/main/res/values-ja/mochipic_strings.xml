@@ -19,4 +19,9 @@
     <string name="mochipic_sort_modified">更新日時</string>
     <string name="mochipic_sort_path">パス名</string>
     <string name="mochipic_sort_detailed">詳細な並べ替え…</string>
+    <string name="mochipic_details_summary">解像度と日時（1 行）</string>
+    <string name="mochipic_zoom_in">拡大</string>
+    <string name="mochipic_zoom_out">縮小</string>
+    <string name="mochipic_single_tap_zoom">シングルタップで画像を拡大する</string>
+    <string name="mochipic_single_tap_zoom_summary">シングルタップで画像を拡大表示して、ダブルタップでツールバーを表示するようにします。設定しない場合は逆の動作になります</string>
 </resources>

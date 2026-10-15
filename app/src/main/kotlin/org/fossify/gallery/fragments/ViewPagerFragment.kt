@@ -57,6 +57,12 @@ abstract class ViewPagerFragment : Fragment() {
 
         val details = StringBuilder()
         val detailsFlag = context.config.extendedDetails
+        // MochiPic: 「解像度 ・ 日時」の 1 行（QP-Gallery の画面下部の表示）
+        if (detailsFlag and org.fossify.gallery.mochipic.EXT_MOCHI_SUMMARY != 0) {
+            org.fossify.gallery.mochipic.ViewerDetails.summary(
+                getResolution(medium, file), exif.getExifDateTaken(context), getFileLastModified(file)
+            ).let { if (it.isNotEmpty()) details.appendLine(it) }
+        }
         if (detailsFlag and EXT_NAME != 0) {
             medium.name.let { if (it.isNotEmpty()) details.appendLine(it) }
         }

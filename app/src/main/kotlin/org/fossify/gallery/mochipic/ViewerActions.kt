@@ -20,6 +20,8 @@ object ViewerActions {
             ActionEntry(ActionId.DELETE, Slot.TOP),
             ActionEntry(ActionId.SHARE, Slot.TOP),
             ActionEntry(ActionId.PROPERTIES, Slot.BOTTOM),
+            ActionEntry(ActionId.ZOOM_OUT, Slot.BOTTOM),
+            ActionEntry(ActionId.ZOOM_IN, Slot.BOTTOM),
             ActionEntry(ActionId.SLIDESHOW, Slot.MENU),
             ActionEntry(ActionId.ROTATE, Slot.MENU),
             ActionEntry(ActionId.RENAME, Slot.MENU),
@@ -61,6 +63,8 @@ object ViewerActions {
         ActionId.CREATE_SHORTCUT -> org.fossify.commons.R.string.create_shortcut
         ActionId.PRINT -> org.fossify.commons.R.string.print
         ActionId.SETTINGS -> org.fossify.commons.R.string.settings
+        ActionId.ZOOM_IN -> R.string.mochipic_zoom_in
+        ActionId.ZOOM_OUT -> R.string.mochipic_zoom_out
     }
 
     /** ボタンのアイコン（設定画面で表示）。無いものは 0。 */
@@ -82,6 +86,8 @@ object ViewerActions {
         ActionId.SHOW_ON_MAP -> org.fossify.commons.R.drawable.ic_place_vector
         ActionId.SETTINGS -> org.fossify.commons.R.drawable.ic_settings_cog_vector
         ActionId.PRINT -> org.fossify.commons.R.drawable.ic_print_vector
+        ActionId.ZOOM_IN -> R.drawable.mochipic_ic_zoom_in
+        ActionId.ZOOM_OUT -> R.drawable.mochipic_ic_zoom_out
         else -> 0
     }
 
@@ -107,6 +113,8 @@ object ViewerActions {
         ActionId.CREATE_SHORTCUT -> listOf(R.id.menu_create_shortcut)
         ActionId.PRINT -> listOf(R.id.menu_print)
         ActionId.SETTINGS -> listOf(R.id.menu_settings)
+        ActionId.ZOOM_IN -> listOf(R.id.menu_zoom_in)
+        ActionId.ZOOM_OUT -> listOf(R.id.menu_zoom_out)
     }
 
     /** そのボタンの下部バー用の部品。下部バーに置けないボタンは null。 */
@@ -126,6 +134,8 @@ object ViewerActions {
         ActionId.RESIZE -> b.bottomResize
         ActionId.CHANGE_ORIENTATION -> b.bottomChangeOrientation
         ActionId.SHOW_ON_MAP -> b.bottomShowOnMap
+        ActionId.ZOOM_IN -> b.bottomZoomIn
+        ActionId.ZOOM_OUT -> b.bottomZoomOut
         else -> null
     }
 

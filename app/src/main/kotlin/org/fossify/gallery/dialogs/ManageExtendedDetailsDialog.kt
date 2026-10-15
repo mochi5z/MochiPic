@@ -16,6 +16,7 @@ class ManageExtendedDetailsDialog(val activity: BaseSimpleActivity, val callback
             manageExtendedDetailsName.isChecked = details and EXT_NAME != 0
             manageExtendedDetailsPath.isChecked = details and EXT_PATH != 0
             manageExtendedDetailsSize.isChecked = details and EXT_SIZE != 0
+            manageExtendedDetailsMochiSummary.isChecked = details and org.fossify.gallery.mochipic.EXT_MOCHI_SUMMARY != 0
             manageExtendedDetailsResolution.isChecked = details and EXT_RESOLUTION != 0
             manageExtendedDetailsLastModified.isChecked = details and EXT_LAST_MODIFIED != 0
             manageExtendedDetailsDateTaken.isChecked = details and EXT_DATE_TAKEN != 0
@@ -41,6 +42,8 @@ class ManageExtendedDetailsDialog(val activity: BaseSimpleActivity, val callback
                 result += EXT_PATH
             if (manageExtendedDetailsSize.isChecked)
                 result += EXT_SIZE
+            if (manageExtendedDetailsMochiSummary.isChecked)
+                result += org.fossify.gallery.mochipic.EXT_MOCHI_SUMMARY
             if (manageExtendedDetailsResolution.isChecked)
                 result += EXT_RESOLUTION
             if (manageExtendedDetailsLastModified.isChecked)

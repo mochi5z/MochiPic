@@ -12,7 +12,7 @@ class ActionLayoutTest {
     @Test
     fun defaultLayoutMatchesQpGallery() {
         assertEquals(listOf(ActionId.EDIT, ActionId.DELETE, ActionId.SHARE), defaults.inSlot(Slot.TOP))
-        assertEquals(listOf(ActionId.PROPERTIES), defaults.inSlot(Slot.BOTTOM))
+        assertEquals(listOf(ActionId.PROPERTIES, ActionId.ZOOM_OUT, ActionId.ZOOM_IN), defaults.inSlot(Slot.BOTTOM))
         assertEquals(Slot.MENU, defaults.slotOf(ActionId.SLIDESHOW))
         // すべてのボタンがちょうど 1 回ずつ入っている
         assertEquals(ActionId.entries.toSet(), defaults.entries.map { it.action }.toSet())
@@ -55,7 +55,7 @@ class ActionLayoutTest {
             .move(ActionId.DELETE, Slot.BOTTOM, 0)
             .move(ActionId.SLIDESHOW, Slot.TOP, 0)
         assertEquals(listOf(ActionId.SLIDESHOW, ActionId.EDIT, ActionId.SHARE), layout.inSlot(Slot.TOP))
-        assertEquals(listOf(ActionId.DELETE, ActionId.PROPERTIES), layout.inSlot(Slot.BOTTOM))
+        assertEquals(listOf(ActionId.DELETE, ActionId.PROPERTIES, ActionId.ZOOM_OUT, ActionId.ZOOM_IN), layout.inSlot(Slot.BOTTOM))
         assertEquals(ActionId.entries.size, layout.entries.size)
     }
 

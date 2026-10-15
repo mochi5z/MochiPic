@@ -74,6 +74,7 @@ import org.fossify.commons.helpers.DEFAULT_ANIMATION_DURATION
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.commons.helpers.isRPlus
 import org.fossify.gallery.R
+import org.fossify.gallery.mochipic.mochiPrefs
 import org.fossify.gallery.activities.BaseViewerActivity
 import org.fossify.gallery.activities.PhotoActivity
 import org.fossify.gallery.activities.PhotoVideoActivity
@@ -130,6 +131,11 @@ class PhotoFragment : ViewPagerFragment() {
     private var mInitialZoom = 1f
     private var mHasInitialZoom = false
 
+    // MochiPic: 「シングルタップで拡大」と拡大・縮小ボタン
+    private var mSingleTapZoom = false
+    private var mSubsamplingFullScale = 0f
+    private val mTapZoom by lazy { org.fossify.gallery.mochipic.TapZoomHelper(requireContext()) { photoClicked() } }
+
     private var mStoredShowExtendedDetails = false
     private var mStoredHideExtendedDetails = false
     private var mStoredAllowDeepZoomableImages = false
@@ -156,8 +162,9 @@ class PhotoFragment : ViewPagerFragment() {
         mOriginalPath = mMedium.path
 
         binding.apply {
-            subsamplingView.setOnClickListener { photoClicked() }
-            gesturesView.setOnClickListener { photoClicked() }
+            mSingleTapZoom = context.mochiPrefs.singleTapZoom
+            subsamplingView.setOnClickListener { imageTapped() }
+            gesturesView.setOnClickListener { imageTapped() }
             gifView.setOnClickListener { photoClicked() }
             instantPrevItem.setOnClickListener { listener?.goToPrevItem() }
             instantNextItem.setOnClickListener { listener?.goToNextItem() }
@@ -183,6 +190,7 @@ class PhotoFragment : ViewPagerFragment() {
 
             setupGesturesViewStateListener()
             gesturesView.setOnTouchListener { v, event ->
+                if (mSingleTapZoom && mTapZoom.onTouch(event)) return@setOnTouchListener true
                 val allowDownGesture = context.config.allowDownGesture
                 if (allowDownGesture && abs(mCurrentGestureViewZoom - mInitialZoom) < MAX_ZOOM_EQUALITY_TOLERANCE) {
                     handleEvent(event)
@@ -191,6 +199,7 @@ class PhotoFragment : ViewPagerFragment() {
             }
 
             subsamplingView.setOnTouchListener { v, event ->
+                if (mSingleTapZoom && mTapZoom.onTouch(event)) return@setOnTouchListener true
                 if (subsamplingView.isZoomedOut() && context.config.allowDownGesture) handleEvent(event)
                 false
             }
@@ -784,6 +793,7 @@ class PhotoFragment : ViewPagerFragment() {
                     val useWidth = if (mImageOrientation == ORIENTATION_ROTATE_90 || mImageOrientation == ORIENTATION_ROTATE_270) sHeight else sWidth
                     val useHeight = if (mImageOrientation == ORIENTATION_ROTATE_90 || mImageOrientation == ORIENTATION_ROTATE_270) sWidth else sHeight
                     doubleTapZoomScale = getDoubleTapZoomScale(useWidth, useHeight)
+                    mSubsamplingFullScale = scale   // MochiPic: 縮小の下限（画面に収まる大きさ）
                 }
 
                 override fun onImageLoadError(e: Exception) {
@@ -942,6 +952,60 @@ class PhotoFragment : ViewPagerFragment() {
 
     private fun photoClicked() {
         listener?.fragmentClicked()
+    }
+
+    // ---------------------------------------------------------------- MochiPic: 拡大・縮小
+
+    /** 画像をタップしたとき。「シングルタップで拡大」がオンなら拡大・縮小、オフなら従来どおりバーの表示切り替え。 */
+    private fun imageTapped() {
+        if (!mSingleTapZoom) {
+            photoClicked()
+        } else if (!mTapZoom.shouldIgnoreClick()) {
+            toggleZoomAt(mTapZoom.lastX, mTapZoom.lastY)
+        }
+    }
+
+    /** 収まっていればタップした所を拡大、拡大中なら元の大きさに戻す。 */
+    private fun toggleZoomAt(x: Float, y: Float) {
+        if (mIsSubsamplingVisible && binding.subsamplingView.isVisible()) {
+            val view = binding.subsamplingView
+            if (view.isZoomedOut()) {
+                val target = view.viewToSourceCoord(android.graphics.PointF(x, y)) ?: return
+                view.AnimationBuilder(target, minOf(view.doubleTapZoomScale, view.maxScale)).start()
+            } else {
+                val center = view.viewToSourceCoord(android.graphics.PointF(view.width / 2f, view.height / 2f)) ?: return
+                view.AnimationBuilder(center, fullScaleOf(view)).start()
+            }
+        } else {
+            val controller = binding.gesturesView.controller
+            val end = controller.stateController.toggleMinMaxZoom(controller.state, x, y)
+            controller.state.set(end)
+            controller.updateState()
+        }
+    }
+
+    private fun fullScaleOf(view: SubsamplingScaleImageView) =
+        if (mSubsamplingFullScale > 0f) mSubsamplingFullScale else view.scale
+
+    /** 拡大・縮小ボタン: 画面の中央を中心に [factor] 倍する（画面に収まる大きさ〜最大まで）。 */
+    fun zoomBy(factor: Float) {
+        if (!this::binding.isInitialized) return
+        if (mIsSubsamplingVisible && binding.subsamplingView.isVisible()) {
+            val view = binding.subsamplingView
+            val center = view.viewToSourceCoord(android.graphics.PointF(view.width / 2f, view.height / 2f)) ?: return
+            val target = (view.scale * factor).coerceIn(minOf(fullScaleOf(view), view.scale), view.maxScale)
+            view.AnimationBuilder(center, target).start()
+        } else {
+            val controller = when {
+                binding.gifViewFrame.isVisible() -> binding.gifViewFrame.controller
+                else -> binding.gesturesView.controller
+            }
+            val settings = controller.settings
+            if (!settings.hasViewportSize()) return
+            val state = controller.state
+            state.zoomBy(factor, settings.viewportWidth / 2f, settings.viewportHeight / 2f)
+            controller.updateState()
+        }
     }
 
     private fun updateInstantSwitchWidths() {

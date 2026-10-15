@@ -650,6 +650,22 @@
 
             </RelativeLayout>
 
+            <!-- MochiPic: シングルタップで画像を拡大する -->
+            <RelativeLayout
+                android:id="@+id/settings_mochi_single_tap_zoom_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_mochi_single_tap_zoom"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_single_tap_zoom" />
+
+            </RelativeLayout>
+
             <RelativeLayout
                 android:id="@+id/settings_allow_rotating_with_gestures_holder"
                 style="@style/SettingsHolderSwitchStyle"

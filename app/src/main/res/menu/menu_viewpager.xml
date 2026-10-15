@@ -144,6 +144,17 @@
         android:icon="@drawable/ic_slideshow_vector"
         android:title="@string/slideshow"
         app:showAsAction="ifRoom" />
+    <!-- MochiPic: 縮小・拡大 -->
+    <item
+        android:id="@+id/menu_zoom_out"
+        android:icon="@drawable/mochipic_ic_zoom_out"
+        android:title="@string/mochipic_zoom_out"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/menu_zoom_in"
+        android:icon="@drawable/mochipic_ic_zoom_in"
+        android:title="@string/mochipic_zoom_in"
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/menu_settings"
         android:icon="@drawable/ic_settings_cog_vector"

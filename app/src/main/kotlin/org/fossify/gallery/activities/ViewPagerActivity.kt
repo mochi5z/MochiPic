@@ -179,6 +179,7 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
     companion object {
         private const val REQUEST_VIEW_VIDEO = 1
         private const val SAVED_PATH = "current_path"
+        private const val ZOOM_STEP = 1.5f   // MochiPic: 拡大・縮小ボタン 1 回あたりの倍率
     }
 
     private var mPath = ""
@@ -313,6 +314,8 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
                 findItem(R.id.menu_create_shortcut).isVisible = inBar(ActionId.CREATE_SHORTCUT)
                 findItem(R.id.menu_open_with).isVisible = inBar(ActionId.OPEN_WITH)
                 findItem(R.id.menu_settings).isVisible = inBar(ActionId.SETTINGS)
+                findItem(R.id.menu_zoom_in).isVisible = inBar(ActionId.ZOOM_IN) && canZoom(currentMedium)
+                findItem(R.id.menu_zoom_out).isVisible = inBar(ActionId.ZOOM_OUT) && canZoom(currentMedium)
                 findItem(R.id.menu_change_orientation).isVisible = rotationDegrees == 0 && inBar(ActionId.CHANGE_ORIENTATION)
 
                 ViewerActions.applyShowAsAction(this, layout)
@@ -345,6 +348,13 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
         if (config.bottomActions) mViewerLayout else mViewerLayout.withoutBottomBar()
 
     private fun inBottom(action: ActionId) = effectiveViewerLayout().slotOf(action) == Slot.BOTTOM
+
+    /** 拡大・縮小は画像（GIF・動く画像を含む）のときだけ。動画は対象外。 */
+    private fun canZoom(medium: org.fossify.gallery.models.Medium?) = medium != null && !medium.isVideo()
+
+    private fun zoomCurrent(factor: Float) {
+        getCurrentPhotoFragment()?.zoomBy(factor)
+    }
 
     private fun setupOptionsMenu() {
         binding.mediumViewerToolbar.apply {
@@ -388,6 +398,8 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
                 R.id.menu_create_shortcut -> createShortcut()
                 R.id.menu_resize -> resizeImage()
                 R.id.menu_settings -> launchSettings()
+                R.id.menu_zoom_in -> zoomCurrent(ZOOM_STEP)
+                R.id.menu_zoom_out -> zoomCurrent(1f / ZOOM_STEP)
                 R.id.menu_copy_to_clipboard -> copyImageToClipboard()
                 else -> return@setOnMenuItemClickListener false
             }
@@ -1058,6 +1070,14 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
         }
 
         binding.bottomActions.bottomResize.beVisibleIf(inBottom(ActionId.RESIZE) && currentMedium?.isImage() == true)
+
+        // MochiPic: 縮小・拡大
+        binding.bottomActions.bottomZoomOut.beVisibleIf(inBottom(ActionId.ZOOM_OUT) && canZoom(currentMedium))
+        binding.bottomActions.bottomZoomOut.setOnLongClickListener { toast(R.string.mochipic_zoom_out); true }
+        binding.bottomActions.bottomZoomOut.setOnClickListener { zoomCurrent(1f / ZOOM_STEP) }
+        binding.bottomActions.bottomZoomIn.beVisibleIf(inBottom(ActionId.ZOOM_IN) && canZoom(currentMedium))
+        binding.bottomActions.bottomZoomIn.setOnLongClickListener { toast(R.string.mochipic_zoom_in); true }
+        binding.bottomActions.bottomZoomIn.setOnClickListener { zoomCurrent(ZOOM_STEP) }
         binding.bottomActions.bottomResize.setOnLongClickListener { toast(org.fossify.commons.R.string.resize); true }
         binding.bottomActions.bottomResize.setOnClickListener {
             resizeImage()
@@ -1078,6 +1098,8 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
         binding.bottomActions.bottomToggleFileVisibility.setImageResource(hideIcon)
 
         binding.bottomActions.bottomRotate.beVisibleIf(inBottom(ActionId.ROTATE) && getCurrentMedium()?.isImage() == true)
+        binding.bottomActions.bottomZoomOut.beVisibleIf(inBottom(ActionId.ZOOM_OUT) && canZoom(medium))
+        binding.bottomActions.bottomZoomIn.beVisibleIf(inBottom(ActionId.ZOOM_IN) && canZoom(medium))
         binding.bottomActions.bottomChangeOrientation.setImageResource(getChangeOrientationIcon())
     }
 

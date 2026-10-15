@@ -374,7 +374,7 @@ class Config(context: Context) : BaseConfig(context) {
         set(viewTypeFiles) = prefs.edit().putInt(VIEW_TYPE_FILES, viewTypeFiles).apply()
 
     var showExtendedDetails: Boolean
-        get() = prefs.getBoolean(SHOW_EXTENDED_DETAILS, false)
+        get() = prefs.getBoolean(SHOW_EXTENDED_DETAILS, true) // MochiPic: QP 同様に画面下部へ詳細を出す
         set(showExtendedDetails) = prefs.edit().putBoolean(SHOW_EXTENDED_DETAILS, showExtendedDetails).apply()
 
     var hideExtendedDetails: Boolean
@@ -382,7 +382,7 @@ class Config(context: Context) : BaseConfig(context) {
         set(hideExtendedDetails) = prefs.edit().putBoolean(HIDE_EXTENDED_DETAILS, hideExtendedDetails).apply()
 
     var extendedDetails: Int
-        get() = prefs.getInt(EXTENDED_DETAILS, EXT_RESOLUTION or EXT_LAST_MODIFIED or EXT_EXIF_PROPERTIES)
+        get() = prefs.getInt(EXTENDED_DETAILS, org.fossify.gallery.mochipic.EXT_MOCHI_SUMMARY) // MochiPic: 「解像度 ・ 日時」
         set(extendedDetails) = prefs.edit().putInt(EXTENDED_DETAILS, extendedDetails).apply()
 
     var wasNewAppShown: Boolean

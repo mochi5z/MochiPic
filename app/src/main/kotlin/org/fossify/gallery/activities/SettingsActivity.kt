@@ -95,6 +95,7 @@ class SettingsActivity : SimpleActivity() {
         setupAllowZoomingImages()
         setupShowHighestQuality()
         setupAllowOneToOneZoom()
+        setupMochiSingleTapZoom()
         setupAllowInstantChange()
         setupShowExtendedDetails()
         setupHideExtendedDetails()
@@ -598,6 +599,16 @@ class SettingsActivity : SimpleActivity() {
         binding.settingsShowHighestQualityHolder.setOnClickListener {
             binding.settingsShowHighestQuality.toggle()
             config.showHighestQuality = binding.settingsShowHighestQuality.isChecked
+        }
+    }
+
+    // MochiPic: シングルタップで拡大（オン: 1 回タップで拡大、2 回タップでバー表示）
+    private fun setupMochiSingleTapZoom() {
+        val prefs = org.fossify.gallery.mochipic.MochiPicPrefs(this)
+        binding.settingsMochiSingleTapZoom.isChecked = prefs.singleTapZoom
+        binding.settingsMochiSingleTapZoomHolder.setOnClickListener {
+            binding.settingsMochiSingleTapZoom.toggle()
+            prefs.singleTapZoom = binding.settingsMochiSingleTapZoom.isChecked
         }
     }
 

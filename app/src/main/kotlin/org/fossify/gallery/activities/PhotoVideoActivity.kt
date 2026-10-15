@@ -380,6 +380,8 @@ open class PhotoVideoActivity : BaseViewerActivity(), ViewPagerFragment.Fragment
             binding.bottomActions.bottomCopy,
             binding.bottomActions.bottomMove,
             binding.bottomActions.bottomResize,
+            binding.bottomActions.bottomZoomOut,   // MochiPic
+            binding.bottomActions.bottomZoomIn,    // MochiPic
         ).forEach {
             it.beGone()
         }

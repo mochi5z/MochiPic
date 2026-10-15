@@ -20,7 +20,7 @@ enum class Slot(val code: Char) {
 /** 画面に置けるボタンの種類。[canBeInBottom] が false のものは下部バーに置けない（下部バー用の部品が無い）。 */
 enum class ActionId(val canBeInBottom: Boolean = true) {
     EDIT, DELETE, SHARE, PROPERTIES, SLIDESHOW, ROTATE, RENAME, COPY, MOVE, SET_AS,
-    FAVORITE, TOGGLE_VISIBILITY, RESIZE, CHANGE_ORIENTATION, SHOW_ON_MAP,
+    FAVORITE, TOGGLE_VISIBILITY, RESIZE, CHANGE_ORIENTATION, SHOW_ON_MAP, ZOOM_IN, ZOOM_OUT,
     OPEN_WITH(false), COPY_TO_CLIPBOARD(false), CREATE_SHORTCUT(false), PRINT(false), SETTINGS(false);
 
     companion object {

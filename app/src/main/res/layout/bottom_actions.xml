@@ -177,4 +177,27 @@
         android:padding="@dimen/normal_margin"
         android:src="@drawable/ic_minimize_vector" />
 
+    <!-- MochiPic: 縮小・拡大 -->
+    <ImageView
+        android:id="@+id/bottom_zoom_out"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="@dimen/list_touch_target_min"
+        android:layout_marginBottom="@dimen/normal_margin"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/mochipic_zoom_out"
+        android:padding="@dimen/normal_margin"
+        android:src="@drawable/mochipic_ic_zoom_out" />
+
+    <ImageView
+        android:id="@+id/bottom_zoom_in"
+        android:layout_width="0dp"
+        android:layout_weight="1"
+        android:layout_height="@dimen/list_touch_target_min"
+        android:layout_marginBottom="@dimen/normal_margin"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/mochipic_zoom_in"
+        android:padding="@dimen/normal_margin"
+        android:src="@drawable/mochipic_ic_zoom_in" />
+
 </LinearLayout>

@@ -20,4 +20,9 @@
     <string name="mochipic_sort_modified">Last modified</string>
     <string name="mochipic_sort_path">Path</string>
     <string name="mochipic_sort_detailed">More sorting options…</string>
+    <string name="mochipic_details_summary">Resolution and date (one line)</string>
+    <string name="mochipic_zoom_in">Zoom in</string>
+    <string name="mochipic_zoom_out">Zoom out</string>
+    <string name="mochipic_single_tap_zoom">Zoom in with a single tap</string>
+    <string name="mochipic_single_tap_zoom_summary">Single tap zooms the image, double tap shows the toolbars. When off, the other way round</string>
 </resources>
