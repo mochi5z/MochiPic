@@ -315,7 +315,7 @@ class Config(context: Context) : BaseConfig(context) {
     }
 
     var hideSystemUI: Boolean
-        get() = prefs.getBoolean(HIDE_SYSTEM_UI, false)
+        get() = prefs.getBoolean(HIDE_SYSTEM_UI, true) // MochiPic: QP-Gallery と同じく、開いたらすぐ上下のバーと日付を隠す
         set(hideSystemUI) = prefs.edit().putBoolean(HIDE_SYSTEM_UI, hideSystemUI).apply()
 
     var deleteEmptyFolders: Boolean

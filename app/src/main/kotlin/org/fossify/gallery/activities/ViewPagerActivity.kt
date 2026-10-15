@@ -547,7 +547,7 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
             binding.viewPager.onGlobalLayout {
                 Handler().postDelayed({
                     fragmentClicked()
-                }, HIDE_SYSTEM_UI_DELAY)
+                }, 50L)  // MochiPic: QP-Gallery と同じく、開いたらすぐにバーと日付を隠す
             }
         }
 

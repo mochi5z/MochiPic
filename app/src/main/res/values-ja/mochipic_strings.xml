@@ -112,4 +112,6 @@
     <string name="mochipic_edit_resolution">解像度</string>
     <string name="mochipic_edit_selection">選択範囲</string>
     <string name="mochipic_edit_ratio_free">自由</string>
+    <!-- QP-Gallery と同じ表記に（Fossify の訳は「他で使う」） -->
+    <string name="set_as">セット…</string>
 </resources>

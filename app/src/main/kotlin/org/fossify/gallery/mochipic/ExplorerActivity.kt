@@ -136,12 +136,28 @@ class ExplorerActivity : SimpleActivity() {
 
     private fun rootPath() = internalStoragePath.trimEnd('/')
 
-    private fun sdPath(): String? = sdCardPath.trimEnd('/').takeIf { it.isNotEmpty() && File(it).canRead() }
+    /**
+     * SD カードや USB メモリ（取り外しできるストレージ）の場所。
+     * 端末のストレージ一覧・アプリ用フォルダの場所・/storage の中身から集める（機種によって見つかる方法が違うため）。
+     */
+    private val externalVolumes: List<String> by lazy {
+        val found = linkedSetOf<String>()
+        sdCardPath.trimEnd('/').takeIf { it.isNotEmpty() }?.let { found.add(it) }
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getSystemService(android.os.storage.StorageManager::class.java)?.storageVolumes
+                ?.filter { it.isRemovable }
+                ?.mapNotNull { it.directory?.path }
+                ?.forEach { found.add(it) }
+        }
+        getExternalFilesDirs(null).filterNotNull().map { it.path.substringBefore("/Android/") }.forEach { found.add(it) }
+        File("/storage").listFiles()?.filter { it.isDirectory && it.name != "emulated" && it.name != "self" }?.forEach { found.add(it.path) }
+        found.map { it.trimEnd('/') }.filter { it != rootPath() && !it.startsWith(rootPath() + "/") && File(it).isDirectory }.distinct()
+    }
 
     /** 1 つ上の階層。いちばん上（内部ストレージ）なら null。SD カードの上は内部ストレージ。 */
     private fun parentOf(path: String): String? = when (path) {
         rootPath() -> null
-        sdPath() -> rootPath()
+        in externalVolumes -> rootPath()
         else -> File(path).parent
     }
 
@@ -201,7 +217,7 @@ class ExplorerActivity : SimpleActivity() {
         val showHidden = config.shouldShowHidden
         val dir = File(path)
         val subdirs = dir.listFiles()?.filter { it.isDirectory && (showHidden || !it.name.startsWith(".")) }.orEmpty().toMutableList()
-        if (path == rootPath()) sdPath()?.let { subdirs.add(File(it)) }
+        if (path == rootPath()) externalVolumes.forEach { subdirs.add(File(it)) }
 
         val list = subdirs.map { sub ->
             val s = scan(sub, showHidden)

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- MochiPic: QP-Gallery と同じく上部バーは 並べ替え・表示モード・隠しフォルダの表示切り替え。︙は検索と読み込むフォルダの追加だけ
      （ほかの項目は MainActivity.refreshMenuItems で隠す。カメラと「すべて表示」はサイドメニューへ） -->
+<!-- 隠しフォルダのボタンは今の状態を表す: 目に斜線＝隠しフォルダを出していない、目＝出している -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -35,13 +36,13 @@
         app:showAsAction="always" />
     <item
         android:id="@+id/temporarily_show_hidden"
-        android:icon="@drawable/ic_unhide_vector"
+        android:icon="@drawable/ic_hide_vector"
         android:title="@string/temporarily_show_hidden"
         android:showAsAction="always"
         app:showAsAction="always" />
     <item
         android:id="@+id/stop_showing_hidden"
-        android:icon="@drawable/ic_hide_vector"
+        android:icon="@drawable/ic_unhide_vector"
         android:title="@string/stop_showing_hidden"
         android:showAsAction="always"
         app:showAsAction="always" />

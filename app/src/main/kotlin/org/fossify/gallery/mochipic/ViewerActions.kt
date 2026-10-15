@@ -17,7 +17,7 @@ object ViewerActions {
     /**
      * 初期配置（QP-Gallery の画面に合わせ、ユーザーの指定で 移動・コピー・名前の変更 を上部バーに、編集と共有を︙に移した形）。
      * 上部バー: 削除・移動・コピー・名前の変更、下部: 情報（解像度と日時の 1 行表示つき）、
-     * ︙: スライドショー・壁紙などに設定・回転・マップに表示・編集・共有・拡大・縮小。それ以外は非表示（ボタンの配置で出せる）。
+     * ︙: スライドショー・壁紙などに設定・回転・編集・共有・拡大・縮小。それ以外は非表示（ボタンの配置で出せる）。
      */
     val DEFAULT_LAYOUT = ActionLayout(
         listOf(
@@ -29,11 +29,11 @@ object ViewerActions {
             ActionEntry(ActionId.SLIDESHOW, Slot.MENU),
             ActionEntry(ActionId.SET_AS, Slot.MENU),
             ActionEntry(ActionId.ROTATE, Slot.MENU),
-            ActionEntry(ActionId.SHOW_ON_MAP, Slot.MENU),
             ActionEntry(ActionId.EDIT, Slot.MENU),
             ActionEntry(ActionId.SHARE, Slot.MENU),
             ActionEntry(ActionId.ZOOM_IN, Slot.MENU),
             ActionEntry(ActionId.ZOOM_OUT, Slot.MENU),
+            ActionEntry(ActionId.SHOW_ON_MAP, Slot.HIDDEN),
             ActionEntry(ActionId.FAVORITE, Slot.HIDDEN),
             ActionEntry(ActionId.TOGGLE_VISIBILITY, Slot.HIDDEN),
             ActionEntry(ActionId.RESIZE, Slot.HIDDEN),

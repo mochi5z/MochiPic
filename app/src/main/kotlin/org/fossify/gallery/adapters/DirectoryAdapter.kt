@@ -993,7 +993,8 @@ class DirectoryAdapter(
                 dirName.ellipsize = TextUtils.TruncateAt.MIDDLE
             }
 
-            var nameCount = directory.name
+            // MochiPic: 前に保存された名前に付いている「(非表示)」も表示しない
+            var nameCount = directory.name.removeSuffix(" " + activity.getString(R.string.hidden))
             if (showMediaCount == FOLDER_MEDIA_CNT_BRACKETS) {
                 nameCount += " (${directory.subfoldersMediaCount})"
             }

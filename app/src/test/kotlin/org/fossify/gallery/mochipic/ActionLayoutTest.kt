@@ -116,7 +116,7 @@ class ActionLayoutTest {
         assertEquals(listOf(ActionId.DELETE, ActionId.MOVE, ActionId.COPY, ActionId.RENAME), d.inSlot(Slot.TOP))
         assertEquals(listOf(ActionId.PROPERTIES), d.inSlot(Slot.BOTTOM))
         assertEquals(
-            listOf(ActionId.SLIDESHOW, ActionId.SET_AS, ActionId.ROTATE, ActionId.SHOW_ON_MAP, ActionId.EDIT, ActionId.SHARE, ActionId.ZOOM_IN, ActionId.ZOOM_OUT),
+            listOf(ActionId.SLIDESHOW, ActionId.SET_AS, ActionId.ROTATE, ActionId.EDIT, ActionId.SHARE, ActionId.ZOOM_IN, ActionId.ZOOM_OUT),
             d.inSlot(Slot.MENU),
         )
         assertEquals(ActionId.entries.toSet(), d.entries.map { it.action }.toSet())

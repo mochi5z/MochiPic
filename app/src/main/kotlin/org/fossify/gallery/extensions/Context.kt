@@ -583,7 +583,7 @@ fun Context.checkAppendingHidden(
         path.doesThisOrParentHaveNoMedia(folderNoMediaStatuses, null)
         && !path.isThisOrParentIncluded(includedFolders)
     ) {
-        "$dirName $hidden"
+        dirName  // MochiPic: QP-Gallery と同じく、隠しフォルダにも「(非表示)」を付けない
     } else {
         dirName
     }

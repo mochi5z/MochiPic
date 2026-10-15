@@ -116,10 +116,11 @@ object AlbumStyles {
 
     private fun bindStack(activity: Activity, b: GridDirectoryItemMosaicBinding, dir: Directory) {
         val v = b.binding
-        val start = dp(activity, 14)
-        val end = dp(activity, 30)
+        // 重なりの幅（step）は QP-Gallery の見え方に合わせて 12dp。2 枚分（24dp）が右の余白に収まるようにする
+        val start = dp(activity, 10)
+        val end = dp(activity, 38)
         val top = dp(activity, 6)
-        val step = dp(activity, 8)
+        val step = dp(activity, 12)
         setMargins(v.dirThumbnail, start, end, top)
         v.mosaicPlaySingle.beVisibleIf(dir.tmb.isVideoFast())
         AlbumMosaic.withPaths(activity, dir, v.stackLayer1) { paths ->
