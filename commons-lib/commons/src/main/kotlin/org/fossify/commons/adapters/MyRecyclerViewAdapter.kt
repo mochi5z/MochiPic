@@ -78,10 +78,12 @@ abstract class MyRecyclerViewAdapter(val activity: BaseSimpleActivity, val recyc
                 }
 
                 activity.menuInflater.inflate(getActionMenuId(), menu)
-                val bgColor = if (activity.isDynamicTheme()) {
-                    resources.getColor(R.color.you_contextual_status_bar_color, activity.theme)
-                } else {
-                    resources.getColor(R.color.dark_grey, activity.theme)
+                // MochiPic: 選択中のバーも、普段の上部バーと同じテーマの主色（QP-Gallery と同じ）
+                val bgColor = activity.getProperPrimaryColor()
+                actBarTextView?.onGlobalLayout {
+                    activity.findViewById<View>(androidx.appcompat.R.id.action_mode_bar)?.setBackgroundColor(bgColor)
+                    activity.findViewById<ImageView>(androidx.appcompat.R.id.action_mode_close_button)
+                        ?.applyColorFilter(bgColor.getContrastColor())
                 }
 
                 actBarTextView!!.setTextColor(bgColor.getContrastColor())
@@ -152,7 +154,7 @@ abstract class MyRecyclerViewAdapter(val activity: BaseSimpleActivity, val recyc
         val selectableItemCount = getSelectableItemCount()
         val selectedCount = Math.min(selectedKeys.size, selectableItemCount)
         val oldTitle = actBarTextView?.text
-        val newTitle = "$selectedCount / $selectableItemCount"
+        val newTitle = "$selectedCount/$selectableItemCount"
         if (oldTitle != newTitle) {
             actBarTextView?.text = newTitle
             actMode?.invalidate()

@@ -230,13 +230,15 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
                 || mIsSetWallpaperIntent
 
         if (!mIsThirdPartyIntent) {
-            sideMenu = org.fossify.gallery.mochipic.SideMenu(this, org.fossify.gallery.mochipic.SideMenu.Item.ALBUMS).attach()
+            sideMenu = org.fossify.gallery.mochipic.SideMenu(this, org.fossify.gallery.mochipic.SideMenu.Item.ALBUMS, binding.mainMenu) { open ->
+                org.fossify.gallery.mochipic.QpTopBar.setDrawerOpen(binding.mainMenu, open)
+            }.attach()
         }
         setupOptionsMenu()
         if (!mIsThirdPartyIntent) {
             // MochiPic: 上部バーを QP-Gallery の「≡ アルバム」に
             org.fossify.gallery.mochipic.QpTopBar.install(this, binding.mainMenu, getString(R.string.mochipic_album_title)) {
-                sideMenu?.open()
+                sideMenu?.toggle()
             }
         }
         refreshMenuItems()
@@ -635,7 +637,15 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
             }
 
             if (config.showAll) {
-                showAllMedia()
+                if (mIsThirdPartyIntent) {
+                    showAllMedia()
+                } else {
+                    // MochiPic: 「すべて表示」は日付表示（月ごとの一覧）に置き換え
+                    config.showAll = false
+                    startActivity(Intent(this, org.fossify.gallery.mochipic.DateAlbumsActivity::class.java))
+                    finish()
+                    return@handleMediaPermissions
+                }
             } else {
                 getDirectories()
             }

@@ -78,4 +78,5 @@
     <string name="mochipic_slideshow_shuffle">画像をシャッフル表示する</string>
     <string name="mochipic_slideshow_loop">繰り返し再生する</string>
     <string name="mochipic_slideshow_section">スライドショー</string>
+    <string name="mochipic_date_empty">写真も動画もありません</string>
 </resources>

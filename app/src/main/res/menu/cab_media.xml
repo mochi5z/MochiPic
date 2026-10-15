@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- MochiPic: QP-Gallery と同じく、選択中の上部バーには 削除・共有・回転 だけを出す -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -25,7 +26,7 @@
         android:id="@+id/cab_rotate"
         android:icon="@drawable/ic_rotate_right_vector"
         android:title="@string/rotate"
-        app:showAsAction="ifRoom">
+        app:showAsAction="always">
         <menu>
             <item
                 android:id="@+id/cab_rotate_right"
@@ -42,7 +43,7 @@
         android:id="@+id/cab_properties"
         android:icon="@drawable/ic_info_vector"
         android:title="@string/properties"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/cab_rename"
         android:title="@string/rename"
@@ -51,12 +52,12 @@
         android:id="@+id/cab_hide"
         android:icon="@drawable/ic_hide_vector"
         android:title="@string/hide"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/cab_unhide"
         android:icon="@drawable/ic_unhide_vector"
         android:title="@string/unhide"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/cab_copy_to"
         android:showAsAction="never"
@@ -91,17 +92,17 @@
         android:id="@+id/cab_edit"
         android:icon="@drawable/ic_edit_vector"
         android:title="@string/edit"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/cab_add_to_favorites"
         android:icon="@drawable/ic_star_outline_vector"
         android:title="@string/add_to_favorites"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/cab_remove_from_favorites"
         android:icon="@drawable/ic_star_vector"
         android:title="@string/remove_from_favorites"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/cab_restore_recycle_bin_files"
         android:showAsAction="never"
@@ -116,5 +117,5 @@
         android:id="@+id/cab_select_all"
         android:icon="@drawable/ic_select_all_vector"
         android:title="@string/select_all"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 </menu>

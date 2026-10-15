@@ -4,7 +4,9 @@
     <dimen name="mochipic_list_thumbnail_size">84dp</dimen>
     <!-- サイドメニュー -->
     <dimen name="mochipic_side_menu_width">280dp</dimen>
-    <dimen name="mochipic_side_menu_item_height">52dp</dimen>
+    <dimen name="mochipic_side_menu_item_height">54dp</dimen>
     <!-- エクスプローラーのフォルダの行のサムネイル -->
     <dimen name="mochipic_explorer_folder_thumb">56dp</dimen>
+    <!-- 上部バーのタイトルの左の余白（≡ との間） -->
+    <dimen name="mochipic_top_bar_title_start">28dp</dimen>
 </resources>

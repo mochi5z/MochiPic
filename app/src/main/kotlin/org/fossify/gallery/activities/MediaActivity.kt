@@ -126,6 +126,14 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     private var mAllowPickingMultiple = false
     private var mShowAll = false
     private var sideMenu: org.fossify.gallery.mochipic.SideMenu? = null  // MochiPic
+    private var mQpTitle = false  // MochiPic: タイトルを「名前 (枚数)」にする
+
+    private fun mochiDirName() = when (mPath) {
+        FAVORITES -> getString(org.fossify.commons.R.string.favorites)
+        RECYCLE_BIN -> getString(org.fossify.commons.R.string.recycle_bin)
+        config.OTGPath -> getString(org.fossify.commons.R.string.usb)
+        else -> getHumanizedFilename(mPath)
+    }
     private var mLoadedInitialPhotos = false
     private var mShowLoadingIndicator = true
     private var mWasFullscreenViewOpen = false
@@ -175,11 +183,23 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
 
         setupOptionsMenu()
         storeStateVariables()
-        // MochiPic: 「日付」（全部の画像を日付ごとに表示）のときは、上部バーを「≡ 日付」にしてサイドメニューを付ける
-        if (mShowAll && !mIsGetImageIntent && !mIsGetVideoIntent && !mIsGetAnyIntent) {
-            sideMenu = org.fossify.gallery.mochipic.SideMenu(this, org.fossify.gallery.mochipic.SideMenu.Item.DATE).attach()
-            org.fossify.gallery.mochipic.QpTopBar.install(this, binding.mediaMenu, getString(R.string.mochipic_menu_date)) {
-                sideMenu?.open()
+        // MochiPic: 上部バーを QP-Gallery の形に。
+        //  アルバムの中身 … 「← 名前 (枚数)  [並べ替え][スライドショー][︙]」
+        //  すべて表示（旧「日付」）… 「≡ 日付 …」とサイドメニュー
+        if (!mIsGetImageIntent && !mIsGetVideoIntent && !mIsGetAnyIntent) {
+            if (mShowAll) {
+                sideMenu = org.fossify.gallery.mochipic.SideMenu(this, org.fossify.gallery.mochipic.SideMenu.Item.DATE, binding.mediaMenu) { open ->
+                    org.fossify.gallery.mochipic.QpTopBar.setDrawerOpen(binding.mediaMenu, open)
+                }.attach()
+                org.fossify.gallery.mochipic.QpTopBar.install(this, binding.mediaMenu, getString(R.string.mochipic_menu_date)) {
+                    sideMenu?.toggle()
+                }
+            } else {
+                mQpTitle = true
+                org.fossify.gallery.mochipic.QpTopBar.install(
+                    this, binding.mediaMenu, mochiDirName(),
+                    nav = org.fossify.gallery.mochipic.QpTopBar.Nav.BACK, withSearch = false,
+                ) { performDefaultBack() }
             }
         }
         refreshMenuItems()
@@ -424,7 +444,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
 
     private fun updateMenuColors() {
         binding.mediaMenu.updateColors()
-        if (sideMenu != null) {
+        if (sideMenu != null || mQpTitle) {
             org.fossify.gallery.mochipic.QpTopBar.updateColors(this, binding.mediaMenu)
             sideMenu?.updateColors()
         }
@@ -1022,6 +1042,10 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         mMedia = media
 
         runOnUiThread {
+            if (mQpTitle) {
+                val count = media.count { it is Medium }
+                org.fossify.gallery.mochipic.QpTopBar.setTitle(binding.mediaMenu, "${mochiDirName()} ($count)")
+            }
             binding.loadingIndicator.hide()
             binding.mediaRefreshLayout.isRefreshing = false
             binding.mediaEmptyTextPlaceholder.beVisibleIf(media.isEmpty() && !isFromCache)

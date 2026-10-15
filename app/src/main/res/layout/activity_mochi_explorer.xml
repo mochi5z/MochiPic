@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- MochiPic: エクスプローラー画面 -->
+<!-- MochiPic: エクスプローラー画面（上部バーと、アルバム一覧と同じ見た目のフォルダの一覧だけ） -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/explorer_coordinator"
@@ -11,60 +11,27 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <LinearLayout
-            android:id="@+id/explorer_path_bar"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/explorer_list"
             android:layout_width="match_parent"
-            android:layout_height="40dp"
-            android:background="?attr/selectableItemBackground"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingStart="@dimen/activity_margin"
-            android:paddingEnd="@dimen/activity_margin">
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:scrollbars="vertical" />
 
-            <ImageView
-                android:id="@+id/explorer_up"
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_marginEnd="@dimen/medium_margin"
-                android:contentDescription="@string/mochipic_explorer_up"
-                android:src="@drawable/mochipic_ic_up" />
-
-            <TextView
-                android:id="@+id/explorer_path"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:ellipsize="start"
-                android:singleLine="true"
-                android:textSize="13sp" />
-        </LinearLayout>
-
-        <FrameLayout
+        <TextView
+            android:id="@+id/explorer_empty"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/explorer_list"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:scrollbars="vertical" />
-
-            <TextView
-                android:id="@+id/explorer_empty"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:alpha="0.7"
-                android:gravity="center_horizontal"
-                android:padding="@dimen/activity_margin"
-                android:text="@string/mochipic_explorer_empty"
-                android:textStyle="italic"
-                android:visibility="gone" />
-        </FrameLayout>
-    </LinearLayout>
+            android:layout_height="wrap_content"
+            android:alpha="0.7"
+            android:gravity="center_horizontal"
+            android:padding="@dimen/activity_margin"
+            android:text="@string/mochipic_explorer_empty"
+            android:textStyle="italic"
+            android:visibility="gone" />
+    </FrameLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

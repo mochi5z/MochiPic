@@ -79,4 +79,5 @@
     <string name="mochipic_slideshow_shuffle">Shuffle images</string>
     <string name="mochipic_slideshow_loop">Loop</string>
     <string name="mochipic_slideshow_section">Slideshow</string>
+    <string name="mochipic_date_empty">No photos or videos</string>
 </resources>

@@ -32,7 +32,9 @@ object AlbumMenus {
     private fun themed(activity: Activity) = ContextThemeWrapper(activity, activity.getPopupMenuTheme())
 
     /** 表示形式: グリッド／リスト（選んでいるものに印）と、別枠の「エクスプローラー」（フォルダ階層をたどる画面へ）。 */
-    fun showViewType(activity: Activity, anchor: View, onExplorer: (() -> Unit)? = null, onChanged: () -> Unit) {
+    fun showViewType(
+        activity: Activity, anchor: View, onExplorer: (() -> Unit)? = null, explorerChecked: Boolean = false, onChanged: () -> Unit,
+    ) {
         val config = activity.config
         val popup = PopupMenu(themed(activity), anchor, Gravity.END)
         val menu = popup.menu
@@ -41,7 +43,10 @@ object AlbumMenus {
         menu.setGroupCheckable(GROUP, true, true)
         menu.findItem(config.viewTypeFolders)?.isChecked = true
         if (onExplorer != null) {
-            menu.add(GROUP_EXPLORER, EXPLORER, 2, R.string.mochipic_view_explorer).isCheckable = true
+            menu.add(GROUP_EXPLORER, EXPLORER, 2, R.string.mochipic_view_explorer).apply {
+                isCheckable = true
+                isChecked = explorerChecked
+            }
         }
         popup.setOnMenuItemClickListener { item ->
             when {
@@ -76,7 +81,7 @@ object AlbumMenus {
             (current and SORT_OPTIONS) or chosen
         }
 
-    fun showSort(activity: Activity, anchor: View, onDetailed: () -> Unit, onChanged: () -> Unit) {
+    fun showSort(activity: Activity, anchor: View, onDetailed: () -> Unit, onChanged: () -> Unit, detailed: Boolean = true) {
         val config = activity.config
         val current = config.directorySorting
         val popup = PopupMenu(themed(activity), anchor, Gravity.END)
@@ -88,7 +93,7 @@ object AlbumMenus {
             }
             menu.add(Menu.NONE, kind, i, text)
         }
-        menu.add(Menu.NONE, DETAILED, SORTS.size, R.string.mochipic_sort_detailed)
+        if (detailed) menu.add(Menu.NONE, DETAILED, SORTS.size, R.string.mochipic_sort_detailed)
         popup.setOnMenuItemClickListener { item ->
             if (item.itemId == DETAILED) {
                 onDetailed()

@@ -103,13 +103,14 @@ open class MySearchMenu(context: Context, attrs: AttributeSet) : MyAppBarLayout(
     }
 
     fun updateColors() {
-        val backgroundColor = context.getProperBackgroundColor()
+        // MochiPic: 上部バーはテーマの主色（QP-Gallery と同じ色付きのバー）
+        val backgroundColor = context.getProperPrimaryColor()
         val contrastColor = backgroundColor.getContrastColor()
 
         setBackgroundColor(backgroundColor)
         binding.topToolbarSearchIcon.applyColorFilter(contrastColor)
         binding.toolbarContainer.background?.applyColorFilter(
-            color = context.getProperPrimaryColor().adjustAlpha(LOWER_ALPHA)
+            color = contrastColor.adjustAlpha(LOWER_ALPHA)
         )
         binding.topToolbarSearch.setTextColor(contrastColor)
         binding.topToolbarSearch.setHintTextColor(contrastColor.adjustAlpha(MEDIUM_ALPHA))

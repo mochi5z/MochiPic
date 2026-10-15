@@ -184,6 +184,18 @@
             android:parentActivityName=".activities.MainActivity" />
 
         <activity
+            android:name=".mochipic.DateAlbumsActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:exported="false"
+            android:label="@string/mochipic_menu_date" />
+
+        <activity
+            android:name=".mochipic.MonthMediaActivity"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:exported="false"
+            android:label="@string/mochipic_menu_date" />
+
+        <activity
             android:name=".mochipic.ExplorerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"

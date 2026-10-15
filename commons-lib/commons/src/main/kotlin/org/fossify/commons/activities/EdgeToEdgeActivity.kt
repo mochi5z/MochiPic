@@ -21,6 +21,7 @@ import org.fossify.commons.extensions.getColoredDrawableWithColor
 import org.fossify.commons.extensions.getColoredMaterialStatusBarColor
 import org.fossify.commons.extensions.getContrastColor
 import org.fossify.commons.extensions.getProperBackgroundColor
+import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.onApplyWindowInsets
 import org.fossify.commons.extensions.setSystemBarsAppearance
 import org.fossify.commons.extensions.updateMarginWithBase
@@ -147,24 +148,24 @@ abstract class EdgeToEdgeActivity : AppCompatActivity() {
         }
     }
 
-    fun updateTopBarColors(topAppBar: MyAppBarLayout, color: Int) {
-        val contrastColor = if (isSearchBarEnabled) {
-            getProperBackgroundColor().getContrastColor()
-        } else {
-            color.getContrastColor()
-        }
+    /**
+     * MochiPic: 上部バーはスクロール位置に関係なく、いつもテーマの主色（QP-Gallery と同じ色付きのバー）にする。
+     * 文字とアイコンは主色に対して読みやすい色（濃い色なら白）。
+     */
+    @Suppress("UNUSED_PARAMETER")
+    fun updateTopBarColors(topAppBar: MyAppBarLayout, requestedColor: Int) {
+        val color = getProperPrimaryColor()
+        val contrastColor = color.getContrastColor()
 
         window.setSystemBarsAppearance(color)
-        if (!isSearchBarEnabled) {
-            topAppBar.setBackgroundColor(color)
-            topAppBar.toolbar?.setBackgroundColor(color)
-            topAppBar.toolbar?.setTitleTextColor(contrastColor)
-            topAppBar.toolbar?.navigationIcon?.applyColorFilter(contrastColor)
-            topAppBar.toolbar?.collapseIcon = resources.getColoredDrawableWithColor(
-                drawableId = R.drawable.ic_arrow_left_vector,
-                color = contrastColor
-            )
-        }
+        topAppBar.setBackgroundColor(color)
+        topAppBar.toolbar?.setBackgroundColor(color)
+        topAppBar.toolbar?.setTitleTextColor(contrastColor)
+        topAppBar.toolbar?.navigationIcon?.applyColorFilter(contrastColor)
+        topAppBar.toolbar?.collapseIcon = resources.getColoredDrawableWithColor(
+            drawableId = R.drawable.ic_arrow_left_vector,
+            color = contrastColor
+        )
 
         topAppBar.toolbar?.overflowIcon =
             resources.getColoredDrawableWithColor(R.drawable.ic_three_dots_vector, contrastColor)

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- MochiPic: 複数選択中にステータスバーの所へ AppCompat が出す黒い帯を透明にして、色付きの上部バーが見えるようにする -->
+    <color name="abc_decor_view_status_guard" tools:override="true">#00000000</color>
+    <color name="abc_decor_view_status_guard_light" tools:override="true">#00000000</color>
+</resources>
