@@ -567,6 +567,8 @@ fun Activity.openEditorIntent(path: String, forceChooser: Boolean, applicationId
 
             putExtra(REAL_FILE_PATH, path)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            // MochiPic: 「編集」は自分の編集画面を直接開く（「ほかのアプリで編集」のときだけ選ぶ画面を出す）
+            if (!forceChooser) setPackage(applicationId)
 
             try {
                 val chooser = Intent.createChooser(this, getString(R.string.edit_with))

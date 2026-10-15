@@ -1,11 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- MochiPic: QP-Gallery と同じ編集画面の上部バー: [✓][共有][回転][反転] ︙ 縮小・切り抜き（縦横比）・解像度・選択範囲
+     （EditActivity の mochiQpMode で切り替え。ほかのアプリから切り抜きを頼まれたときは Fossify の形のまま） -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/save_as"
         android:icon="@drawable/ic_check_vector"
         android:title="@string/save_as"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/share"
+        android:icon="@drawable/ic_share_vector"
+        android:title="@string/share"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/mochi_edit_rotate"
+        android:icon="@drawable/ic_rotate_right_vector"
+        android:title="@string/rotate"
+        android:visible="false"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/mochi_edit_flip"
+        android:icon="@drawable/ic_flip_horizontally_vector"
+        android:title="@string/mochipic_edit_flip"
+        android:visible="false"
+        app:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/mochi_edit_flip_vertical"
+                android:title="@string/mochipic_edit_flip_vertical" />
+            <item
+                android:id="@+id/mochi_edit_flip_horizontal"
+                android:title="@string/mochipic_edit_flip_horizontal" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/mochi_edit_shrink"
+        android:title="@string/mochipic_edit_shrink"
+        android:visible="false"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/mochi_edit_crop"
+        android:title="@string/mochipic_edit_crop_ratio"
+        android:visible="false"
+        app:showAsAction="never">
+        <menu>
+            <item
+                android:id="@+id/mochi_ratio_free"
+                android:title="@string/mochipic_edit_ratio_free" />
+            <item
+                android:id="@+id/mochi_ratio_1_1"
+                android:title="1:1" />
+            <item
+                android:id="@+id/mochi_ratio_4_3"
+                android:title="4:3" />
+            <item
+                android:id="@+id/mochi_ratio_16_9"
+                android:title="16:9" />
+            <item
+                android:id="@+id/mochi_ratio_other"
+                android:title="@string/other" />
+        </menu>
+    </item>
+    <item
+        android:id="@+id/mochi_edit_resolution"
+        android:title="@string/mochipic_edit_resolution"
+        android:visible="false"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/mochi_edit_selection"
+        android:checkable="true"
+        android:checked="true"
+        android:title="@string/mochipic_edit_selection"
+        android:visible="false"
+        app:showAsAction="never" />
     <item
         android:id="@+id/overwrite_original"
         android:icon="@drawable/ic_check_vector"
@@ -16,9 +84,4 @@
         android:icon="@drawable/ic_edit_vector"
         android:title="@string/edit_with"
         app:showAsAction="never" />
-    <item
-        android:id="@+id/share"
-        android:icon="@drawable/ic_share_vector"
-        android:title="@string/share"
-        app:showAsAction="ifRoom" />
 </menu>

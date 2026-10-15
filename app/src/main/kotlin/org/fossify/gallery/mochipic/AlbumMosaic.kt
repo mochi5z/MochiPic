@@ -164,6 +164,21 @@ object AlbumMosaic {
         )
     }
 
+    /**
+     * フォルダの中の画像（表紙が先頭、最大 4 件）を取り出して [onReady] に渡す。覚えていればすぐ、なければ裏で調べてから。
+     * 行が別のアルバムに使い回されたときは、遅れて届いた結果を捨てる（目印は [tagView] の tag）。
+     */
+    fun withPaths(activity: Activity, dir: Directory, tagView: View, onReady: (List<String>) -> Unit) {
+        val key = cacheKey(dir)
+        tagView.tag = key
+        cache.get(key)?.let { onReady(it); return }
+        ensureBackgroundThread {
+            val paths = pickPaths(dir)
+            cache.put(key, paths)
+            activity.runOnUiThread { if (tagView.tag == key) onReady(paths) }
+        }
+    }
+
     /** 使わない View を隠す（リスト表示などで共通部品を使い回すとき用）。 */
     fun hide(vararg views: View) = views.forEach { it.beGone() }
 }

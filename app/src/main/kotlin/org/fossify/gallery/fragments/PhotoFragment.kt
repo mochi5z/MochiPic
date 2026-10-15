@@ -518,7 +518,8 @@ class PhotoFragment : ViewPagerFragment() {
             .signature(mMedium.getKey())
             .format(DecodeFormat.PREFER_ARGB_8888)
             .priority(priority)
-            .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
+            // MochiPic: 設定「プレビューをキャッシュする」がオフなら端末に保存しない
+            .diskCacheStrategy(if (requireContext().mochiPrefs.previewCache) DiskCacheStrategy.RESOURCE else DiskCacheStrategy.NONE)
             .fitCenter()
             .run {
                 if (mCurrentRotationDegrees != 0) {

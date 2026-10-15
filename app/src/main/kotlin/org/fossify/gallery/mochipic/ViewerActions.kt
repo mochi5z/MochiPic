@@ -14,30 +14,35 @@ import org.fossify.gallery.databinding.BottomActionsBinding
 object ViewerActions {
 
     /** 初期配置: QP-Gallery 9.7 のスクリーンショットに合わせる（︙メニューの中身は仮）。 */
+    /**
+     * 初期配置（QP-Gallery の画面に合わせ、ユーザーの指定で 移動・コピー・名前の変更 を上部バーに、編集と共有を︙に移した形）。
+     * 上部バー: 削除・移動・コピー・名前の変更、下部: 情報（解像度と日時の 1 行表示つき）、
+     * ︙: スライドショー・壁紙などに設定・回転・マップに表示・編集・共有・拡大・縮小。それ以外は非表示（ボタンの配置で出せる）。
+     */
     val DEFAULT_LAYOUT = ActionLayout(
         listOf(
-            ActionEntry(ActionId.EDIT, Slot.TOP),
             ActionEntry(ActionId.DELETE, Slot.TOP),
-            ActionEntry(ActionId.SHARE, Slot.TOP),
+            ActionEntry(ActionId.MOVE, Slot.TOP),
+            ActionEntry(ActionId.COPY, Slot.TOP),
+            ActionEntry(ActionId.RENAME, Slot.TOP),
             ActionEntry(ActionId.PROPERTIES, Slot.BOTTOM),
-            ActionEntry(ActionId.ZOOM_OUT, Slot.BOTTOM),
-            ActionEntry(ActionId.ZOOM_IN, Slot.BOTTOM),
             ActionEntry(ActionId.SLIDESHOW, Slot.MENU),
-            ActionEntry(ActionId.ROTATE, Slot.MENU),
-            ActionEntry(ActionId.RENAME, Slot.MENU),
-            ActionEntry(ActionId.COPY, Slot.MENU),
-            ActionEntry(ActionId.MOVE, Slot.MENU),
             ActionEntry(ActionId.SET_AS, Slot.MENU),
-            ActionEntry(ActionId.FAVORITE, Slot.MENU),
-            ActionEntry(ActionId.TOGGLE_VISIBILITY, Slot.MENU),
-            ActionEntry(ActionId.RESIZE, Slot.MENU),
-            ActionEntry(ActionId.CHANGE_ORIENTATION, Slot.MENU),
+            ActionEntry(ActionId.ROTATE, Slot.MENU),
             ActionEntry(ActionId.SHOW_ON_MAP, Slot.MENU),
-            ActionEntry(ActionId.OPEN_WITH, Slot.MENU),
-            ActionEntry(ActionId.COPY_TO_CLIPBOARD, Slot.MENU),
-            ActionEntry(ActionId.CREATE_SHORTCUT, Slot.MENU),
-            ActionEntry(ActionId.PRINT, Slot.MENU),
-            ActionEntry(ActionId.SETTINGS, Slot.MENU),
+            ActionEntry(ActionId.EDIT, Slot.MENU),
+            ActionEntry(ActionId.SHARE, Slot.MENU),
+            ActionEntry(ActionId.ZOOM_IN, Slot.MENU),
+            ActionEntry(ActionId.ZOOM_OUT, Slot.MENU),
+            ActionEntry(ActionId.FAVORITE, Slot.HIDDEN),
+            ActionEntry(ActionId.TOGGLE_VISIBILITY, Slot.HIDDEN),
+            ActionEntry(ActionId.RESIZE, Slot.HIDDEN),
+            ActionEntry(ActionId.CHANGE_ORIENTATION, Slot.HIDDEN),
+            ActionEntry(ActionId.OPEN_WITH, Slot.HIDDEN),
+            ActionEntry(ActionId.COPY_TO_CLIPBOARD, Slot.HIDDEN),
+            ActionEntry(ActionId.CREATE_SHORTCUT, Slot.HIDDEN),
+            ActionEntry(ActionId.PRINT, Slot.HIDDEN),
+            ActionEntry(ActionId.SETTINGS, Slot.HIDDEN),
         )
     )
 
@@ -171,8 +176,16 @@ object ViewerActions {
     /** 上部バーなら空きがある限りアイコンで出し（入りきらなければ自動で︙メニューへ）、メニューなら︙メニューに入れる。 */
     fun applyShowAsAction(menu: Menu, layout: ActionLayout) {
         for (entry in layout.entries) {
-            val flag = if (entry.slot == Slot.TOP) MenuItem.SHOW_AS_ACTION_IF_ROOM else MenuItem.SHOW_AS_ACTION_NEVER
-            menuIds(entry.action).forEach { id -> menu.findItem(id)?.setShowAsAction(flag) }
+            // 上部バーに置いたボタンは必ず出す（QP-Gallery と同じく 4 つ並ぶ）。アイコンのない項目にはアイコンを付ける
+            val flag = if (entry.slot == Slot.TOP) MenuItem.SHOW_AS_ACTION_ALWAYS else MenuItem.SHOW_AS_ACTION_NEVER
+            menuIds(entry.action).forEach { id ->
+                val item = menu.findItem(id) ?: return@forEach
+                item.setShowAsAction(flag)
+                if (entry.slot == Slot.TOP && item.icon == null && iconRes(entry.action) != 0) {
+                    item.setIcon(iconRes(entry.action))
+                    item.icon?.mutate()?.setTint(android.graphics.Color.WHITE)
+                }
+            }
         }
     }
 
@@ -183,5 +196,21 @@ object ViewerActions {
         val others = (0 until bar.childCount).map { bar.getChildAt(it) }.filter { it !in order }
         bar.removeAllViews()
         (order + others).forEach { bar.addView(it) }
+        // ボタンが少ないとき（初期配置は情報ボタンだけ）は、QP-Gallery と同じく左に寄せる
+        val few = order.size <= 2
+        bar.gravity = if (few) android.view.Gravity.START or android.view.Gravity.CENTER_VERTICAL else android.view.Gravity.CENTER
+        val pad = (16 * bar.resources.displayMetrics.density).toInt()
+        (order + others).forEach { v ->
+            val lp = v.layoutParams as LinearLayout.LayoutParams
+            if (few) {
+                lp.width = LinearLayout.LayoutParams.WRAP_CONTENT
+                lp.weight = 0f
+                v.setPadding(pad, v.paddingTop, pad, v.paddingBottom)
+            } else {
+                lp.width = 0
+                lp.weight = 1f
+            }
+            v.layoutParams = lp
+        }
     }
 }

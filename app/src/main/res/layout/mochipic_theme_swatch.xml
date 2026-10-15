@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MochiPic: テーマの見本 1 つ（上半分＝上部バーの色、下半分＝背景の色、選択中は左下にチェック） -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="92dp"
+    android:foreground="?attr/selectableItemBackground"
+    android:padding="2dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <View
+            android:id="@+id/swatch_bar"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+
+        <View
+            android:id="@+id/swatch_background"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1" />
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/swatch_check"
+        android:layout_width="24dp"
+        android:layout_height="24dp"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="10dp"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_check_vector"
+        android:tint="#FFFFFFFF"
+        android:visibility="gone" />
+</FrameLayout>

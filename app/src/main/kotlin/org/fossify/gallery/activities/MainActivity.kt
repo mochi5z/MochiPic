@@ -237,9 +237,12 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         setupOptionsMenu()
         if (!mIsThirdPartyIntent) {
             // MochiPic: 上部バーを QP-Gallery の「≡ アルバム」に
-            org.fossify.gallery.mochipic.QpTopBar.install(this, binding.mainMenu, getString(R.string.mochipic_album_title)) {
-                sideMenu?.toggle()
-            }
+            org.fossify.gallery.mochipic.QpTopBar.install(
+                this, binding.mainMenu, getString(R.string.mochipic_album_title), searchInOverflow = true,
+            ) { sideMenu?.toggle() }
+            binding.mainMenu.requireToolbar().menu.add(
+                android.view.Menu.NONE, R.id.mochi_include_folder, 200, R.string.mochipic_add_folder
+            ).setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_NEVER)
         }
         refreshMenuItems()
 
@@ -248,6 +251,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         )
 
         binding.directoriesRefreshLayout.setOnRefreshListener { getDirectories() }
+        org.fossify.gallery.mochipic.MochiCache.attachLazyLoad(this, binding.directoriesGrid)
         storeStateVariables()
         checkWhatsNewDialog()
         setupLatestMediaId()
@@ -388,6 +392,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     }
 
     override fun onDestroy() {
+        org.fossify.gallery.mochipic.MochiCache.onAppExit(this)
         super.onDestroy()
         if (!isChangingConfigurations) {
             config.temporarilyShowHidden = false
@@ -481,6 +486,17 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
             findItem(R.id.temporarily_show_excluded).isVisible = !config.temporarilyShowExcluded
             findItem(R.id.stop_showing_excluded).isVisible = config.temporarilyShowExcluded
         }
+
+        // MochiPic: QP-Gallery と同じく、上部バーは 並べ替え・表示モード・隠しフォルダの切り替え、︙は 検索・読み込むフォルダの追加 だけ
+        if (!mIsThirdPartyIntent) {
+            binding.mainMenu.requireToolbar().menu.apply {
+                listOf(
+                    R.id.filter, R.id.temporarily_show_excluded, R.id.stop_showing_excluded, R.id.set_as_default_folder,
+                    R.id.create_new_folder, R.id.open_recycle_bin, R.id.column_count, R.id.settings, R.id.about,
+                    R.id.more_apps_from_us, R.id.open_camera, R.id.show_all,
+                ).forEach { findItem(it)?.isVisible = false }
+            }
+        }
     }
 
     private fun setupOptionsMenu() {
@@ -510,6 +526,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         binding.mainMenu.requireToolbar().setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.mochi_search -> org.fossify.gallery.mochipic.QpTopBar.handleMenuClick(this, binding.mainMenu, menuItem)
+                R.id.mochi_include_folder -> startActivity(Intent(this, IncludedFoldersActivity::class.java))
                 R.id.sort -> showQpSortMenu() // MochiPic: QP 風の短いメニュー
                 R.id.filter -> showFilterMediaDialog()
                 R.id.open_camera -> launchCamera()

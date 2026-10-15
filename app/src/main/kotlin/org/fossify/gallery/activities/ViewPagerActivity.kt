@@ -954,8 +954,18 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
     private fun getCurrentFragment() = (binding.viewPager.adapter as? MyPagerAdapter)?.getCurrentFragment(binding.viewPager.currentItem)
 
     private fun showProperties() {
-        if (getCurrentMedium() != null) {
-            PropertiesDialog(this, getCurrentPath(), false)
+        // MochiPic: QP-Gallery と同じ短い詳細（何枚目／全体、パス・MIME・サイズ・解像度・撮影日時、［更新日時の修正］［OK］）
+        val medium = getCurrentMedium() ?: return
+        org.fossify.gallery.mochipic.MochiDetailsDialog.show(this, medium, mPos.coerceAtLeast(0), getCurrentMedia().size) {
+            org.fossify.commons.dialogs.ConfirmationDialog(
+                this,
+                message = getString(R.string.mochipic_fix_date_message),
+                positive = org.fossify.commons.R.string.ok,
+                negative = org.fossify.commons.R.string.cancel,
+                dialogTitle = getString(R.string.mochipic_fix_date),
+            ) {
+                fixDateTaken(arrayListOf(medium.path), true)
+            }
         }
     }
 

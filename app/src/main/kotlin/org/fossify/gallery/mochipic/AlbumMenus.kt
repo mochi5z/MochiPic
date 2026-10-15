@@ -31,30 +31,64 @@ object AlbumMenus {
     /** Fossify の他のメニューと同じテーマ（明るさ・文字色）で出す。 */
     private fun themed(activity: Activity) = ContextThemeWrapper(activity, activity.getPopupMenuTheme())
 
-    /** 表示形式: グリッド／リスト（選んでいるものに印）と、別枠の「エクスプローラー」（フォルダ階層をたどる画面へ）。 */
+    /** アルバム一覧の表示モード（QP-Gallery と同じ 4 つ）。 */
+    private val MODES = listOf(
+        AlbumStyles.Mode.DEFAULT to R.string.mochipic_view_default,
+        AlbumStyles.Mode.STACK to R.string.mochipic_view_stack,
+        AlbumStyles.Mode.GRID to R.string.mochipic_view_grid,
+        AlbumStyles.Mode.LIST to R.string.mochipic_view_list,
+    )
+
+    /**
+     * 表示モード: デフォルト／スタック／グリッド／リスト（選んでいるものに印）と、
+     * 別枠の「エクスプローラー」（チェックの入れ外しで、フォルダ階層をたどる画面との行き来）。
+     */
     fun showViewType(
         activity: Activity, anchor: View, onExplorer: (() -> Unit)? = null, explorerChecked: Boolean = false, onChanged: () -> Unit,
     ) {
         val config = activity.config
+        val current = AlbumStyles.current(config)
         val popup = PopupMenu(themed(activity), anchor, Gravity.END)
         val menu = popup.menu
-        menu.add(GROUP, VIEW_TYPE_GRID, 0, R.string.mochipic_view_grid)
-        menu.add(GROUP, VIEW_TYPE_LIST, 1, R.string.mochipic_view_list)
+        MODES.forEachIndexed { i, (mode, title) -> menu.add(GROUP, i, i, title).isChecked = mode == current }
         menu.setGroupCheckable(GROUP, true, true)
-        menu.findItem(config.viewTypeFolders)?.isChecked = true
+        MODES.indexOfFirst { it.first == current }.takeIf { it >= 0 }?.let { menu.findItem(it)?.isChecked = true }
         if (onExplorer != null) {
-            menu.add(GROUP_EXPLORER, EXPLORER, 2, R.string.mochipic_view_explorer).apply {
+            menu.add(GROUP_EXPLORER, EXPLORER, MODES.size, R.string.mochipic_view_explorer).apply {
                 isCheckable = true
                 isChecked = explorerChecked
             }
         }
         popup.setOnMenuItemClickListener { item ->
-            when {
-                item.itemId == EXPLORER -> onExplorer?.invoke()
-                item.itemId != config.viewTypeFolders -> {
-                    config.viewTypeFolders = item.itemId
+            if (item.itemId == EXPLORER) {
+                onExplorer?.invoke()
+            } else {
+                val mode = MODES[item.itemId].first
+                if (mode != current) {
+                    AlbumStyles.set(config, mode)
                     onChanged()
                 }
+            }
+            true
+        }
+        popup.show()
+    }
+
+    /** アルバムの中身の表示モード: グリッド／リスト（QP-Gallery と同じ 2 つ）。 */
+    fun showMediaViewType(activity: Activity, anchor: View, path: String, onChanged: () -> Unit) {
+        val config = activity.config
+        val current = config.getFolderViewType(path)
+        val popup = PopupMenu(themed(activity), anchor, Gravity.END)
+        val menu = popup.menu
+        menu.add(GROUP, VIEW_TYPE_GRID, 0, R.string.mochipic_view_grid)
+        menu.add(GROUP, VIEW_TYPE_LIST, 1, R.string.mochipic_view_list)
+        menu.setGroupCheckable(GROUP, true, true)
+        menu.findItem(current)?.isChecked = true
+        popup.setOnMenuItemClickListener { item ->
+            if (item.itemId != current) {
+                config.viewTypeFiles = item.itemId
+                config.removeFolderViewType(path)
+                onChanged()
             }
             true
         }

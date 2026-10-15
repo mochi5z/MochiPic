@@ -7,7 +7,33 @@ import org.junit.Test
 
 class ActionLayoutTest {
 
-    private val defaults = ViewerActions.DEFAULT_LAYOUT
+    /** テスト用の配置（初期配置が変わってもテストが変わらないように固定）。 */
+    private val defaults = ActionLayout(
+        listOf(
+            ActionEntry(ActionId.EDIT, Slot.TOP),
+            ActionEntry(ActionId.DELETE, Slot.TOP),
+            ActionEntry(ActionId.SHARE, Slot.TOP),
+            ActionEntry(ActionId.PROPERTIES, Slot.BOTTOM),
+            ActionEntry(ActionId.ZOOM_OUT, Slot.BOTTOM),
+            ActionEntry(ActionId.ZOOM_IN, Slot.BOTTOM),
+            ActionEntry(ActionId.SLIDESHOW, Slot.MENU),
+            ActionEntry(ActionId.ROTATE, Slot.MENU),
+            ActionEntry(ActionId.RENAME, Slot.MENU),
+            ActionEntry(ActionId.COPY, Slot.MENU),
+            ActionEntry(ActionId.MOVE, Slot.MENU),
+            ActionEntry(ActionId.SET_AS, Slot.MENU),
+            ActionEntry(ActionId.FAVORITE, Slot.MENU),
+            ActionEntry(ActionId.TOGGLE_VISIBILITY, Slot.MENU),
+            ActionEntry(ActionId.RESIZE, Slot.MENU),
+            ActionEntry(ActionId.CHANGE_ORIENTATION, Slot.MENU),
+            ActionEntry(ActionId.SHOW_ON_MAP, Slot.MENU),
+            ActionEntry(ActionId.OPEN_WITH, Slot.MENU),
+            ActionEntry(ActionId.COPY_TO_CLIPBOARD, Slot.MENU),
+            ActionEntry(ActionId.CREATE_SHORTCUT, Slot.MENU),
+            ActionEntry(ActionId.PRINT, Slot.MENU),
+            ActionEntry(ActionId.SETTINGS, Slot.MENU),
+        )
+    )
 
     @Test
     fun defaultLayoutMatchesQpGallery() {
@@ -82,5 +108,17 @@ class ActionLayoutTest {
         assertFalse(layout.hasAny(Slot.BOTTOM))
         assertEquals(Slot.MENU, layout.slotOf(ActionId.PROPERTIES))
         assertTrue(defaults.hasAny(Slot.BOTTOM))
+    }
+
+    @Test
+    fun qpDefaultLayout() {
+        val d = ViewerActions.DEFAULT_LAYOUT
+        assertEquals(listOf(ActionId.DELETE, ActionId.MOVE, ActionId.COPY, ActionId.RENAME), d.inSlot(Slot.TOP))
+        assertEquals(listOf(ActionId.PROPERTIES), d.inSlot(Slot.BOTTOM))
+        assertEquals(
+            listOf(ActionId.SLIDESHOW, ActionId.SET_AS, ActionId.ROTATE, ActionId.SHOW_ON_MAP, ActionId.EDIT, ActionId.SHARE, ActionId.ZOOM_IN, ActionId.ZOOM_OUT),
+            d.inSlot(Slot.MENU),
+        )
+        assertEquals(ActionId.entries.toSet(), d.entries.map { it.action }.toSet())
     }
 }

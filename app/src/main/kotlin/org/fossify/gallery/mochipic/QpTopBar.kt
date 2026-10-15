@@ -31,6 +31,7 @@ object QpTopBar {
         title: String,
         nav: Nav = Nav.MENU,
         withSearch: Boolean = true,
+        searchInOverflow: Boolean = false,
         onNav: () -> Unit,
     ) {
         val b = bar.binding
@@ -67,8 +68,12 @@ object QpTopBar {
 
         if (withSearch) {
             val search = bar.requireToolbar().menu.add(Menu.NONE, R.id.mochi_search, Menu.NONE, org.fossify.commons.R.string.search)
-            search.setIcon(org.fossify.commons.R.drawable.ic_search_vector)
-            search.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            if (searchInOverflow) {
+                search.setShowAsAction(MenuItem.SHOW_AS_ACTION_NEVER)  // QP-Gallery のアルバム一覧は︙の中
+            } else {
+                search.setIcon(org.fossify.commons.R.drawable.ic_search_vector)
+                search.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+            }
         }
     }
 

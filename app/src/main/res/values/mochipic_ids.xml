@@ -2,4 +2,9 @@
 <resources>
     <item name="mochi_search" type="id" />
     <item name="mochi_top_bar_title" type="id" />
+    <item name="mochi_include_folder" type="id" />
+    <item name="mochi_hide_folder" type="id" />
+    <item name="mochi_exclude_folder" type="id" />
+    <item name="mochi_rename_folder" type="id" />
+    <item name="mochi_fix_date" type="id" />
 </resources>

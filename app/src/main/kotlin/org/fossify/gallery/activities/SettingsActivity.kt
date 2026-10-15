@@ -15,7 +15,6 @@ import org.fossify.commons.models.RadioItem
 import org.fossify.gallery.R
 import org.fossify.gallery.mochipic.ButtonLayoutActivity
 import org.fossify.gallery.mochipic.SettingsCategory
-import org.fossify.gallery.mochipic.ThemePresets
 import org.fossify.gallery.databinding.ActivitySettingsBinding
 import org.fossify.gallery.dialogs.*
 import org.fossify.gallery.extensions.*
@@ -70,8 +69,8 @@ class SettingsActivity : SimpleActivity() {
             val name = if (child.id != android.view.View.NO_ID) {
                 try { resources.getResourceEntryName(child.id) } catch (e: Exception) { null }
             } else null
-            name?.let { SettingsCategory.SECTION_OF[it] }?.let { sectionCategory = it }
-            val itemCategory = name?.let { SettingsCategory.ITEM_OVERRIDE[it] } ?: sectionCategory
+            if (name != null && SettingsCategory.SECTION_OF.containsKey(name)) sectionCategory = SettingsCategory.SECTION_OF[name]
+            val itemCategory = if (name != null && SettingsCategory.ITEM_OVERRIDE.containsKey(name)) SettingsCategory.ITEM_OVERRIDE[name] else sectionCategory
             // 表示する側の項目は触らない（Fossify の各 setup が出し入れしている）
             if (itemCategory != category) child.beGone()
         }
@@ -123,6 +122,7 @@ class SettingsActivity : SimpleActivity() {
         setupMochiSingleTapZoom()
         setupMochiTheme()
         setupMochiSlideshow()
+        setupMochiCache()
         setupAllowInstantChange()
         setupShowExtendedDetails()
         setupHideExtendedDetails()
@@ -633,13 +633,7 @@ class SettingsActivity : SimpleActivity() {
     private fun setupMochiTheme() {
         binding.settingsMochiTheme.text = getString(R.string.mochipic_theme_row_summary)
         binding.settingsMochiThemeHolder.setOnClickListener {
-            ThemePresets.show(this) {
-                // recreate() だと、色を変えた直後だけ上部バーの位置がずれるので、開き直す
-                startActivity(Intent(this, SettingsActivity::class.java).putExtras(intent))
-                finish()
-                @Suppress("DEPRECATION")
-                overridePendingTransition(0, 0)
-            }
+            startActivity(Intent(this, org.fossify.gallery.mochipic.ThemeActivity::class.java))
         }
     }
 
@@ -686,6 +680,31 @@ class SettingsActivity : SimpleActivity() {
         binding.settingsMochiSlideshowLoopHolder.setOnClickListener {
             binding.settingsMochiSlideshowLoop.toggle()
             config.loopSlideshow = binding.settingsMochiSlideshowLoop.isChecked
+        }
+    }
+
+    private fun setupMochiCache() {
+        val prefs = org.fossify.gallery.mochipic.MochiPicPrefs(this)
+        binding.settingsMochiPreviewCache.isChecked = prefs.previewCache
+        binding.settingsMochiPreviewCacheHolder.setOnClickListener {
+            binding.settingsMochiPreviewCache.toggle()
+            prefs.previewCache = binding.settingsMochiPreviewCache.isChecked
+        }
+        binding.settingsMochiLazyLoad.isChecked = prefs.lazyLoad
+        binding.settingsMochiLazyLoadHolder.setOnClickListener {
+            binding.settingsMochiLazyLoad.toggle()
+            prefs.lazyLoad = binding.settingsMochiLazyLoad.isChecked
+        }
+        binding.settingsMochiClearOnExit.isChecked = prefs.clearCacheOnExit
+        binding.settingsMochiClearOnExitHolder.setOnClickListener {
+            binding.settingsMochiClearOnExit.toggle()
+            prefs.clearCacheOnExit = binding.settingsMochiClearOnExit.isChecked
+        }
+        binding.settingsMochiClearPreviewsHolder.setOnClickListener {
+            org.fossify.gallery.mochipic.MochiCache.clearPreviews(this) { toast(R.string.mochipic_cache_cleared) }
+        }
+        binding.settingsMochiClearThumbnailsHolder.setOnClickListener {
+            org.fossify.gallery.mochipic.MochiCache.clearThumbnails(this) { toast(R.string.mochipic_cache_cleared) }
         }
     }
 

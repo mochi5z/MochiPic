@@ -1126,6 +1126,100 @@
                 android:id="@+id/settings_mochi_slideshow_divider"
                 layout="@layout/divider" />
 
+            <!-- MochiPic: キャッシュ（QP-Gallery と同じ項目） -->
+            <TextView
+                android:id="@+id/settings_mochi_cache_image_label"
+                style="@style/SettingsSectionLabelStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/mochipic_cache_image" />
+
+            <RelativeLayout
+                android:id="@+id/settings_mochi_preview_cache_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_mochi_preview_cache"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_cache_preview" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_mochi_lazy_load_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_mochi_lazy_load"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_cache_lazy" />
+
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/settings_mochi_cache_clear_label"
+                style="@style/SettingsSectionLabelStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/mochipic_cache_clear" />
+
+            <RelativeLayout
+                android:id="@+id/settings_mochi_clear_on_exit_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_mochi_clear_on_exit"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_cache_clear_on_exit" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_mochi_clear_previews_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_mochi_clear_previews"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_cache_clear_previews" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_mochi_clear_thumbnails_holder"
+                style="@style/SettingsHolderTextViewOneLinerStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_mochi_clear_thumbnails"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_cache_clear_thumbnails" />
+
+            </RelativeLayout>
+
+            <include
+                android:id="@+id/settings_mochi_cache_divider"
+                layout="@layout/divider" />
+
             <TextView
                 android:id="@+id/settings_migrating_label"
                 style="@style/SettingsSectionLabelStyle"

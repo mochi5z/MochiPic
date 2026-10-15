@@ -177,6 +177,22 @@ class EditActivity : BaseCropActivity() {
                 R.id.overwrite_original -> startSaveFlow(overwrite = true)
                 R.id.edit -> editWith()
                 R.id.share -> shareImage()
+                R.id.mochi_edit_rotate -> binding.cropImageView.rotateImage(90)
+                R.id.mochi_edit_flip_vertical -> binding.cropImageView.flipImageVertically()
+                R.id.mochi_edit_flip_horizontal -> binding.cropImageView.flipImageHorizontally()
+                R.id.mochi_edit_shrink, R.id.mochi_edit_resolution -> resizeImage()  // QP-Gallery でもどちらもピクセルで大きさを変える
+                R.id.mochi_ratio_free -> updateAspectRatio(ASPECT_RATIO_FREE)
+                R.id.mochi_ratio_1_1 -> updateAspectRatio(ASPECT_RATIO_ONE_ONE)
+                R.id.mochi_ratio_4_3 -> updateAspectRatio(ASPECT_RATIO_FOUR_THREE)
+                R.id.mochi_ratio_16_9 -> updateAspectRatio(ASPECT_RATIO_SIXTEEN_NINE)
+                R.id.mochi_ratio_other -> OtherAspectRatioDialog(this, lastOtherAspectRatio) {
+                    lastOtherAspectRatio = it
+                    config.lastEditorCropOtherAspectRatioX = it.first
+                    config.lastEditorCropOtherAspectRatioY = it.second
+                    updateAspectRatio(ASPECT_RATIO_OTHER)
+                }
+                R.id.mochi_edit_selection -> toggleSelection(menuItem)
+                R.id.mochi_edit_flip, R.id.mochi_edit_crop -> return@setOnMenuItemClickListener false  // 中の項目を出す
                 else -> return@setOnMenuItemClickListener false
             }
             return@setOnMenuItemClickListener true
@@ -247,6 +263,45 @@ class EditActivity : BaseCropActivity() {
         updateAspectRatio(config.lastEditorCropAspectRatio)
         binding.cropImageView.guidelines = CropImageView.Guidelines.ON
         binding.bottomAspectRatios.root.beVisible()
+        mochiQpMode()
+    }
+
+    // ---------------------------------------------------------------- MochiPic: QP-Gallery と同じ編集画面
+
+    /**
+     * 開いたらすぐ白い切り抜き枠（3×3 の格子）を出し、下のボタン列は使わない。
+     * 操作は上部バー: [✓ 保存][共有][回転][反転] ︙ 縮小・切り抜き（縦横比）・解像度・選択範囲。
+     */
+    private fun mochiQpMode() {
+        if (isCropIntent) return
+        currPrimaryAction = PRIMARY_ACTION_CROP_ROTATE
+        updatePrimaryActionButtons()
+        listOf(
+            binding.bottomEditorPrimaryActions.root,
+            binding.bottomEditorCropRotateActions.root,
+            binding.bottomEditorFilterActions.root,
+            binding.bottomEditorDrawActions.root,
+            binding.bottomAspectRatios.root,
+            binding.bottomEditorActionsBackground,
+        ).forEach { it.beGone() }
+        binding.editorToolbar.menu.apply {
+            listOf(
+                R.id.mochi_edit_rotate, R.id.mochi_edit_flip, R.id.mochi_edit_shrink,
+                R.id.mochi_edit_crop, R.id.mochi_edit_resolution, R.id.mochi_edit_selection,
+            ).forEach { findItem(it)?.isVisible = true }
+            findItem(R.id.overwrite_original)?.isVisible = false
+            findItem(R.id.edit)?.isVisible = false
+        }
+    }
+
+    /** 選択範囲のオン・オフ。オフなら枠を消して画像全体を対象にする。 */
+    private fun toggleSelection(item: android.view.MenuItem) {
+        val show = !item.isChecked
+        item.isChecked = show
+        binding.cropImageView.apply {
+            if (!show) wholeImageRect?.let { cropRect = it }
+            isShowCropOverlay = show
+        }
     }
 
     override fun onDestroy() {

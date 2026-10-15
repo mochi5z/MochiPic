@@ -10,6 +10,7 @@ import org.fossify.commons.helpers.PROTECTION_PATTERN
 import org.fossify.commons.helpers.SORT_BY_DATE_MODIFIED
 import org.fossify.commons.helpers.SORT_DESCENDING
 import org.fossify.commons.helpers.VIEW_TYPE_GRID
+import org.fossify.commons.helpers.VIEW_TYPE_LIST
 import org.fossify.gallery.R
 import org.fossify.gallery.models.AlbumCover
 import java.util.Arrays
@@ -366,7 +367,7 @@ class Config(context: Context) : BaseConfig(context) {
         set(tempFolderPath) = prefs.edit().putString(TEMP_FOLDER_PATH, tempFolderPath).apply()
 
     var viewTypeFolders: Int
-        get() = prefs.getInt(VIEW_TYPE_FOLDERS, VIEW_TYPE_GRID)
+        get() = prefs.getInt(VIEW_TYPE_FOLDERS, VIEW_TYPE_LIST) // MochiPic: 初期値は QP-Gallery と同じくリスト
         set(viewTypeFolders) = prefs.edit().putInt(VIEW_TYPE_FOLDERS, viewTypeFolders).apply()
 
     var viewTypeFiles: Int

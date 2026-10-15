@@ -64,6 +64,7 @@ class ExplorerActivity : SimpleActivity() {
         }
         binding.explorerList.layoutManager = GridLayoutManager(this, FolderTileAdapter.spanCount(this))
         binding.explorerList.adapter = adapter
+        MochiCache.attachLazyLoad(this, binding.explorerList)
 
         currentPath = savedInstanceState?.getString(STATE_PATH) ?: rootPath()
     }
@@ -115,6 +116,11 @@ class ExplorerActivity : SimpleActivity() {
             }
             true
         }
+    }
+
+    override fun onDestroy() {
+        MochiCache.onAppExit(this)
+        super.onDestroy()
     }
 
     override fun onBackPressedCompat(): Boolean {

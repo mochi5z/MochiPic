@@ -14,7 +14,6 @@ import org.fossify.gallery.R
 import org.fossify.gallery.activities.SettingsActivity
 import org.fossify.gallery.activities.SimpleActivity
 import org.fossify.gallery.databinding.ActivityMochiSettingsTopBinding
-import org.fossify.gallery.extensions.launchAbout
 
 /** MochiPic: 設定のいちばん上の画面（分類の一覧）。分類を選ぶと [SettingsActivity] がその分類の項目だけを出す。 */
 class SettingsCategoriesActivity : SimpleActivity() {
@@ -52,6 +51,6 @@ class SettingsCategoriesActivity : SimpleActivity() {
                 startActivity(Intent(this, SettingsActivity::class.java).putExtra(SettingsActivity.EXTRA_CATEGORY, cat.key))
             }
         }
-        addRow(R.string.mochipic_cat_about, R.string.mochipic_cat_about_summary, R.drawable.mochipic_ic_cat_about) { launchAbout() }
+        addRow(R.string.mochipic_cat_about, R.string.mochipic_cat_about_summary, R.drawable.mochipic_ic_cat_about) { MochiAbout.show(this) }
     }
 }

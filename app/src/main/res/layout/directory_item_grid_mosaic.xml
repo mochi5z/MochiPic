@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- MochiPic: QP-Gallery 風のアルバム表示（中の画像 4 枚を 2×2、下に「名前 枚数」） -->
+<!-- MochiPic: QP-Gallery 風のアルバム表示。モザイク（2×2）・デフォルト（表紙 1 枚＋名前と枚数の 2 行）・スタック（表紙の右に重なり）を
+     この 1 つの部品で切り替える（AlbumStyles.kt） -->
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/dir_holder"
@@ -8,6 +9,21 @@
     android:clickable="true"
     android:focusable="true"
     android:padding="1dp">
+
+    <!-- スタック表示で表紙の右に重ねる 2・3 枚目（表紙より奥に描くので先に置く） -->
+    <org.fossify.commons.views.MySquareImageView
+        android:id="@+id/stack_layer2"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
+
+    <org.fossify.commons.views.MySquareImageView
+        android:id="@+id/stack_layer1"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scaleType="centerCrop"
+        android:visibility="gone" />
 
     <org.fossify.commons.views.MySquareImageView
         android:id="@+id/dir_thumbnail"

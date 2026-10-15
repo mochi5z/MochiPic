@@ -31,9 +31,10 @@
         app:showAsAction="never" />
     <item
         android:id="@+id/change_view_type"
-        android:showAsAction="never"
+        android:icon="@drawable/mochipic_ic_view_mode"
         android:title="@string/change_view_type"
-        app:showAsAction="never" />
+        android:showAsAction="always"
+        app:showAsAction="always" />
     <item
         android:id="@+id/temporarily_show_hidden"
         android:showAsAction="never"

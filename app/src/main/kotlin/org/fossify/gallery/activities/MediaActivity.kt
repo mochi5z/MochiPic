@@ -1,5 +1,12 @@
 package org.fossify.gallery.activities
 
+import org.fossify.gallery.extensions.addNoMedia
+import org.fossify.commons.extensions.isAStorageRootFolder
+import org.fossify.commons.dialogs.RenameItemDialog
+import org.fossify.gallery.extensions.updateDirectoryPath
+import org.fossify.commons.dialogs.ConfirmationDialog
+import org.fossify.gallery.extensions.fixDateTaken
+import org.fossify.gallery.dialogs.ExcludeFolderDialog
 import android.app.WallpaperManager
 import android.content.Intent
 import android.graphics.Bitmap
@@ -173,6 +180,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         }
 
         binding.mediaRefreshLayout.setOnRefreshListener { getMedia() }
+        org.fossify.gallery.mochipic.MochiCache.attachLazyLoad(this, binding.mediaGrid)
         try {
             mPath = intent.getStringExtra(DIRECTORY) ?: ""
         } catch (e: Exception) {
@@ -200,6 +208,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
                     this, binding.mediaMenu, mochiDirName(),
                     nav = org.fossify.gallery.mochipic.QpTopBar.Nav.BACK, withSearch = false,
                 ) { performDefaultBack() }
+                addQpMenuItems()
             }
         }
         refreshMenuItems()
@@ -385,6 +394,74 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
             val viewType = config.getFolderViewType(if (mShowAll) SHOW_ALL else mPath)
             findItem(R.id.column_count).isVisible = viewType == VIEW_TYPE_GRID
             findItem(R.id.toggle_filename).isVisible = viewType == VIEW_TYPE_GRID
+
+            // MochiPic: 普通のアルバムの中身は QP-Gallery と同じく、上部バーは 並べ替え・スライドショー・表示モード、
+            // ︙は 隠しフォルダにする・除外フォルダにする・フォルダ名の変更・更新日時の修正 だけ
+            if (isQpMenu()) {
+                val keep = setOf(
+                    R.id.sort, R.id.slideshow, R.id.change_view_type,
+                    R.id.mochi_hide_folder, R.id.mochi_exclude_folder, R.id.mochi_rename_folder, R.id.mochi_fix_date,
+                )
+                for (i in 0 until size()) {
+                    val item = getItem(i)
+                    if (item.itemId !in keep) item.isVisible = false
+                }
+            }
+        }
+    }
+
+    private fun isQpMenu() = mQpTitle && mPath != RECYCLE_BIN && mPath != FAVORITES
+
+    private fun addQpMenuItems() {
+        if (!isQpMenu()) return
+        binding.mediaMenu.requireToolbar().menu.apply {
+            listOf(
+                R.id.mochi_hide_folder to R.string.mochipic_hide_folder,
+                R.id.mochi_exclude_folder to R.string.mochipic_exclude_folder,
+                R.id.mochi_rename_folder to R.string.mochipic_rename_folder,
+                R.id.mochi_fix_date to R.string.mochipic_fix_date,
+            ).forEachIndexed { i, (id, title) ->
+                add(android.view.Menu.NONE, id, 300 + i, title).setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_NEVER)
+            }
+        }
+    }
+
+    private fun mochiHideFolder() {
+        addNoMedia(mPath) { runOnUiThread { finish() } }
+    }
+
+    private fun mochiRenameFolder() {
+        val dir = File(mPath)
+        if (isAStorageRootFolder(dir.absolutePath)) {
+            toast(org.fossify.commons.R.string.rename_folder_root)
+            return
+        }
+        RenameItemDialog(this, dir.absolutePath) { newPath ->
+            ensureBackgroundThread {
+                try {
+                    updateDirectoryPath(newPath)
+                } catch (ignored: Exception) {
+                }
+            }
+            runOnUiThread {
+                startActivity(Intent(this, MediaActivity::class.java).putExtra(DIRECTORY, newPath))
+                finish()
+            }
+        }
+    }
+
+    private fun mochiFixDate() {
+        ConfirmationDialog(
+            this,
+            message = getString(R.string.mochipic_fix_date_message),
+            positive = org.fossify.commons.R.string.ok,
+            negative = org.fossify.commons.R.string.cancel,
+            dialogTitle = getString(R.string.mochipic_fix_date),
+        ) {
+            val paths = mMedia.filterIsInstance<Medium>().map { it.path }
+            if (paths.isNotEmpty()) {
+                fixDateTaken(ArrayList(paths), true) { runOnUiThread { refreshItems() } }
+            }
         }
     }
 
@@ -402,6 +479,10 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         binding.mediaMenu.requireToolbar().setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.mochi_search -> org.fossify.gallery.mochipic.QpTopBar.handleMenuClick(this, binding.mediaMenu, menuItem)
+                R.id.mochi_hide_folder -> mochiHideFolder()
+                R.id.mochi_exclude_folder -> ExcludeFolderDialog(this, listOf(mPath)) { finish() }
+                R.id.mochi_rename_folder -> mochiRenameFolder()
+                R.id.mochi_fix_date -> mochiFixDate()
                 R.id.sort -> showSortingDialog()
                 R.id.filter -> showFilterMediaDialog()
                 R.id.empty_recycle_bin -> emptyRecycleBin()
@@ -657,6 +738,16 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     }
 
     private fun changeViewType() {
+        if (isQpMenu()) {
+            // MochiPic: QP-Gallery と同じく、右上から出る短いメニューでグリッド／リストを選ぶ
+            org.fossify.gallery.mochipic.AlbumMenus.showMediaViewType(this, binding.mediaMenu, mPath) {
+                refreshMenuItems()
+                setupLayoutManager()
+                binding.mediaGrid.adapter = null
+                setupAdapter()
+            }
+            return
+        }
         ChangeViewTypeDialog(this, false, mPath) {
             refreshMenuItems()
             setupLayoutManager()

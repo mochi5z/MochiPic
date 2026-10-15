@@ -158,7 +158,7 @@ class DirectoryAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = when {
             isListViewType -> DirectoryItemListBinding.inflate(layoutInflater, parent, false)
-            folderStyle == FOLDER_STYLE_MOSAIC -> DirectoryItemGridMosaicBinding.inflate(layoutInflater, parent, false)
+            org.fossify.gallery.mochipic.AlbumStyles.usesTile(folderStyle) -> DirectoryItemGridMosaicBinding.inflate(layoutInflater, parent, false)
             folderStyle == FOLDER_STYLE_SQUARE -> DirectoryItemGridSquareBinding.inflate(layoutInflater, parent, false)
             else -> DirectoryItemGridRoundedCornersBinding.inflate(layoutInflater, parent, false)
         }
@@ -938,9 +938,7 @@ class DirectoryAdapter(
             if (lockedFolderPaths.contains(directory.path)) {
                 dirLock.beVisible()
                 if (this is org.fossify.gallery.adapters.GridDirectoryItemMosaicBinding) {
-                    binding.mosaicGrid.tag = null
-                    binding.mosaicGrid.beGone()
-                    binding.mosaicPlaySingle.beGone()
+                    org.fossify.gallery.mochipic.AlbumStyles.reset(activity, this)
                 }
                 dirLock.background = ColorDrawable(root.context.getProperBackgroundColor())
                 dirLock.applyColorFilter(root.context.getProperBackgroundColor().getContrastColor())
@@ -948,7 +946,7 @@ class DirectoryAdapter(
                 dirLock.beGone()
                 val roundedCorners = when {
                     isListViewType -> ROUNDED_CORNERS_SMALL
-                    folderStyle == FOLDER_STYLE_SQUARE || folderStyle == FOLDER_STYLE_MOSAIC -> ROUNDED_CORNERS_NONE
+                    folderStyle == FOLDER_STYLE_SQUARE || org.fossify.gallery.mochipic.AlbumStyles.usesTile(folderStyle) -> ROUNDED_CORNERS_NONE
                     else -> ROUNDED_CORNERS_BIG
                 }
 
@@ -975,9 +973,9 @@ class DirectoryAdapter(
                     }
                 )
 
-                // MochiPic: モザイク表示なら 2×2 のマスに中の画像を並べる
+                // MochiPic: 表示モード（デフォルト・スタック・グリッド＝モザイク）ごとの見た目
                 if (this is org.fossify.gallery.adapters.GridDirectoryItemMosaicBinding) {
-                    AlbumMosaic.bind(activity, this, directory, animateGifs, cropThumbnails)
+                    org.fossify.gallery.mochipic.AlbumStyles.bind(activity, this, directory, folderStyle, animateGifs, cropThumbnails)
                 }
             }
 
@@ -1009,12 +1007,14 @@ class DirectoryAdapter(
             dirName.text = nameCount
 
             // MochiPic: モザイクとリストは QP-Gallery と同じく「名前 枚数」（枚数は小さく薄く）
-            if ((folderStyle == FOLDER_STYLE_MOSAIC && !isListViewType) || isListViewType) {
+            if (this is org.fossify.gallery.adapters.GridDirectoryItemMosaicBinding) {
+                org.fossify.gallery.mochipic.AlbumStyles.label(activity, this, folderStyle, nameCount, directory.subfoldersMediaCount, textColor)
+            } else if (isListViewType) {
                 photoCnt.beGone()
                 dirName.text = AlbumMosaic.label(nameCount, directory.subfoldersMediaCount, textColor)
             }
 
-            if (isListViewType || folderStyle == FOLDER_STYLE_ROUNDED_CORNERS || folderStyle == FOLDER_STYLE_MOSAIC) {
+            if (isListViewType || folderStyle == FOLDER_STYLE_ROUNDED_CORNERS || org.fossify.gallery.mochipic.AlbumStyles.usesTile(folderStyle)) {
                 photoCnt.setTextColor(textColor)
                 dirName.setTextColor(textColor)
                 dirLocation.applyColorFilter(textColor)
@@ -1078,7 +1078,7 @@ class DirectoryAdapter(
     private fun bindItem(view: View): DirectoryItemBinding {
         return when {
             isListViewType -> DirectoryItemListBinding.bind(view).toItemBinding()
-            folderStyle == FOLDER_STYLE_MOSAIC -> DirectoryItemGridMosaicBinding.bind(view).toItemBinding()
+            org.fossify.gallery.mochipic.AlbumStyles.usesTile(folderStyle) -> DirectoryItemGridMosaicBinding.bind(view).toItemBinding()
             folderStyle == FOLDER_STYLE_SQUARE -> DirectoryItemGridSquareBinding.bind(view).toItemBinding()
             else -> DirectoryItemGridRoundedCornersBinding.bind(view).toItemBinding()
         }

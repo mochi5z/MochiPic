@@ -93,25 +93,27 @@ class FolderTileAdapter(
 
     private fun bindGrid(b: DirectoryItemGridMosaicBinding, tile: FolderTile) {
         listOf(b.dirLock, b.dirCheck, b.dirPin, b.dirDragHandleWrapper, b.dirLocation, b.photoCnt).forEach { it.beGone() }
-        b.dirName.setTextColor(textColor)
-        if (labelAtStart) {
-            b.dirName.gravity = Gravity.START or Gravity.CENTER_VERTICAL
-            b.dirName.text = tile.name
-        } else {
-            b.dirName.gravity = Gravity.CENTER
-            b.dirName.text = AlbumMosaic.label(tile.name, tile.count, textColor)
-        }
-
-        b.mosaicGrid.beGone()
-        b.mosaicGrid.tag = null
-        b.dirThumbnail.alpha = 1f
-        b.mosaicPlaySingle.beVisibleIf(tile.thumb?.isVideoFast() == true)
+        val wrapper = GridDirectoryItemMosaicBinding(b)
+        AlbumStyles.reset(activity, wrapper)
         loadThumb(b.dirThumbnail, tile, big = true)
 
-        if (mosaic && tile.thumb != null) {
-            val dir = Directory(null, tile.path, tile.thumb, tile.name, tile.count, tile.modified, 0L, 0L, 0, 0, "")
-            AlbumMosaic.bind(activity, GridDirectoryItemMosaicBinding(b), dir, animateGifs = false, cropThumbnails = true)
+        if (labelAtStart) {
+            // 日付表示: 表紙 1 枚と左寄せの月名（QP-Gallery と同じ）
+            b.dirName.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            b.dirName.text = tile.name
+            b.dirName.setTextColor(textColor)
+            b.mosaicPlaySingle.beVisibleIf(tile.thumb?.isVideoFast() == true)
+            return
         }
+
+        // エクスプローラー: アルバム一覧と同じ表示モード（デフォルト・スタック・グリッド）
+        val style = if (mosaic) activity.config.folderStyle else FOLDER_STYLE_QP_DEFAULT
+        if (tile.thumb != null) {
+            val dir = Directory(null, tile.path, tile.thumb, tile.name, tile.count, tile.modified, 0L, 0L, 0, 0, "")
+            AlbumStyles.bind(activity, wrapper, dir, style, animateGifs = false, crop = true)
+        }
+        AlbumStyles.label(activity, wrapper, style, tile.name, tile.count, textColor)
+        if (tile.count <= 0) b.photoCnt.beGone()
     }
 
     private fun bindList(b: DirectoryItemListBinding, tile: FolderTile) {

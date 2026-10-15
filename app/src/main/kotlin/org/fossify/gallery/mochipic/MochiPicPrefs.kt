@@ -15,6 +15,21 @@ class MochiPicPrefs(context: Context) {
     var explorerMode: Boolean
         get() = prefs.getBoolean("explorer_mode", false)
         set(value) = prefs.edit().putBoolean("explorer_mode", value).apply()
+
+    /** オン: 表示画面で開いた画像（プレビュー）を端末に保存しておき、次に開くときに速く出す。 */
+    var previewCache: Boolean
+        get() = prefs.getBoolean("preview_cache", true)
+        set(value) = prefs.edit().putBoolean("preview_cache", value).apply()
+
+    /** オン: 一覧を勢いよくスクロールしている間はサムネイルを読み込まず、止まってから読み込む。 */
+    var lazyLoad: Boolean
+        get() = prefs.getBoolean("lazy_load", false)
+        set(value) = prefs.edit().putBoolean("lazy_load", value).apply()
+
+    /** オン: アプリを閉じるときにキャッシュを消す。 */
+    var clearCacheOnExit: Boolean
+        get() = prefs.getBoolean("clear_cache_on_exit", false)
+        set(value) = prefs.edit().putBoolean("clear_cache_on_exit", value).apply()
 }
 
 val Context.mochiPrefs: MochiPicPrefs get() = MochiPicPrefs(this)

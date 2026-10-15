@@ -46,6 +46,7 @@ class MonthMediaActivity : SimpleActivity() {
         )
         binding.explorerList.layoutManager = GridLayoutManager(this, config.mediaColumnCnt.coerceAtLeast(1))
         binding.explorerList.adapter = adapter
+        MochiCache.attachLazyLoad(this, binding.explorerList)
     }
 
     override fun onResume() {

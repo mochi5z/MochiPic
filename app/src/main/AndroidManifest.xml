@@ -196,6 +196,12 @@
             android:label="@string/mochipic_menu_date" />
 
         <activity
+            android:name=".mochipic.ThemeActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/mochipic_theme_title" />
+
+        <activity
             android:name=".mochipic.ExplorerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"
