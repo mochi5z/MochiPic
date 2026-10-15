@@ -200,4 +200,16 @@
         android:padding="@dimen/normal_margin"
         android:src="@drawable/mochipic_ic_zoom_in" />
 
+    <!-- MochiPic: 情報ボタンの横に出す「解像度」と「日時」（ViewPagerActivity.updateMochiSummary） -->
+    <TextView
+        android:id="@+id/bottom_mochi_summary"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/list_touch_target_min"
+        android:layout_marginBottom="@dimen/normal_margin"
+        android:gravity="center_vertical"
+        android:lineSpacingExtra="2dp"
+        android:textColor="@android:color/white"
+        android:textSize="13sp"
+        android:visibility="gone" />
+
 </LinearLayout>

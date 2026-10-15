@@ -58,6 +58,7 @@ import org.fossify.commons.extensions.getIsPathDirectory
 import org.fossify.commons.extensions.getParentPath
 import org.fossify.commons.extensions.getProperBackgroundColor
 import org.fossify.commons.extensions.getResolution
+import org.fossify.commons.extensions.formatDate
 import org.fossify.commons.extensions.getUriMimeType
 import org.fossify.commons.extensions.handleDeletePasswordProtection
 import org.fossify.commons.extensions.handleLockedFolderOpening
@@ -547,7 +548,7 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
             binding.viewPager.onGlobalLayout {
                 Handler().postDelayed({
                     fragmentClicked()
-                }, 50L)  // MochiPic: QP-Gallery と同じく、開いたらすぐにバーと日付を隠す
+                }, 1000L)  // MochiPic: 開いて 1 秒でバーと解像度・日時を隠す
             }
         }
 
@@ -1094,7 +1095,29 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
         }
     }
 
+    /** MochiPic: 下部の情報ボタンの横に「解像度」と「日時」の 2 行（QP-Gallery と同じ）。 */
+    private fun updateMochiSummary(medium: Medium?) {
+        val view = binding.bottomActions.bottomMochiSummary
+        if (medium == null || !inBottom(ActionId.PROPERTIES)) {
+            view.beGone()
+            return
+        }
+        view.beVisible()
+        val time = if (medium.taken > 0) medium.taken else medium.modified
+        val date = if (time > 0) time.formatDate(this) else ""
+        view.text = date
+        val path = medium.path
+        view.tag = path
+        ensureBackgroundThread {
+            val p = try { getResolution(path) } catch (e: Exception) { null }
+            runOnUiThread {
+                if (view.tag == path) view.text = listOfNotNull(p?.let { "${it.x}x${it.y}" }, date.ifEmpty { null }).joinToString("\n")
+            }
+        }
+    }
+
     private fun updateBottomActionIcons(medium: Medium?) {
+        updateMochiSummary(medium)
         if (medium == null) {
             return
         }

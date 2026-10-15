@@ -375,7 +375,7 @@ class Config(context: Context) : BaseConfig(context) {
         set(viewTypeFiles) = prefs.edit().putInt(VIEW_TYPE_FILES, viewTypeFiles).apply()
 
     var showExtendedDetails: Boolean
-        get() = prefs.getBoolean(SHOW_EXTENDED_DETAILS, true) // MochiPic: QP 同様に画面下部へ詳細を出す
+        get() = prefs.getBoolean(SHOW_EXTENDED_DETAILS, false) // MochiPic: 解像度と日時は下部の情報ボタンの横に出すので、画像に重なる表示は初期値で出さない
         set(showExtendedDetails) = prefs.edit().putBoolean(SHOW_EXTENDED_DETAILS, showExtendedDetails).apply()
 
     var hideExtendedDetails: Boolean

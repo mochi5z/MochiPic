@@ -16,6 +16,14 @@ class MochiPicPrefs(context: Context) {
         get() = prefs.getBoolean("explorer_mode", false)
         set(value) = prefs.edit().putBoolean("explorer_mode", value).apply()
 
+    /**
+     * 隠しフォルダを出すか（アルバム一覧の目のボタンで切り替え、次の起動でもそのまま）。初期値は出す。
+     * Android 11 以降は「すべてのファイルへのアクセス」を許可しているときだけ実際に出せる。
+     */
+    var showHiddenFolders: Boolean
+        get() = prefs.getBoolean("show_hidden_folders", true)
+        set(value) = prefs.edit().putBoolean("show_hidden_folders", value).apply()
+
     /** オン: 表示画面で開いた画像（プレビュー）を端末に保存しておき、次に開くときに速く出す。 */
     var previewCache: Boolean
         get() = prefs.getBoolean("preview_cache", true)

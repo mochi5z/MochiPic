@@ -206,7 +206,8 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         appLaunched(BuildConfig.APPLICATION_ID)
 
         if (savedInstanceState == null) {
-            config.temporarilyShowHidden = false
+            // MochiPic: 隠しフォルダは起動時から出す（目のボタンで切り替えた状態を覚えておく）
+            config.temporarilyShowHidden = mochiPrefs.showHiddenFolders && (!isRPlus() || isExternalStorageManager())
             config.temporarilyShowExcluded = false
             config.tempSkipDeleteConfirmation = false
             config.tempSkipRecycleBin = false
@@ -381,7 +382,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
 
         if (config.temporarilyShowHidden || config.tempSkipDeleteConfirmation || config.temporarilyShowExcluded) {
             mTempShowHiddenHandler.postDelayed({
-                config.temporarilyShowHidden = false
+                // MochiPic: 隠しフォルダの表示は時間がたっても戻さない（ユーザーが選んだ状態のまま）
                 config.temporarilyShowExcluded = false
                 config.tempSkipDeleteConfirmation = false
                 config.tempSkipRecycleBin = false
@@ -395,7 +396,8 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         org.fossify.gallery.mochipic.MochiCache.onAppExit(this)
         super.onDestroy()
         if (!isChangingConfigurations) {
-            config.temporarilyShowHidden = false
+            // MochiPic: エクスプローラーなどへ切り替えて閉じる場合もあるので、隠しフォルダの表示は選んだ状態に戻す
+            config.temporarilyShowHidden = mochiPrefs.showHiddenFolders && (!isRPlus() || isExternalStorageManager())
             config.temporarilyShowExcluded = false
             config.tempSkipDeleteConfirmation = false
             config.tempSkipRecycleBin = false
@@ -787,6 +789,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     private fun toggleTemporarilyShowHidden(show: Boolean) {
         mLoadedInitialPhotos = false
         config.temporarilyShowHidden = show
+        mochiPrefs.showHiddenFolders = show
         binding.directoriesGrid.adapter = null
         getDirectories()
         refreshMenuItems()

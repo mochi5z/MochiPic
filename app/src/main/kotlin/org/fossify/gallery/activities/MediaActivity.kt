@@ -320,7 +320,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
 
         if (config.temporarilyShowHidden || config.tempSkipDeleteConfirmation) {
             mTempShowHiddenHandler.postDelayed({
-                config.temporarilyShowHidden = false
+                // MochiPic: 隠しフォルダの表示は時間がたっても戻さない
                 config.tempSkipDeleteConfirmation = false
                 config.tempSkipRecycleBin = false
             }, SHOW_TEMP_HIDDEN_DURATION)
@@ -900,6 +900,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     private fun toggleTemporarilyShowHidden(show: Boolean) {
         mLoadedInitialPhotos = false
         config.temporarilyShowHidden = show
+        org.fossify.gallery.mochipic.MochiPicPrefs(this).showHiddenFolders = show
         getMedia()
         refreshMenuItems()
     }
