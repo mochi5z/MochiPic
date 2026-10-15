@@ -495,11 +495,11 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
 
         binding.mainMenu.requireToolbar().setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
-                R.id.sort -> showSortingDialog()
+                R.id.sort -> showQpSortMenu() // MochiPic: QP 風の短いメニュー
                 R.id.filter -> showFilterMediaDialog()
                 R.id.open_camera -> launchCamera()
                 R.id.show_all -> showAllMedia()
-                R.id.change_view_type -> changeViewType()
+                R.id.change_view_type -> showQpViewTypeMenu() // MochiPic: QP 風の短いメニュー
                 R.id.temporarily_show_hidden -> tryToggleTemporarilyShowHidden()
                 R.id.stop_showing_hidden -> tryToggleTemporarilyShowHidden()
                 R.id.temporarily_show_excluded -> tryToggleTemporarilyShowExcluded()
@@ -648,8 +648,29 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         }, 500)
     }
 
+    // ---------------------------------------------------------------- MochiPic: QP 風のメニュー
+
+    private fun showQpSortMenu() {
+        org.fossify.gallery.mochipic.AlbumMenus.showSort(
+            this, binding.mainMenu, onDetailed = { showSortingDialog() }, onChanged = { onDirectorySortingChanged() }
+        )
+    }
+
+    private fun showQpViewTypeMenu() {
+        org.fossify.gallery.mochipic.AlbumMenus.showViewType(this, binding.mainMenu) {
+            refreshMenuItems()
+            setupLayoutManager()
+            binding.directoriesGrid.adapter = null
+            setupAdapter(getRecyclerAdapter()?.dirs ?: mDirs)
+        }
+    }
+
     private fun showSortingDialog() {
-        ChangeSortingDialog(this, true, false) {
+        ChangeSortingDialog(this, true, false) { onDirectorySortingChanged() }
+    }
+
+    private fun onDirectorySortingChanged() {
+        run {
             binding.directoriesGrid.adapter = null
             if (config.directorySorting and SORT_BY_DATE_MODIFIED != 0 || config.directorySorting and SORT_BY_DATE_TAKEN != 0) {
                 getDirectories()

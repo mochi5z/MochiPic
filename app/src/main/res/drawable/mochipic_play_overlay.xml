@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MochiPic: 動画のサムネイルに重ねる再生マーク（半透明の丸＋白い三角） -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="40dp"
+    android:height="40dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    <path
+        android:fillColor="#66000000"
+        android:strokeColor="#E6FFFFFF"
+        android:strokeWidth="2.5"
+        android:pathData="M24,3.5a20.5,20.5 0,1 1,0 41a20.5,20.5 0,1 1,0 -41z" />
+    <path
+        android:fillColor="#F2FFFFFF"
+        android:pathData="M19,15.5L33.5,24L19,32.5Z" />
+</vector>

@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MochiPic: QP-Gallery 風のアルバム表示（中の画像 4 枚を 2×2、下に「名前 枚数」） -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/dir_holder"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true"
+    android:padding="1dp">
+
+    <org.fossify.commons.views.MySquareImageView
+        android:id="@+id/dir_thumbnail"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@drawable/placeholder_square" />
+
+    <LinearLayout
+        android:id="@+id/mosaic_grid"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/dir_thumbnail"
+        android:layout_alignTop="@+id/dir_thumbnail"
+        android:layout_alignEnd="@+id/dir_thumbnail"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/mosaic_row1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <org.fossify.commons.views.MySquareImageView
+                    android:id="@+id/mosaic_cell1"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <ImageView
+                    android:id="@+id/mosaic_play1"
+                    style="@style/MochiPicMosaicPlay" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <org.fossify.commons.views.MySquareImageView
+                    android:id="@+id/mosaic_cell2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <ImageView
+                    android:id="@+id/mosaic_play2"
+                    style="@style/MochiPicMosaicPlay" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/mosaic_row2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <org.fossify.commons.views.MySquareImageView
+                    android:id="@+id/mosaic_cell3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <ImageView
+                    android:id="@+id/mosaic_play3"
+                    style="@style/MochiPicMosaicPlay" />
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1">
+
+                <org.fossify.commons.views.MySquareImageView
+                    android:id="@+id/mosaic_cell4"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+                <ImageView
+                    android:id="@+id/mosaic_play4"
+                    style="@style/MochiPicMosaicPlay" />
+            </FrameLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/mosaic_play_single"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_alignStart="@+id/dir_thumbnail"
+        android:layout_alignTop="@+id/dir_thumbnail"
+        android:layout_alignEnd="@+id/dir_thumbnail"
+        android:layout_alignBottom="@+id/dir_thumbnail"
+        android:layout_centerInParent="true"
+        android:contentDescription="@null"
+        android:scaleType="center"
+        android:src="@drawable/mochipic_play_overlay"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/dir_lock"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignStart="@+id/dir_thumbnail"
+        android:layout_alignTop="@+id/dir_thumbnail"
+        android:layout_alignEnd="@+id/dir_thumbnail"
+        android:layout_alignBottom="@+id/dir_thumbnail"
+        android:background="@color/default_background_color"
+        android:contentDescription="@string/lock_folder"
+        android:padding="@dimen/lock_padding"
+        android:src="@drawable/ic_lock_vector"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/dir_check"
+        android:layout_width="@dimen/selection_check_size"
+        android:layout_height="@dimen/selection_check_size"
+        android:layout_alignTop="@+id/dir_thumbnail"
+        android:layout_alignEnd="@+id/dir_thumbnail"
+        android:layout_margin="@dimen/medium_margin"
+        android:background="@drawable/circle_background"
+        android:contentDescription="@null"
+        android:padding="@dimen/tiny_margin"
+        android:src="@drawable/ic_check_vector"
+        android:visibility="gone" />
+
+    <ImageView
+        android:id="@+id/dir_pin"
+        android:layout_width="@dimen/selection_check_size"
+        android:layout_height="@dimen/selection_check_size"
+        android:layout_alignStart="@+id/dir_thumbnail"
+        android:layout_alignTop="@+id/dir_thumbnail"
+        android:layout_margin="@dimen/small_margin"
+        android:background="@drawable/circle_black_background"
+        android:contentDescription="@string/pin"
+        android:padding="@dimen/small_margin"
+        android:src="@drawable/ic_pin_filled_vector"
+        android:visibility="gone" />
+
+    <RelativeLayout
+        android:id="@+id/dir_drag_handle_wrapper"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/dir_thumbnail"
+        android:layout_alignEnd="@+id/dir_thumbnail"
+        android:visibility="gone">
+
+        <ImageView
+            android:id="@+id/dir_drag_handle"
+            android:layout_width="@dimen/drag_handle_size"
+            android:layout_height="@dimen/drag_handle_size"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_margin="@dimen/medium_margin"
+            android:background="@drawable/circle_black_background"
+            android:contentDescription="@string/reorder_by_dragging"
+            android:padding="@dimen/small_margin"
+            android:src="@drawable/ic_drag_handle_vector" />
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/dir_location"
+        android:layout_width="@dimen/sd_card_icon_size"
+        android:layout_height="@dimen/sd_card_icon_size"
+        android:layout_alignEnd="@+id/dir_thumbnail"
+        android:layout_alignBottom="@+id/dir_thumbnail"
+        android:alpha="0.8"
+        android:contentDescription="@null"
+        android:paddingEnd="@dimen/small_margin"
+        android:paddingBottom="@dimen/small_margin"
+        android:src="@drawable/ic_sd_card_vector"
+        android:visibility="gone" />
+
+    <TextView
+        android:id="@+id/dir_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/dir_thumbnail"
+        android:ellipsize="middle"
+        android:gravity="center"
+        android:paddingStart="@dimen/small_margin"
+        android:paddingTop="@dimen/small_margin"
+        android:paddingEnd="@dimen/small_margin"
+        android:paddingBottom="@dimen/medium_margin"
+        android:singleLine="true"
+        android:textSize="@dimen/bigger_text_size"
+        tools:text="Camera 36" />
+
+    <TextView
+        android:id="@+id/photo_cnt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+</RelativeLayout>

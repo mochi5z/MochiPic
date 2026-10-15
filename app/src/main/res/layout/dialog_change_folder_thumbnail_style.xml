@@ -41,6 +41,15 @@
                 android:paddingBottom="@dimen/medium_margin"
                 android:text="@string/rounded_corners" />
 
+            <!-- MochiPic: QP-Gallery 風のモザイク表示 -->
+            <org.fossify.commons.views.MyCompatRadioButton
+                android:id="@+id/dialog_radio_folder_mosaic"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="@dimen/medium_margin"
+                android:paddingBottom="@dimen/medium_margin"
+                android:text="@string/mochipic_folder_style_mosaic" />
+
         </RadioGroup>
 
         <include layout="@layout/divider" />

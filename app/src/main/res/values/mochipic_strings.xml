@@ -13,4 +13,11 @@
     <string name="mochipic_slot_menu">⋮ Menu</string>
     <string name="mochipic_slot_hidden">Hidden</string>
     <string name="mochipic_action_toggle_visibility">Hide / Unhide</string>
+    <string name="mochipic_folder_style_mosaic">Mosaic (2×2)</string>
+    <string name="mochipic_view_grid">Grid</string>
+    <string name="mochipic_view_list">List</string>
+    <string name="mochipic_sort_name">File name</string>
+    <string name="mochipic_sort_modified">Last modified</string>
+    <string name="mochipic_sort_path">Path</string>
+    <string name="mochipic_sort_detailed">More sorting options…</string>
 </resources>

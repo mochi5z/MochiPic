@@ -12,4 +12,11 @@
     <string name="mochipic_slot_menu">︙メニュー</string>
     <string name="mochipic_slot_hidden">非表示</string>
     <string name="mochipic_action_toggle_visibility">隠す／表示する</string>
+    <string name="mochipic_folder_style_mosaic">モザイク（2×2）</string>
+    <string name="mochipic_view_grid">グリッド</string>
+    <string name="mochipic_view_list">リスト</string>
+    <string name="mochipic_sort_name">ファイル名</string>
+    <string name="mochipic_sort_modified">更新日時</string>
+    <string name="mochipic_sort_path">パス名</string>
+    <string name="mochipic_sort_detailed">詳細な並べ替え…</string>
 </resources>

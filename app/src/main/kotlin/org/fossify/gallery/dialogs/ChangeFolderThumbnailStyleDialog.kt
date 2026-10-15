@@ -42,6 +42,7 @@ class ChangeFolderThumbnailStyleDialog(val activity: BaseSimpleActivity, val cal
         }
 
         val styleBtn = when (config.folderStyle) {
+            org.fossify.gallery.mochipic.FOLDER_STYLE_MOSAIC -> binding.dialogRadioFolderMosaic
             FOLDER_STYLE_SQUARE -> binding.dialogRadioFolderSquare
             else -> binding.dialogRadioFolderRoundedCorners
         }
@@ -71,7 +72,10 @@ class ChangeFolderThumbnailStyleDialog(val activity: BaseSimpleActivity, val cal
             val useRoundedCornersLayout = binding.dialogRadioFolderStyle.checkedRadioButtonId == R.id.dialog_radio_folder_rounded_corners
             binding.dialogFolderSampleHolder.removeAllViews()
 
-            val sampleBinding = if (useRoundedCornersLayout) {
+            val useMosaicLayout = binding.dialogRadioFolderStyle.checkedRadioButtonId == R.id.dialog_radio_folder_mosaic
+            val sampleBinding = if (useMosaicLayout) {
+                org.fossify.gallery.databinding.DirectoryItemGridMosaicBinding.inflate(activity.layoutInflater).toItemBinding()
+            } else if (useRoundedCornersLayout) {
                 DirectoryItemGridRoundedCornersBinding.inflate(activity.layoutInflater).toItemBinding()
             } else {
                 DirectoryItemGridSquareBinding.inflate(activity.layoutInflater).toItemBinding()
@@ -113,11 +117,25 @@ class ChangeFolderThumbnailStyleDialog(val activity: BaseSimpleActivity, val cal
             }
 
             builder.into(sampleBinding.dirThumbnail)
+
+            // MochiPic: モザイクの見本は同じ画像を 4 マスに並べ、名前の下に枚数を出す
+            if (sampleBinding is org.fossify.gallery.adapters.GridDirectoryItemMosaicBinding) {
+                val b = sampleBinding.binding
+                b.mosaicGrid.beVisible()
+                b.dirThumbnail.alpha = 0f
+                listOf(b.mosaicCell1, b.mosaicCell2, b.mosaicCell3, b.mosaicCell4).forEach {
+                    Glide.with(activity).load(R.drawable.sample_logo).apply(options).into(it)
+                }
+                b.photoCnt.beGone()
+                b.dirName.setTextColor(activity.getProperTextColor())
+                b.dirName.text = org.fossify.gallery.mochipic.AlbumMosaic.label(folderName, photoCount, activity.getProperTextColor())
+            }
         }
     }
 
     override fun onClick(dialog: DialogInterface, which: Int) {
         val style = when (binding.dialogRadioFolderStyle.checkedRadioButtonId) {
+            R.id.dialog_radio_folder_mosaic -> org.fossify.gallery.mochipic.FOLDER_STYLE_MOSAIC
             R.id.dialog_radio_folder_square -> FOLDER_STYLE_SQUARE
             else -> FOLDER_STYLE_ROUNDED_CORNERS
         }

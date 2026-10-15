@@ -29,6 +29,8 @@ import org.fossify.commons.dialogs.RenameItemsDialog
 import org.fossify.commons.dialogs.SecurityDialog
 import org.fossify.commons.extensions.applyColorFilter
 import org.fossify.commons.extensions.beGone
+import org.fossify.commons.extensions.internalStoragePath
+import org.fossify.commons.extensions.formatDate
 import org.fossify.commons.extensions.beVisible
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.containsNoMedia
@@ -68,6 +70,9 @@ import org.fossify.gallery.activities.MediaActivity
 import org.fossify.gallery.databinding.DirectoryItemGridRoundedCornersBinding
 import org.fossify.gallery.databinding.DirectoryItemGridSquareBinding
 import org.fossify.gallery.databinding.DirectoryItemListBinding
+import org.fossify.gallery.databinding.DirectoryItemGridMosaicBinding
+import org.fossify.gallery.mochipic.AlbumMosaic
+import org.fossify.gallery.mochipic.FOLDER_STYLE_MOSAIC
 import org.fossify.gallery.dialogs.ConfirmDeleteFolderDialog
 import org.fossify.gallery.dialogs.ExcludeFolderDialog
 import org.fossify.gallery.dialogs.PickMediumDialog
@@ -150,6 +155,7 @@ class DirectoryAdapter(
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = when {
             isListViewType -> DirectoryItemListBinding.inflate(layoutInflater, parent, false)
+            folderStyle == FOLDER_STYLE_MOSAIC -> DirectoryItemGridMosaicBinding.inflate(layoutInflater, parent, false)
             folderStyle == FOLDER_STYLE_SQUARE -> DirectoryItemGridSquareBinding.inflate(layoutInflater, parent, false)
             else -> DirectoryItemGridRoundedCornersBinding.inflate(layoutInflater, parent, false)
         }
@@ -874,13 +880,18 @@ class DirectoryAdapter(
 
             if (lockedFolderPaths.contains(directory.path)) {
                 dirLock.beVisible()
+                if (this is org.fossify.gallery.adapters.GridDirectoryItemMosaicBinding) {
+                    binding.mosaicGrid.tag = null
+                    binding.mosaicGrid.beGone()
+                    binding.mosaicPlaySingle.beGone()
+                }
                 dirLock.background = ColorDrawable(root.context.getProperBackgroundColor())
                 dirLock.applyColorFilter(root.context.getProperBackgroundColor().getContrastColor())
             } else {
                 dirLock.beGone()
                 val roundedCorners = when {
                     isListViewType -> ROUNDED_CORNERS_SMALL
-                    folderStyle == FOLDER_STYLE_SQUARE -> ROUNDED_CORNERS_NONE
+                    folderStyle == FOLDER_STYLE_SQUARE || folderStyle == FOLDER_STYLE_MOSAIC -> ROUNDED_CORNERS_NONE
                     else -> ROUNDED_CORNERS_BIG
                 }
 
@@ -906,6 +917,11 @@ class DirectoryAdapter(
                         dirThumbnail.setImageDrawable(AppCompatResources.getDrawable(activity, R.drawable.ic_vector_warning_colored))
                     }
                 )
+
+                // MochiPic: モザイク表示なら 2×2 のマスに中の画像を並べる
+                if (this is org.fossify.gallery.adapters.GridDirectoryItemMosaicBinding) {
+                    AlbumMosaic.bind(activity, this, directory, animateGifs, cropThumbnails)
+                }
             }
 
             dirPin.beVisibleIf(pinnedFolders.contains(directory.path))
@@ -935,10 +951,26 @@ class DirectoryAdapter(
 
             dirName.text = nameCount
 
-            if (isListViewType || folderStyle == FOLDER_STYLE_ROUNDED_CORNERS) {
+            // MochiPic: モザイクとリストは QP-Gallery と同じく「名前 枚数」（枚数は小さく薄く）
+            if ((folderStyle == FOLDER_STYLE_MOSAIC && !isListViewType) || isListViewType) {
+                photoCnt.beGone()
+                dirName.text = AlbumMosaic.label(nameCount, directory.subfoldersMediaCount, textColor)
+            }
+
+            if (isListViewType || folderStyle == FOLDER_STYLE_ROUNDED_CORNERS || folderStyle == FOLDER_STYLE_MOSAIC) {
                 photoCnt.setTextColor(textColor)
                 dirName.setTextColor(textColor)
                 dirLocation.applyColorFilter(textColor)
+            }
+
+            // MochiPic: リスト表示は QP-Gallery と同じく「パス（ストレージの先頭を除く）」「更新日時」、動画には再生マーク
+            if (this is org.fossify.gallery.adapters.ListDirectoryItemBinding) {
+                val parent = directory.path.substringBeforeLast("/")
+                dirPath?.text = parent.removePrefix(activity.internalStoragePath).ifEmpty { "/" }
+                binding.dirDate.text = directory.modified.formatDate(activity, dateFormat, timeFormat)
+                binding.dirDate.setTextColor(textColor)
+                binding.dirPlay.beVisibleIf(directory.tmb.isVideoFast() && !lockedFolderPaths.contains(directory.path))
+                binding.dirDivider.setBackgroundColor(textColor)
             }
 
             if (isListViewType) {
@@ -989,6 +1021,7 @@ class DirectoryAdapter(
     private fun bindItem(view: View): DirectoryItemBinding {
         return when {
             isListViewType -> DirectoryItemListBinding.bind(view).toItemBinding()
+            folderStyle == FOLDER_STYLE_MOSAIC -> DirectoryItemGridMosaicBinding.bind(view).toItemBinding()
             folderStyle == FOLDER_STYLE_SQUARE -> DirectoryItemGridSquareBinding.bind(view).toItemBinding()
             else -> DirectoryItemGridRoundedCornersBinding.bind(view).toItemBinding()
         }

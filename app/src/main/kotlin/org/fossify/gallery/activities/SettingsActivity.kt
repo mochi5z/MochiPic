@@ -553,6 +553,7 @@ class SettingsActivity : SimpleActivity() {
 
     private fun getFolderStyleText() = getString(
         when (config.folderStyle) {
+            org.fossify.gallery.mochipic.FOLDER_STYLE_MOSAIC -> R.string.mochipic_folder_style_mosaic
             FOLDER_STYLE_SQUARE -> R.string.square
             else -> R.string.rounded_corners
         }

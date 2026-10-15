@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- MochiPic: リスト表示のサムネイル（QP-Gallery と同じく画面幅の約 1/5） -->
+    <dimen name="mochipic_list_thumbnail_size">84dp</dimen>
+</resources>
