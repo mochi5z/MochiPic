@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MochiPic で追加した文言（英語。日本語は values-ja/mochipic_strings.xml） -->
+<resources>
+    <string name="mochipic_button_layout">Button layout</string>
+    <string name="mochipic_button_layout_viewer">Button layout (photo viewer)</string>
+    <string name="mochipic_button_layout_hint">Drag the handle to reorder buttons or move them between areas. Tap the area name on the right to move a button directly.</string>
+    <string name="mochipic_button_layout_reset">Reset to default</string>
+    <string name="mochipic_button_layout_reset_confirm">Reset the button layout to the default?</string>
+    <string name="mochipic_button_layout_drag">Drag to move</string>
+    <string name="mochipic_button_layout_not_bottom">This button cannot be placed in the bottom bar</string>
+    <string name="mochipic_slot_top">Top bar</string>
+    <string name="mochipic_slot_bottom">Bottom bar</string>
+    <string name="mochipic_slot_menu">⋮ Menu</string>
+    <string name="mochipic_slot_hidden">Hidden</string>
+    <string name="mochipic_action_toggle_visibility">Hide / Unhide</string>
+</resources>

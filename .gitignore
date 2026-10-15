@@ -20,3 +20,4 @@ fastlane/report.xml
 /logs/
 keystore.properties
 *.jks
+/testdata/

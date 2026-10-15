@@ -129,21 +129,12 @@ import org.fossify.gallery.extensions.updateFavoritePaths
 import org.fossify.gallery.fragments.PhotoFragment
 import org.fossify.gallery.fragments.VideoFragment
 import org.fossify.gallery.fragments.ViewPagerFragment
-import org.fossify.gallery.helpers.BOTTOM_ACTION_CHANGE_ORIENTATION
-import org.fossify.gallery.helpers.BOTTOM_ACTION_COPY
-import org.fossify.gallery.helpers.BOTTOM_ACTION_DELETE
-import org.fossify.gallery.helpers.BOTTOM_ACTION_EDIT
-import org.fossify.gallery.helpers.BOTTOM_ACTION_MOVE
-import org.fossify.gallery.helpers.BOTTOM_ACTION_PROPERTIES
-import org.fossify.gallery.helpers.BOTTOM_ACTION_RENAME
-import org.fossify.gallery.helpers.BOTTOM_ACTION_RESIZE
-import org.fossify.gallery.helpers.BOTTOM_ACTION_ROTATE
-import org.fossify.gallery.helpers.BOTTOM_ACTION_SET_AS
-import org.fossify.gallery.helpers.BOTTOM_ACTION_SHARE
-import org.fossify.gallery.helpers.BOTTOM_ACTION_SHOW_ON_MAP
-import org.fossify.gallery.helpers.BOTTOM_ACTION_SLIDESHOW
-import org.fossify.gallery.helpers.BOTTOM_ACTION_TOGGLE_FAVORITE
-import org.fossify.gallery.helpers.BOTTOM_ACTION_TOGGLE_VISIBILITY
+import org.fossify.gallery.mochipic.ActionId
+import org.fossify.gallery.mochipic.ActionLayout
+import org.fossify.gallery.mochipic.ActionLayoutStore
+import org.fossify.gallery.mochipic.LayoutScreen
+import org.fossify.gallery.mochipic.Slot
+import org.fossify.gallery.mochipic.ViewerActions
 import org.fossify.gallery.helpers.ColorModeHelper
 import org.fossify.gallery.helpers.DefaultPageTransformer
 import org.fossify.gallery.helpers.FadePageTransformer
@@ -249,6 +240,7 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
             return
         }
 
+        applyViewerLayout()
         initBottomActions()
         mOriginalBrightness = window.updateBrightness(config.maxBrightness, mOriginalBrightness)
         setupOrientation()
@@ -283,55 +275,76 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
     fun refreshMenuItems() {
         val currentMedium = getCurrentMedium() ?: return
         currentMedium.isFavorite = mFavoritePaths.contains(currentMedium.path)
-        val visibleBottomActions = if (config.bottomActions) config.visibleBottomActions else 0
+        // MochiPic: 表示するかどうかと置き場所は、ボタン配置の設定（ActionLayout）で決める
+        val layout = effectiveViewerLayout()
+        fun inBar(action: ActionId) = layout.slotOf(action).let { it == Slot.TOP || it == Slot.MENU }
 
         runOnUiThread {
             val rotationDegrees = getCurrentPhotoFragment()?.mCurrentRotationDegrees ?: 0
             binding.mediumViewerToolbar.menu.apply {
-                findItem(R.id.menu_show_on_map).isVisible = visibleBottomActions and BOTTOM_ACTION_SHOW_ON_MAP == 0
-                findItem(R.id.menu_slideshow).isVisible = visibleBottomActions and BOTTOM_ACTION_SLIDESHOW == 0
-                findItem(R.id.menu_properties).isVisible = visibleBottomActions and BOTTOM_ACTION_PROPERTIES == 0
-                findItem(R.id.menu_delete).isVisible = visibleBottomActions and BOTTOM_ACTION_DELETE == 0
-                findItem(R.id.menu_share).isVisible = visibleBottomActions and BOTTOM_ACTION_SHARE == 0
-                findItem(R.id.menu_edit).isVisible = visibleBottomActions and BOTTOM_ACTION_EDIT == 0 && !currentMedium.isSVG()
-                findItem(R.id.menu_rename).isVisible = visibleBottomActions and BOTTOM_ACTION_RENAME == 0 && !currentMedium.getIsInRecycleBin()
-                findItem(R.id.menu_rotate).isVisible = currentMedium.isImage() && visibleBottomActions and BOTTOM_ACTION_ROTATE == 0
-                findItem(R.id.menu_set_as).isVisible = visibleBottomActions and BOTTOM_ACTION_SET_AS == 0
-                findItem(R.id.menu_copy_to_clipboard).isVisible = currentMedium.isImage()
-                findItem(R.id.menu_copy_to).isVisible = visibleBottomActions and BOTTOM_ACTION_COPY == 0
-                findItem(R.id.menu_move_to).isVisible = visibleBottomActions and BOTTOM_ACTION_MOVE == 0
+                findItem(R.id.menu_show_on_map).isVisible = inBar(ActionId.SHOW_ON_MAP)
+                findItem(R.id.menu_slideshow).isVisible = inBar(ActionId.SLIDESHOW)
+                findItem(R.id.menu_properties).isVisible = inBar(ActionId.PROPERTIES)
+                findItem(R.id.menu_delete).isVisible = inBar(ActionId.DELETE)
+                findItem(R.id.menu_share).isVisible = inBar(ActionId.SHARE)
+                findItem(R.id.menu_edit).isVisible = inBar(ActionId.EDIT) && !currentMedium.isSVG()
+                findItem(R.id.menu_rename).isVisible = inBar(ActionId.RENAME) && !currentMedium.getIsInRecycleBin()
+                findItem(R.id.menu_rotate).isVisible = currentMedium.isImage() && inBar(ActionId.ROTATE)
+                findItem(R.id.menu_set_as).isVisible = inBar(ActionId.SET_AS)
+                findItem(R.id.menu_copy_to_clipboard).isVisible = currentMedium.isImage() && inBar(ActionId.COPY_TO_CLIPBOARD)
+                findItem(R.id.menu_copy_to).isVisible = inBar(ActionId.COPY)
+                findItem(R.id.menu_move_to).isVisible = inBar(ActionId.MOVE)
                 findItem(R.id.menu_save_as).isVisible = rotationDegrees != 0
-                findItem(R.id.menu_print).isVisible = currentMedium.isImage() || currentMedium.isRaw()
-                findItem(R.id.menu_resize).isVisible = visibleBottomActions and BOTTOM_ACTION_RESIZE == 0 && currentMedium.isImage()
+                findItem(R.id.menu_print).isVisible = (currentMedium.isImage() || currentMedium.isRaw()) && inBar(ActionId.PRINT)
+                findItem(R.id.menu_resize).isVisible = inBar(ActionId.RESIZE) && currentMedium.isImage()
                 findItem(R.id.menu_hide).isVisible =
-                    (!isRPlus() || isExternalStorageManager()) && !currentMedium.isHidden() && visibleBottomActions and BOTTOM_ACTION_TOGGLE_VISIBILITY == 0 && !currentMedium.getIsInRecycleBin()
+                    (!isRPlus() || isExternalStorageManager()) && !currentMedium.isHidden() && inBar(ActionId.TOGGLE_VISIBILITY) && !currentMedium.getIsInRecycleBin()
 
                 findItem(R.id.menu_unhide).isVisible =
-                    (!isRPlus() || isExternalStorageManager()) && currentMedium.isHidden() && visibleBottomActions and BOTTOM_ACTION_TOGGLE_VISIBILITY == 0 && !currentMedium.getIsInRecycleBin()
+                    (!isRPlus() || isExternalStorageManager()) && currentMedium.isHidden() && inBar(ActionId.TOGGLE_VISIBILITY) && !currentMedium.getIsInRecycleBin()
 
                 findItem(R.id.menu_add_to_favorites).isVisible =
-                    !currentMedium.isFavorite && visibleBottomActions and BOTTOM_ACTION_TOGGLE_FAVORITE == 0 && !currentMedium.getIsInRecycleBin()
+                    !currentMedium.isFavorite && inBar(ActionId.FAVORITE) && !currentMedium.getIsInRecycleBin()
 
                 findItem(R.id.menu_remove_from_favorites).isVisible =
-                    currentMedium.isFavorite && visibleBottomActions and BOTTOM_ACTION_TOGGLE_FAVORITE == 0 && !currentMedium.getIsInRecycleBin()
+                    currentMedium.isFavorite && inBar(ActionId.FAVORITE) && !currentMedium.getIsInRecycleBin()
 
                 findItem(R.id.menu_restore_file).isVisible = currentMedium.path.startsWith(recycleBinPath)
-                findItem(R.id.menu_create_shortcut).isVisible = true
-                findItem(R.id.menu_change_orientation).isVisible = rotationDegrees == 0 && visibleBottomActions and BOTTOM_ACTION_CHANGE_ORIENTATION == 0
-                findItem(R.id.menu_rotate).setShowAsAction(
-                    if (rotationDegrees != 0) {
-                        MenuItem.SHOW_AS_ACTION_ALWAYS
-                    } else {
-                        MenuItem.SHOW_AS_ACTION_IF_ROOM
-                    }
-                )
+                findItem(R.id.menu_create_shortcut).isVisible = inBar(ActionId.CREATE_SHORTCUT)
+                findItem(R.id.menu_open_with).isVisible = inBar(ActionId.OPEN_WITH)
+                findItem(R.id.menu_settings).isVisible = inBar(ActionId.SETTINGS)
+                findItem(R.id.menu_change_orientation).isVisible = rotationDegrees == 0 && inBar(ActionId.CHANGE_ORIENTATION)
+
+                ViewerActions.applyShowAsAction(this, layout)
+                findItem(R.id.menu_save_as).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                if (rotationDegrees != 0) {
+                    findItem(R.id.menu_rotate).setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+                }
             }
 
-            if (visibleBottomActions != 0) {
+            if (layout.hasAny(Slot.BOTTOM)) {
                 updateBottomActionIcons(currentMedium)
             }
         }
     }
+
+    // ---------------------------------------------------------------- MochiPic: ボタン配置
+
+    private var mViewerLayout: ActionLayout = ViewerActions.DEFAULT_LAYOUT
+
+    /** 保存されたボタン配置を読み、上部バー・︙メニュー・下部バーの順番を並べ直す。 */
+    private fun applyViewerLayout() {
+        mViewerLayout = ActionLayoutStore.load(this, LayoutScreen.VIEWER)
+        val menu = binding.mediumViewerToolbar.menu
+        ViewerActions.reorderMenu(menu, effectiveViewerLayout())
+        updateMenuItemColors(menu, forceWhiteIcons = true)
+    }
+
+    /** 下部バーを使わない設定のときは、下部バーのボタンを︙メニューに回した配置。 */
+    private fun effectiveViewerLayout(): ActionLayout =
+        if (config.bottomActions) mViewerLayout else mViewerLayout.withoutBottomBar()
+
+    private fun inBottom(action: ActionId) = effectiveViewerLayout().slotOf(action) == Slot.BOTTOM
 
     private fun setupOptionsMenu() {
         binding.mediumViewerToolbar.apply {
@@ -935,7 +948,7 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
     }
 
     private fun initBottomActionsLayout() {
-        if (config.bottomActions) {
+        if (effectiveViewerLayout().hasAny(Slot.BOTTOM)) {
             binding.bottomActions.root.beVisible()
         } else {
             binding.bottomActions.root.beGone()
@@ -944,45 +957,45 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
 
     private fun initBottomActionButtons() {
         val currentMedium = getCurrentMedium()
-        val visibleBottomActions = if (config.bottomActions) config.visibleBottomActions else 0
-        binding.bottomActions.bottomFavorite.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_TOGGLE_FAVORITE != 0 && currentMedium?.getIsInRecycleBin() == false)
+        ViewerActions.reorderBottomBar(binding.bottomActions, effectiveViewerLayout())
+        binding.bottomActions.bottomFavorite.beVisibleIf(inBottom(ActionId.FAVORITE) && currentMedium?.getIsInRecycleBin() == false)
         binding.bottomActions.bottomFavorite.setOnLongClickListener { toast(R.string.toggle_favorite); true }
         binding.bottomActions.bottomFavorite.setOnClickListener {
             toggleFavorite()
         }
 
-        binding.bottomActions.bottomEdit.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_EDIT != 0 && currentMedium?.isSVG() == false)
+        binding.bottomActions.bottomEdit.beVisibleIf(inBottom(ActionId.EDIT) && currentMedium?.isSVG() == false)
         binding.bottomActions.bottomEdit.setOnLongClickListener { toast(R.string.edit); true }
         binding.bottomActions.bottomEdit.setOnClickListener {
             openEditor(getCurrentPath())
         }
 
-        binding.bottomActions.bottomShare.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_SHARE != 0)
+        binding.bottomActions.bottomShare.beVisibleIf(inBottom(ActionId.SHARE))
         binding.bottomActions.bottomShare.setOnLongClickListener { toast(org.fossify.commons.R.string.share); true }
         binding.bottomActions.bottomShare.setOnClickListener {
             shareMediumPath(getCurrentPath())
         }
 
-        binding.bottomActions.bottomDelete.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_DELETE != 0)
+        binding.bottomActions.bottomDelete.beVisibleIf(inBottom(ActionId.DELETE))
         binding.bottomActions.bottomDelete.setOnLongClickListener { toast(org.fossify.commons.R.string.delete); true }
         binding.bottomActions.bottomDelete.setOnClickListener {
             checkDeleteConfirmation()
         }
 
-        binding.bottomActions.bottomRotate.beVisibleIf(config.visibleBottomActions and BOTTOM_ACTION_ROTATE != 0 && getCurrentMedium()?.isImage() == true)
+        binding.bottomActions.bottomRotate.beVisibleIf(inBottom(ActionId.ROTATE) && getCurrentMedium()?.isImage() == true)
         binding.bottomActions.bottomRotate.setOnLongClickListener { toast(R.string.rotate); true }
         binding.bottomActions.bottomRotate.setOnClickListener {
             rotateImage(90)
         }
 
         binding.bottomActions.bottomProperties.applyColorFilter(Color.WHITE)
-        binding.bottomActions.bottomProperties.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_PROPERTIES != 0)
+        binding.bottomActions.bottomProperties.beVisibleIf(inBottom(ActionId.PROPERTIES))
         binding.bottomActions.bottomProperties.setOnLongClickListener { toast(org.fossify.commons.R.string.properties); true }
         binding.bottomActions.bottomProperties.setOnClickListener {
             showProperties()
         }
 
-        binding.bottomActions.bottomChangeOrientation.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_CHANGE_ORIENTATION != 0)
+        binding.bottomActions.bottomChangeOrientation.beVisibleIf(inBottom(ActionId.CHANGE_ORIENTATION))
         binding.bottomActions.bottomChangeOrientation.setOnLongClickListener { toast(R.string.change_orientation); true }
         binding.bottomActions.bottomChangeOrientation.setOnClickListener {
             requestedOrientation = when (requestedOrientation) {
@@ -995,19 +1008,19 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
             updateBottomActionIcons(currentMedium)
         }
 
-        binding.bottomActions.bottomSlideshow.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_SLIDESHOW != 0)
+        binding.bottomActions.bottomSlideshow.beVisibleIf(inBottom(ActionId.SLIDESHOW))
         binding.bottomActions.bottomSlideshow.setOnLongClickListener { toast(R.string.slideshow); true }
         binding.bottomActions.bottomSlideshow.setOnClickListener {
             initSlideshow()
         }
 
-        binding.bottomActions.bottomShowOnMap.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_SHOW_ON_MAP != 0)
+        binding.bottomActions.bottomShowOnMap.beVisibleIf(inBottom(ActionId.SHOW_ON_MAP))
         binding.bottomActions.bottomShowOnMap.setOnLongClickListener { toast(R.string.show_on_map); true }
         binding.bottomActions.bottomShowOnMap.setOnClickListener {
             showFileOnMap(getCurrentPath())
         }
 
-        binding.bottomActions.bottomToggleFileVisibility.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_TOGGLE_VISIBILITY != 0)
+        binding.bottomActions.bottomToggleFileVisibility.beVisibleIf(inBottom(ActionId.TOGGLE_VISIBILITY))
         binding.bottomActions.bottomToggleFileVisibility.setOnLongClickListener {
             toast(if (currentMedium?.isHidden() == true) org.fossify.commons.R.string.unhide else org.fossify.commons.R.string.hide); true
         }
@@ -1020,31 +1033,31 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
             }
         }
 
-        binding.bottomActions.bottomRename.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_RENAME != 0 && currentMedium?.getIsInRecycleBin() == false)
+        binding.bottomActions.bottomRename.beVisibleIf(inBottom(ActionId.RENAME) && currentMedium?.getIsInRecycleBin() == false)
         binding.bottomActions.bottomRename.setOnLongClickListener { toast(org.fossify.commons.R.string.rename); true }
         binding.bottomActions.bottomRename.setOnClickListener {
             checkMediaManagementAndRename()
         }
 
-        binding.bottomActions.bottomSetAs.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_SET_AS != 0)
+        binding.bottomActions.bottomSetAs.beVisibleIf(inBottom(ActionId.SET_AS))
         binding.bottomActions.bottomSetAs.setOnLongClickListener { toast(org.fossify.commons.R.string.set_as); true }
         binding.bottomActions.bottomSetAs.setOnClickListener {
             setAs(getCurrentPath())
         }
 
-        binding.bottomActions.bottomCopy.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_COPY != 0)
+        binding.bottomActions.bottomCopy.beVisibleIf(inBottom(ActionId.COPY))
         binding.bottomActions.bottomCopy.setOnLongClickListener { toast(org.fossify.commons.R.string.copy); true }
         binding.bottomActions.bottomCopy.setOnClickListener {
             checkMediaManagementAndCopy(true)
         }
 
-        binding.bottomActions.bottomMove.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_MOVE != 0)
+        binding.bottomActions.bottomMove.beVisibleIf(inBottom(ActionId.MOVE))
         binding.bottomActions.bottomMove.setOnLongClickListener { toast(org.fossify.commons.R.string.move); true }
         binding.bottomActions.bottomMove.setOnClickListener {
             moveFileTo()
         }
 
-        binding.bottomActions.bottomResize.beVisibleIf(visibleBottomActions and BOTTOM_ACTION_RESIZE != 0 && currentMedium?.isImage() == true)
+        binding.bottomActions.bottomResize.beVisibleIf(inBottom(ActionId.RESIZE) && currentMedium?.isImage() == true)
         binding.bottomActions.bottomResize.setOnLongClickListener { toast(org.fossify.commons.R.string.resize); true }
         binding.bottomActions.bottomResize.setOnClickListener {
             resizeImage()
@@ -1064,7 +1077,7 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
             if (medium.isHidden()) org.fossify.commons.R.drawable.ic_unhide_vector else org.fossify.commons.R.drawable.ic_hide_vector
         binding.bottomActions.bottomToggleFileVisibility.setImageResource(hideIcon)
 
-        binding.bottomActions.bottomRotate.beVisibleIf(config.visibleBottomActions and BOTTOM_ACTION_ROTATE != 0 && getCurrentMedium()?.isImage() == true)
+        binding.bottomActions.bottomRotate.beVisibleIf(inBottom(ActionId.ROTATE) && getCurrentMedium()?.isImage() == true)
         binding.bottomActions.bottomChangeOrientation.setImageResource(getChangeOrientationIcon())
     }
 
@@ -1488,7 +1501,7 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
             binding.bottomActions.root.animate().alpha(newAlpha).withStartAction {
                 binding.bottomActions.root.beVisible()
             }.withEndAction {
-                binding.bottomActions.root.beVisibleIf(newAlpha == 1f)
+                binding.bottomActions.root.beVisibleIf(newAlpha == 1f && effectiveViewerLayout().hasAny(Slot.BOTTOM))
             }.start()
 
             binding.mediumViewerAppbar.animate().alpha(newAlpha).withStartAction {

@@ -13,6 +13,7 @@ import org.fossify.commons.extensions.*
 import org.fossify.commons.helpers.*
 import org.fossify.commons.models.RadioItem
 import org.fossify.gallery.R
+import org.fossify.gallery.mochipic.ButtonLayoutActivity
 import org.fossify.gallery.databinding.ActivitySettingsBinding
 import org.fossify.gallery.dialogs.*
 import org.fossify.gallery.extensions.*
@@ -682,23 +683,17 @@ class SettingsActivity : SimpleActivity() {
 
     private fun setupBottomActions() {
         binding.settingsBottomActionsCheckbox.isChecked = config.bottomActions
-        binding.settingsManageBottomActionsHolder.beVisibleIf(config.bottomActions)
         binding.settingsBottomActionsCheckboxHolder.setOnClickListener {
             binding.settingsBottomActionsCheckbox.toggle()
             config.bottomActions = binding.settingsBottomActionsCheckbox.isChecked
-            binding.settingsManageBottomActionsHolder.beVisibleIf(config.bottomActions)
         }
     }
 
+    // MochiPic: Fossify の「下部ボタンの表示・非表示」を、置き場所と並び順を決める「ボタンの配置」画面に置き換え
     private fun setupManageBottomActions() {
+        binding.settingsManageBottomActions.text = getString(R.string.mochipic_button_layout)
         binding.settingsManageBottomActionsHolder.setOnClickListener {
-            ManageBottomActionsDialog(this) {
-                if (config.visibleBottomActions == 0) {
-                    binding.settingsBottomActionsCheckboxHolder.callOnClick()
-                    config.bottomActions = false
-                    config.visibleBottomActions = DEFAULT_BOTTOM_ACTIONS
-                }
-            }
+            startActivity(Intent(this, ButtonLayoutActivity::class.java))
         }
     }
 

@@ -112,7 +112,7 @@ android {
         )
     }
 
-    namespace = project.property("APP_ID").toString()
+    namespace = "org.fossify.gallery" // ソースコードの名前空間は Fossify のまま（アプリ ID とは別）
 
     lint {
         checkReleaseBuilds = false
@@ -175,4 +175,7 @@ dependencies {
     implementation(libs.bundles.room)
     ksp(libs.androidx.room.compiler)
     detektPlugins(libs.compose.detekt)
+
+    // MochiPic: 単体テスト（テスト.bat で実行）
+    testImplementation("junit:junit:4.13.2")
 }

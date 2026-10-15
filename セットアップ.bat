@@ -37,8 +37,10 @@ if not exist "%SDKM%" goto fail
 :cl_ok
 echo   OK
 
-echo [3/5] Android SDK のライセンスに同意し、部品を入れています（数分）...
-(for /l %%i in (1,1,40) do @echo y) | call "%SDKM%" --sdk_root="%ANDROID_HOME%" --licenses>>"%LOG%" 2>&1
+echo [3/5] Android SDK の利用規約の確認と、部品の取得（数分）...
+rem 利用規約への同意はユーザーが承認済み（2026-10-15）。y を 40 回分ファイルに書いて答えとして渡す
+>"%T%\yes.txt" (for /l %%i in (1,1,40) do @echo y)
+call "%SDKM%" --sdk_root="%ANDROID_HOME%" --licenses <"%T%\yes.txt">>"%LOG%" 2>&1
 call "%SDKM%" --sdk_root="%ANDROID_HOME%" "platform-tools" "platforms;android-36" "build-tools;36.0.0">>"%LOG%" 2>&1
 if errorlevel 1 goto fail
 echo   OK

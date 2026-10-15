@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mochipic_button_layout">ボタンの配置</string>
+    <string name="mochipic_button_layout_viewer">ボタンの配置（画像・動画の表示）</string>
+    <string name="mochipic_button_layout_hint">左のつまみをドラッグして、並び順や置き場所を変えられます。右の置き場所の名前をタップすると、直接移動できます。</string>
+    <string name="mochipic_button_layout_reset">初期配置に戻す</string>
+    <string name="mochipic_button_layout_reset_confirm">ボタンの配置を初期配置に戻しますか？</string>
+    <string name="mochipic_button_layout_drag">ドラッグして移動</string>
+    <string name="mochipic_button_layout_not_bottom">このボタンは下部バーに置けません</string>
+    <string name="mochipic_slot_top">上部バー</string>
+    <string name="mochipic_slot_bottom">下部バー</string>
+    <string name="mochipic_slot_menu">︙メニュー</string>
+    <string name="mochipic_slot_hidden">非表示</string>
+    <string name="mochipic_action_toggle_visibility">隠す／表示する</string>
+</resources>
