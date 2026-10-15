@@ -22,7 +22,6 @@ import org.fossify.commons.extensions.toast
 import org.fossify.gallery.R
 import org.fossify.gallery.activities.MainActivity
 import org.fossify.gallery.activities.MediaActivity
-import org.fossify.gallery.activities.SettingsActivity
 import org.fossify.gallery.extensions.config
 import org.fossify.gallery.extensions.launchCamera
 import org.fossify.gallery.helpers.DIRECTORY
@@ -141,7 +140,7 @@ class SideMenu(private val activity: Activity, private val current: Item) {
             }
             Item.CAMERA -> activity.launchCamera()
             Item.WIFI -> activity.toast(R.string.mochipic_menu_wifi_later)
-            Item.SETTINGS -> activity.startActivity(Intent(activity, SettingsActivity::class.java))
+            Item.SETTINGS -> activity.startActivity(Intent(activity, SettingsCategoriesActivity::class.java))
         }
     }
 

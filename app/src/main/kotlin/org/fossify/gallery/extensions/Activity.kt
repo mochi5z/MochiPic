@@ -108,7 +108,7 @@ fun Activity.launchCamera() {
 
 fun SimpleActivity.launchSettings() {
     hideKeyboard()
-    startActivity(Intent(applicationContext, SettingsActivity::class.java))
+    startActivity(Intent(applicationContext, org.fossify.gallery.mochipic.SettingsCategoriesActivity::class.java))
 }
 
 fun SimpleActivity.launchAbout() {

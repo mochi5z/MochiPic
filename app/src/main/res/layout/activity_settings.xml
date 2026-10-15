@@ -59,6 +59,29 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
+            <!-- MochiPic: テーマの色（灰・青紫・黒・オレンジ・赤・ピンク × 暗い／明るい） -->
+            <RelativeLayout
+                android:id="@+id/settings_mochi_theme_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_mochi_theme_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_theme_row" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_mochi_theme"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_mochi_theme_label" />
+
+            </RelativeLayout>
+
             <include
                 android:id="@+id/settings_color_customization_divider"
                 layout="@layout/divider" />
@@ -1016,6 +1039,91 @@
 
             <include
                 android:id="@+id/settings_recycle_bin_divider"
+                layout="@layout/divider" />
+
+            <TextView
+                android:id="@+id/settings_mochi_slideshow_label"
+                style="@style/SettingsSectionLabelStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/mochipic_slideshow_section" />
+
+            <RelativeLayout
+                android:id="@+id/settings_mochi_slideshow_animation_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_mochi_slideshow_animation_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_slideshow_animations" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_mochi_slideshow_animation"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_mochi_slideshow_animation_label" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_mochi_slideshow_duration_holder"
+                style="@style/SettingsHolderTextViewStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_mochi_slideshow_duration_label"
+                    style="@style/SettingsTextLabelStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_slideshow_duration" />
+
+                <org.fossify.commons.views.MyTextView
+                    android:id="@+id/settings_mochi_slideshow_duration"
+                    style="@style/SettingsTextValueStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/settings_mochi_slideshow_duration_label" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_mochi_slideshow_shuffle_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_mochi_slideshow_shuffle"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_slideshow_shuffle" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/settings_mochi_slideshow_loop_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_mochi_slideshow_loop"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_slideshow_loop" />
+
+            </RelativeLayout>
+
+            <include
+                android:id="@+id/settings_mochi_slideshow_divider"
                 layout="@layout/divider" />
 
             <TextView

@@ -177,6 +177,13 @@
             android:parentActivityName=".activities.SettingsActivity" />
 
         <activity
+            android:name=".mochipic.SettingsCategoriesActivity"
+            android:configChanges="orientation"
+            android:exported="false"
+            android:label="@string/settings"
+            android:parentActivityName=".activities.MainActivity" />
+
+        <activity
             android:name=".mochipic.ExplorerActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false"

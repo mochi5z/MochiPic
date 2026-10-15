@@ -14,6 +14,8 @@ import org.fossify.commons.helpers.*
 import org.fossify.commons.models.RadioItem
 import org.fossify.gallery.R
 import org.fossify.gallery.mochipic.ButtonLayoutActivity
+import org.fossify.gallery.mochipic.SettingsCategory
+import org.fossify.gallery.mochipic.ThemePresets
 import org.fossify.gallery.databinding.ActivitySettingsBinding
 import org.fossify.gallery.dialogs.*
 import org.fossify.gallery.extensions.*
@@ -30,6 +32,9 @@ class SettingsActivity : SimpleActivity() {
         private const val PICK_IMPORT_SOURCE_INTENT = 1
         private const val SELECT_EXPORT_FAVORITES_FILE_INTENT = 2
         private const val SELECT_IMPORT_FAVORITES_FILE_INTENT = 3
+
+        /** MochiPic: 設定の分類（[SettingsCategory.key]）。付いていれば、その分類の項目だけを出す。 */
+        const val EXTRA_CATEGORY = "mochipic_settings_category"
     }
 
     private var mRecycleBinContentSize = 0L
@@ -50,6 +55,26 @@ class SettingsActivity : SimpleActivity() {
         super.onResume()
         setupTopAppBar(binding.settingsAppbar, NavigationIcon.Arrow)
         setupSettingItems()
+        applyCategory()
+    }
+
+    // ---------------------------------------------------------------- MochiPic: 設定を分類ごとに出す
+
+    private fun applyCategory() {
+        val category = SettingsCategory.fromKey(intent.getStringExtra(EXTRA_CATEGORY)) ?: return
+        binding.settingsToolbar.title = getString(category.titleRes)
+        var sectionCategory: SettingsCategory? = null
+        val holder = binding.settingsHolder
+        for (i in 0 until holder.childCount) {
+            val child = holder.getChildAt(i)
+            val name = if (child.id != android.view.View.NO_ID) {
+                try { resources.getResourceEntryName(child.id) } catch (e: Exception) { null }
+            } else null
+            name?.let { SettingsCategory.SECTION_OF[it] }?.let { sectionCategory = it }
+            val itemCategory = name?.let { SettingsCategory.ITEM_OVERRIDE[it] } ?: sectionCategory
+            // 表示する側の項目は触らない（Fossify の各 setup が出し入れしている）
+            if (itemCategory != category) child.beGone()
+        }
     }
 
     private fun setupSettingItems() {
@@ -96,6 +121,8 @@ class SettingsActivity : SimpleActivity() {
         setupShowHighestQuality()
         setupAllowOneToOneZoom()
         setupMochiSingleTapZoom()
+        setupMochiTheme()
+        setupMochiSlideshow()
         setupAllowInstantChange()
         setupShowExtendedDetails()
         setupHideExtendedDetails()
@@ -603,6 +630,65 @@ class SettingsActivity : SimpleActivity() {
     }
 
     // MochiPic: シングルタップで拡大（オン: 1 回タップで拡大、2 回タップでバー表示）
+    private fun setupMochiTheme() {
+        binding.settingsMochiTheme.text = getString(R.string.mochipic_theme_row_summary)
+        binding.settingsMochiThemeHolder.setOnClickListener {
+            ThemePresets.show(this) {
+                // recreate() だと、色を変えた直後だけ上部バーの位置がずれるので、開き直す
+                startActivity(Intent(this, SettingsActivity::class.java).putExtras(intent))
+                finish()
+                @Suppress("DEPRECATION")
+                overridePendingTransition(0, 0)
+            }
+        }
+    }
+
+    private fun setupMochiSlideshow() {
+        fun animationText() = getString(
+            when (config.slideshowAnimation) {
+                SLIDESHOW_ANIMATION_NONE -> R.string.mochipic_slideshow_anim_none
+                SLIDESHOW_ANIMATION_FADE -> R.string.mochipic_slideshow_anim_fade
+                else -> R.string.mochipic_slideshow_anim_slide
+            }
+        )
+        fun durationText() = getString(R.string.mochipic_slideshow_seconds_format, config.slideshowInterval)
+
+        binding.settingsMochiSlideshowAnimation.text = animationText()
+        binding.settingsMochiSlideshowAnimationHolder.setOnClickListener {
+            val items = arrayListOf(
+                RadioItem(SLIDESHOW_ANIMATION_NONE, getString(R.string.mochipic_slideshow_anim_none)),
+                RadioItem(SLIDESHOW_ANIMATION_SLIDE, getString(R.string.mochipic_slideshow_anim_slide)),
+                RadioItem(SLIDESHOW_ANIMATION_FADE, getString(R.string.mochipic_slideshow_anim_fade)),
+            )
+            RadioGroupDialog(this, items, config.slideshowAnimation) {
+                config.slideshowAnimation = it as Int
+                binding.settingsMochiSlideshowAnimation.text = animationText()
+            }
+        }
+
+        binding.settingsMochiSlideshowDuration.text = durationText()
+        binding.settingsMochiSlideshowDurationHolder.setOnClickListener {
+            val seconds = listOf(1, 2, 3, 5, 8, 10, 15, 30, 60)
+            val items = ArrayList(seconds.map { RadioItem(it, getString(R.string.mochipic_slideshow_seconds_format, it)) })
+            RadioGroupDialog(this, items, config.slideshowInterval) {
+                config.slideshowInterval = it as Int
+                binding.settingsMochiSlideshowDuration.text = durationText()
+            }
+        }
+
+        binding.settingsMochiSlideshowShuffle.isChecked = config.slideshowRandomOrder
+        binding.settingsMochiSlideshowShuffleHolder.setOnClickListener {
+            binding.settingsMochiSlideshowShuffle.toggle()
+            config.slideshowRandomOrder = binding.settingsMochiSlideshowShuffle.isChecked
+        }
+
+        binding.settingsMochiSlideshowLoop.isChecked = config.loopSlideshow
+        binding.settingsMochiSlideshowLoopHolder.setOnClickListener {
+            binding.settingsMochiSlideshowLoop.toggle()
+            config.loopSlideshow = binding.settingsMochiSlideshowLoop.isChecked
+        }
+    }
+
     private fun setupMochiSingleTapZoom() {
         val prefs = org.fossify.gallery.mochipic.MochiPicPrefs(this)
         binding.settingsMochiSingleTapZoom.isChecked = prefs.singleTapZoom
