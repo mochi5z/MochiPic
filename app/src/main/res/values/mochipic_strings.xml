@@ -127,4 +127,7 @@
     <string name="mochipic_scan_folders_count">%d folders</string>
     <string name="mochipic_scan_folders_empty">No folders added, so the whole storage is scanned.\nAdd folders with + to scan only them.</string>
     <string name="mochipic_skip_app_folders">Skip app folders (Android/data etc.) and cache folders</string>
+    <string name="mochipic_load_mode">How to load albums</string>
+    <string name="mochipic_load_mode_mediastore">Fast (Android media list)</string>
+    <string name="mochipic_load_mode_full">Full (check every folder directly)</string>
 </resources>

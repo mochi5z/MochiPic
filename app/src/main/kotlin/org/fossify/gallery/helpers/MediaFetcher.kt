@@ -176,7 +176,7 @@ class MediaFetcher(val context: Context) {
         return parents
     }
 
-    private fun getSelectionQuery(filterMedia: Int): String {
+    fun getSelectionQuery(filterMedia: Int): String {
         val query = StringBuilder()
         if (filterMedia and TYPE_IMAGES != 0) {
             photoExtensions.forEach {
@@ -212,7 +212,7 @@ class MediaFetcher(val context: Context) {
         return query.toString().trim().removeSuffix("OR")
     }
 
-    private fun getSelectionArgsQuery(filterMedia: Int): ArrayList<String> {
+    fun getSelectionArgsQuery(filterMedia: Int): ArrayList<String> {
         val args = ArrayList<String>()
         if (filterMedia and TYPE_IMAGES != 0) {
             photoExtensions.forEach {

@@ -4,6 +4,11 @@ import android.content.Context
 
 /** MochiPic で追加した設定（Fossify の設定とは別のファイルに保存）。 */
 class MochiPicPrefs(context: Context) {
+    companion object {
+        const val LOAD_MEDIASTORE = 0
+        const val LOAD_FULL = 1
+    }
+
     private val appContext = context.applicationContext
     private val prefs = context.applicationContext.getSharedPreferences("mochipic_settings", Context.MODE_PRIVATE)
 
@@ -24,6 +29,14 @@ class MochiPicPrefs(context: Context) {
     var showHiddenFolders: Boolean
         get() = prefs.getBoolean("show_hidden_folders", true)
         set(value) = prefs.edit().putBoolean("show_hidden_folders", value).apply()
+
+    /**
+     * アルバム一覧の読み込み方。[LOAD_MEDIASTORE]（標準）は Android の画像の一覧を 1 回読むだけで速い。
+     * [LOAD_FULL] はフォルダを 1 つずつ直接調べる（遅いが、Android の一覧に載らない画像も拾う）。
+     */
+    var loadMode: Int
+        get() = prefs.getInt("load_mode", LOAD_MEDIASTORE)
+        set(value) = prefs.edit().putInt("load_mode", value).apply()
 
     /** 前回フォルダを調べ終えたときの Android の画像の一覧の状態（変化がなければ調べ直さないため）。 */
     var lastScanState: String?

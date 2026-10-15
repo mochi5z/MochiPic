@@ -1219,6 +1219,14 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
                 }
                 return
             }
+        }
+
+        // MochiPic: 標準は Android の画像の一覧を 1 回読むだけで一覧を作る（設定で「フォルダを直接読み込む」にすると従来の方式）
+        if (mochiPrefs.loadMode == org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_MEDIASTORE && mochiQuickLoad(dirs, mochiStateNow)) {
+            return
+        }
+
+        if (!mochiForce && mochiStateNow != null && mochiStateOld != null && dirs.isNotEmpty()) {
             val cachedCounts = dirs.filter { !it.isRecycleBin() && !it.areFavorites() }
                 .associate { it.path.lowercase(java.util.Locale.ROOT) to it.mediaCnt }
             mochiChanged = mLastMediaFetcher!!.changedFoldersSince(mochiStateOld, mochiStateNow, cachedCounts)
@@ -1871,13 +1879,55 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         }
     }
 
+    /**
+     * Android の画像の一覧を 1 回読むだけでアルバム一覧を作る。読めなかったら false（従来の方式で読む）。
+     * フォルダの中身（日付など）はフォルダを開いたときに読む。
+     */
+    private fun mochiQuickLoad(cached: ArrayList<Directory>, state: MediaFetcher.ScanState?): Boolean {
+        val getImages = mIsPickImageIntent || mIsGetImageContentIntent
+        val getVideos = mIsPickVideoIntent || mIsGetVideoContentIntent
+        val result = org.fossify.gallery.mochipic.QuickAlbumLoader.load(this, cached, getImages && !getVideos, getVideos && !getImages)
+            ?: return false
+        if (mShouldStopFetching || isDestroyed || isFinishing) {
+            return true
+        }
+
+        val dirs = result.dirs
+        if (config.groupDirectSubfolders) {
+            mDirs = dirs.clone() as ArrayList<Directory>
+        }
+        setupAdapter(dirs)
+        mLoadedInitialPhotos = true
+        state?.let { mochiPrefs.lastScanState = it.encode() }
+        runOnUiThread {
+            binding.directoriesRefreshLayout.isRefreshing = false
+            checkPlaceholderVisibility(dirs)
+        }
+
+        // 次に開いたときすぐ出せるよう、アプリのデータベースにも入れておく
+        Thread {
+            try {
+                val keep = dirs.map { it.path.lowercase(java.util.Locale.ROOT) }.toHashSet()
+                cached.filter { it.path.lowercase(java.util.Locale.ROOT) !in keep }.forEach { directoryDB.deleteDirPath(it.path) }
+                directoryDB.insertAll(dirs)
+                result.changedMedia.values.forEach { mediaDB.insertAll(it) }
+            } catch (ignored: Exception) {
+            }
+        }.start()
+
+        if (config.appRunCount > 1) {
+            checkLastMediaChanged()
+        }
+        return true
+    }
+
     /** 読み込む範囲に関わる設定。変わったら全部調べ直す。 */
     private fun mochiScanSettings(): String {
         val prefs = mochiPrefs
         return listOf(
             config.filterMedia, config.shouldShowHidden, config.showRecycleBinAtFolders,
             config.excludedFolders.sorted(), config.includedFolders.sorted(),
-            prefs.scanFolders.sorted(), prefs.skipAppFolders, isPickIntent(intent) || isGetAnyContentIntent(intent),
+            prefs.scanFolders.sorted(), prefs.skipAppFolders, prefs.loadMode, isPickIntent(intent) || isGetAnyContentIntent(intent),
         ).joinToString("|").hashCode().toString()
     }
 

@@ -257,6 +257,23 @@ class SettingsActivity : SimpleActivity() {
         binding.settingsMochiScanFoldersHolder.setOnClickListener {
             startActivity(Intent(this, org.fossify.gallery.mochipic.ScanFoldersActivity::class.java))
         }
+        val loadModeText = {
+            getString(
+                if (prefs.loadMode == org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_FULL) R.string.mochipic_load_mode_full
+                else R.string.mochipic_load_mode_mediastore
+            )
+        }
+        binding.settingsMochiLoadMode.text = loadModeText()
+        binding.settingsMochiLoadModeHolder.setOnClickListener {
+            val items = arrayListOf(
+                RadioItem(org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_MEDIASTORE, getString(R.string.mochipic_load_mode_mediastore)),
+                RadioItem(org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_FULL, getString(R.string.mochipic_load_mode_full)),
+            )
+            RadioGroupDialog(this@SettingsActivity, items, prefs.loadMode) {
+                prefs.loadMode = it as Int
+                binding.settingsMochiLoadMode.text = loadModeText()
+            }
+        }
         binding.settingsMochiSkipAppFolders.isChecked = prefs.skipAppFolders
         binding.settingsMochiSkipAppFoldersHolder.setOnClickListener {
             binding.settingsMochiSkipAppFolders.toggle()
