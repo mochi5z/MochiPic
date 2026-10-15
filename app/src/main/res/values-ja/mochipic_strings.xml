@@ -24,4 +24,23 @@
     <string name="mochipic_zoom_out">縮小</string>
     <string name="mochipic_single_tap_zoom">シングルタップで画像を拡大する</string>
     <string name="mochipic_single_tap_zoom_summary">シングルタップで画像を拡大表示して、ダブルタップでツールバーを表示するようにします。設定しない場合は逆の動作になります</string>
+    <string name="mochipic_menu_albums">アルバム</string>
+    <string name="mochipic_menu_date">日付</string>
+    <string name="mochipic_menu_explorer">エクスプローラー</string>
+    <string name="mochipic_menu_camera">カメラ</string>
+    <string name="mochipic_menu_wifi">Wi-Fi ファイル送受信</string>
+    <string name="mochipic_menu_settings">設定</string>
+    <string name="mochipic_menu_wifi_later">Wi-Fi ファイル送受信は今後のバージョンで追加します</string>
+    <string name="mochipic_side_menu_title">ギャラリー</string>
+    <string name="mochipic_open_side_menu">メニューを開く</string>
+    <string name="mochipic_close_side_menu">メニューを閉じる</string>
+    <string name="mochipic_explorer_exit">アルバム表示に戻る</string>
+    <string name="mochipic_explorer_search_hint">このフォルダ内を検索</string>
+    <string name="mochipic_explorer_internal">内部ストレージ</string>
+    <string name="mochipic_explorer_sd">SD カード</string>
+    <string name="mochipic_explorer_storage_list">ストレージ</string>
+    <string name="mochipic_explorer_up">1 つ上の階層へ</string>
+    <string name="mochipic_explorer_empty">フォルダも画像もありません</string>
+    <string name="mochipic_view_explorer">エクスプローラー</string>
+    <string name="mochipic_album_title">アルバム</string>
 </resources>

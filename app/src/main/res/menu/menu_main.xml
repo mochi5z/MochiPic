@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- MochiPic: QP-Gallery と同じく上部バーには並べ替えと検索だけを出す（カメラと「すべて表示」はサイドメニューへ） -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -7,11 +8,13 @@
         android:id="@+id/open_camera"
         android:icon="@drawable/ic_camera_vector"
         android:title="@string/open_camera"
+        android:visible="false"
         app:showAsAction="always" />
     <item
         android:id="@+id/show_all"
         android:icon="@drawable/ic_files_vector"
         android:title="@string/show_all"
+        android:visible="false"
         app:showAsAction="always" />
     <item
         android:id="@+id/sort"
@@ -22,7 +25,7 @@
         android:id="@+id/filter"
         android:icon="@drawable/ic_filter_vector"
         android:title="@string/filter_media"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/change_view_type"
         android:showAsAction="never"
@@ -67,17 +70,17 @@
         android:id="@+id/column_count"
         android:icon="@drawable/ic_column_count_vector"
         android:title="@string/column_count"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/settings"
         android:icon="@drawable/ic_settings_cog_vector"
         android:title="@string/settings"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/about"
         android:icon="@drawable/ic_info_vector"
         android:title="@string/about"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/more_apps_from_us"
         android:icon="@drawable/ic_google_play_vector"

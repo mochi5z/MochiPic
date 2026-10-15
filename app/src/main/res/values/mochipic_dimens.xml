@@ -2,4 +2,9 @@
 <resources>
     <!-- MochiPic: リスト表示のサムネイル（QP-Gallery と同じく画面幅の約 1/5） -->
     <dimen name="mochipic_list_thumbnail_size">84dp</dimen>
+    <!-- サイドメニュー -->
+    <dimen name="mochipic_side_menu_width">280dp</dimen>
+    <dimen name="mochipic_side_menu_item_height">52dp</dimen>
+    <!-- エクスプローラーのフォルダの行のサムネイル -->
+    <dimen name="mochipic_explorer_folder_thumb">56dp</dimen>
 </resources>

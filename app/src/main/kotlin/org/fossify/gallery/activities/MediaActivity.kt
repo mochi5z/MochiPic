@@ -125,6 +125,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     private var mIsGettingMedia = false
     private var mAllowPickingMultiple = false
     private var mShowAll = false
+    private var sideMenu: org.fossify.gallery.mochipic.SideMenu? = null  // MochiPic
     private var mLoadedInitialPhotos = false
     private var mShowLoadingIndicator = true
     private var mWasFullscreenViewOpen = false
@@ -173,8 +174,15 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         }
 
         setupOptionsMenu()
-        refreshMenuItems()
         storeStateVariables()
+        // MochiPic: 「日付」（全部の画像を日付ごとに表示）のときは、上部バーを「≡ 日付」にしてサイドメニューを付ける
+        if (mShowAll && !mIsGetImageIntent && !mIsGetVideoIntent && !mIsGetAnyIntent) {
+            sideMenu = org.fossify.gallery.mochipic.SideMenu(this, org.fossify.gallery.mochipic.SideMenu.Item.DATE).attach()
+            org.fossify.gallery.mochipic.QpTopBar.install(this, binding.mediaMenu, getString(R.string.mochipic_menu_date)) {
+                sideMenu?.open()
+            }
+        }
+        refreshMenuItems()
         setupEdgeToEdge(
             padTopSystem = listOf(binding.mediaMenu),
             padBottomImeAndSystem = listOf(binding.mediaGrid)
@@ -306,6 +314,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     }
 
     override fun onBackPressedCompat(): Boolean {
+        if (sideMenu?.closeIfOpen() == true) return true
         return if (binding.mediaMenu.isSearchOpen) {
             binding.mediaMenu.closeSearch()
             true
@@ -339,8 +348,8 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
             findItem(R.id.empty_disable_recycle_bin).isVisible = mPath == RECYCLE_BIN
             findItem(R.id.restore_all_files).isVisible = mPath == RECYCLE_BIN
 
-            findItem(R.id.folder_view).isVisible = mShowAll
-            findItem(R.id.open_camera).isVisible = mShowAll
+            findItem(R.id.folder_view).isVisible = mShowAll && sideMenu == null  // MochiPic: サイドメニューがあればそちらから
+            findItem(R.id.open_camera).isVisible = mShowAll && sideMenu == null
             findItem(R.id.about).isVisible = mShowAll
             findItem(R.id.create_new_folder).isVisible =
                 !mShowAll && mPath != RECYCLE_BIN && mPath != FAVORITES
@@ -372,6 +381,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
 
         binding.mediaMenu.requireToolbar().setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
+                R.id.mochi_search -> org.fossify.gallery.mochipic.QpTopBar.handleMenuClick(this, binding.mediaMenu, menuItem)
                 R.id.sort -> showSortingDialog()
                 R.id.filter -> showFilterMediaDialog()
                 R.id.empty_recycle_bin -> emptyRecycleBin()
@@ -414,6 +424,10 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
 
     private fun updateMenuColors() {
         binding.mediaMenu.updateColors()
+        if (sideMenu != null) {
+            org.fossify.gallery.mochipic.QpTopBar.updateColors(this, binding.mediaMenu)
+            sideMenu?.updateColors()
+        }
     }
 
     private fun storeStateVariables() {

@@ -103,6 +103,7 @@ import org.fossify.gallery.extensions.handleMediaManagementPrompt
 import org.fossify.gallery.extensions.isDownloadsFolder
 import org.fossify.gallery.extensions.launchAbout
 import org.fossify.gallery.extensions.launchCamera
+import org.fossify.gallery.mochipic.mochiPrefs
 import org.fossify.gallery.extensions.launchSettings
 import org.fossify.gallery.extensions.mediaDB
 import org.fossify.gallery.extensions.movePathsInRecycleBin
@@ -197,6 +198,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     private var mStoredPrimaryColor = 0
     private var mStoredStyleString = ""
     private val binding by viewBinding(ActivityMainBinding::inflate)
+    private var sideMenu: org.fossify.gallery.mochipic.SideMenu? = null  // MochiPic: ≡ のサイドメニュー
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -227,7 +229,16 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
                 || mIsGetAnyContentIntent
                 || mIsSetWallpaperIntent
 
+        if (!mIsThirdPartyIntent) {
+            sideMenu = org.fossify.gallery.mochipic.SideMenu(this, org.fossify.gallery.mochipic.SideMenu.Item.ALBUMS).attach()
+        }
         setupOptionsMenu()
+        if (!mIsThirdPartyIntent) {
+            // MochiPic: 上部バーを QP-Gallery の「≡ アルバム」に
+            org.fossify.gallery.mochipic.QpTopBar.install(this, binding.mainMenu, getString(R.string.mochipic_album_title)) {
+                sideMenu?.open()
+            }
+        }
         refreshMenuItems()
 
         setupEdgeToEdge(
@@ -393,6 +404,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     }
 
     override fun onBackPressedCompat(): Boolean {
+        if (sideMenu?.closeIfOpen() == true) return true
         return if (binding.mainMenu.isSearchOpen) {
             binding.mainMenu.closeSearch()
             true
@@ -495,6 +507,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
 
         binding.mainMenu.requireToolbar().setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
+                R.id.mochi_search -> org.fossify.gallery.mochipic.QpTopBar.handleMenuClick(this, binding.mainMenu, menuItem)
                 R.id.sort -> showQpSortMenu() // MochiPic: QP 風の短いメニュー
                 R.id.filter -> showFilterMediaDialog()
                 R.id.open_camera -> launchCamera()
@@ -519,6 +532,8 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
 
     private fun updateMenuColors() {
         binding.mainMenu.updateColors()
+        org.fossify.gallery.mochipic.QpTopBar.updateColors(this, binding.mainMenu)
+        sideMenu?.updateColors()
     }
 
     private fun getRecyclerAdapter() = binding.directoriesGrid.adapter as? DirectoryAdapter
@@ -612,6 +627,13 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
             checkOTGPath()
             checkDefaultSpamFolders()
 
+            // MochiPic: エクスプローラーを起動画面にしているときは、そちらを開く
+            if (!mIsThirdPartyIntent && mochiPrefs.explorerMode) {
+                startActivity(Intent(this, org.fossify.gallery.mochipic.ExplorerActivity::class.java))
+                finish()
+                return@handleMediaPermissions
+            }
+
             if (config.showAll) {
                 showAllMedia()
             } else {
@@ -657,7 +679,11 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     }
 
     private fun showQpViewTypeMenu() {
-        org.fossify.gallery.mochipic.AlbumMenus.showViewType(this, binding.mainMenu) {
+        org.fossify.gallery.mochipic.AlbumMenus.showViewType(this, binding.mainMenu, onExplorer = {
+            mochiPrefs.explorerMode = true
+            startActivity(Intent(this, org.fossify.gallery.mochipic.ExplorerActivity::class.java))
+            finish()
+        }) {
             refreshMenuItems()
             setupLayoutManager()
             binding.directoriesGrid.adapter = null

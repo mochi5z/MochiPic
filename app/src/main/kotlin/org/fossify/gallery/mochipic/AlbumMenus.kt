@@ -25,12 +25,14 @@ import org.fossify.gallery.extensions.config
 object AlbumMenus {
 
     private const val GROUP = 1
+    private const val GROUP_EXPLORER = 2
+    private const val EXPLORER = -100
 
     /** Fossify の他のメニューと同じテーマ（明るさ・文字色）で出す。 */
     private fun themed(activity: Activity) = ContextThemeWrapper(activity, activity.getPopupMenuTheme())
 
-    /** 表示形式: グリッド／リスト（選んでいるものに印）。 */
-    fun showViewType(activity: Activity, anchor: View, onChanged: () -> Unit) {
+    /** 表示形式: グリッド／リスト（選んでいるものに印）と、別枠の「エクスプローラー」（フォルダ階層をたどる画面へ）。 */
+    fun showViewType(activity: Activity, anchor: View, onExplorer: (() -> Unit)? = null, onChanged: () -> Unit) {
         val config = activity.config
         val popup = PopupMenu(themed(activity), anchor, Gravity.END)
         val menu = popup.menu
@@ -38,10 +40,16 @@ object AlbumMenus {
         menu.add(GROUP, VIEW_TYPE_LIST, 1, R.string.mochipic_view_list)
         menu.setGroupCheckable(GROUP, true, true)
         menu.findItem(config.viewTypeFolders)?.isChecked = true
+        if (onExplorer != null) {
+            menu.add(GROUP_EXPLORER, EXPLORER, 2, R.string.mochipic_view_explorer).isCheckable = true
+        }
         popup.setOnMenuItemClickListener { item ->
-            if (item.itemId != config.viewTypeFolders) {
-                config.viewTypeFolders = item.itemId
-                onChanged()
+            when {
+                item.itemId == EXPLORER -> onExplorer?.invoke()
+                item.itemId != config.viewTypeFolders -> {
+                    config.viewTypeFolders = item.itemId
+                    onChanged()
+                }
             }
             true
         }

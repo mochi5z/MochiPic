@@ -25,4 +25,23 @@
     <string name="mochipic_zoom_out">Zoom out</string>
     <string name="mochipic_single_tap_zoom">Zoom in with a single tap</string>
     <string name="mochipic_single_tap_zoom_summary">Single tap zooms the image, double tap shows the toolbars. When off, the other way round</string>
+    <string name="mochipic_menu_albums">Albums</string>
+    <string name="mochipic_menu_date">Date</string>
+    <string name="mochipic_menu_explorer">Explorer</string>
+    <string name="mochipic_menu_camera">Camera</string>
+    <string name="mochipic_menu_wifi">Wi-Fi file transfer</string>
+    <string name="mochipic_menu_settings">Settings</string>
+    <string name="mochipic_menu_wifi_later">Wi-Fi file transfer will be added in a later version</string>
+    <string name="mochipic_side_menu_title">Gallery</string>
+    <string name="mochipic_open_side_menu">Open menu</string>
+    <string name="mochipic_close_side_menu">Close menu</string>
+    <string name="mochipic_explorer_exit">Back to albums</string>
+    <string name="mochipic_explorer_search_hint">Search in this folder</string>
+    <string name="mochipic_explorer_internal">Internal storage</string>
+    <string name="mochipic_explorer_sd">SD card</string>
+    <string name="mochipic_explorer_storage_list">Storage</string>
+    <string name="mochipic_explorer_up">Up one level</string>
+    <string name="mochipic_explorer_empty">No folders or media here</string>
+    <string name="mochipic_view_explorer">Explorer</string>
+    <string name="mochipic_album_title">Albums</string>
 </resources>

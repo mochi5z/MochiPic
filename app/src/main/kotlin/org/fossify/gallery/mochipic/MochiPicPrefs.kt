@@ -10,6 +10,11 @@ class MochiPicPrefs(context: Context) {
     var singleTapZoom: Boolean
         get() = prefs.getBoolean("single_tap_zoom", false)
         set(value) = prefs.edit().putBoolean("single_tap_zoom", value).apply()
+
+    /** オン: 起動するとアルバム一覧ではなくエクスプローラー（フォルダ階層）を開く。 */
+    var explorerMode: Boolean
+        get() = prefs.getBoolean("explorer_mode", false)
+        set(value) = prefs.edit().putBoolean("explorer_mode", value).apply()
 }
 
 val Context.mochiPrefs: MochiPicPrefs get() = MochiPicPrefs(this)

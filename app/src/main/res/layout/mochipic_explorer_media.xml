@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MochiPic: エクスプローラーの画像・動画 1 マス -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:foreground="?attr/selectableItemBackground"
+    android:padding="1dp">
+
+    <org.fossify.commons.views.MySquareImageView
+        android:id="@+id/explorer_media_thumb"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:contentDescription="@null"
+        android:scaleType="centerCrop" />
+
+    <ImageView
+        android:id="@+id/explorer_media_play"
+        android:layout_width="28dp"
+        android:layout_height="28dp"
+        android:layout_gravity="center"
+        android:contentDescription="@null"
+        android:src="@drawable/mochipic_play_overlay"
+        android:visibility="gone" />
+</FrameLayout>

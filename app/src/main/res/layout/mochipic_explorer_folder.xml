@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MochiPic: エクスプローラーのフォルダ 1 行（左にサムネイル、右に「名前 枚数」と更新日時） -->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?attr/selectableItemBackground">
+
+    <ImageView
+        android:id="@+id/explorer_folder_thumb"
+        android:layout_width="@dimen/mochipic_explorer_folder_thumb"
+        android:layout_height="@dimen/mochipic_explorer_folder_thumb"
+        android:layout_marginStart="@dimen/medium_margin"
+        android:layout_marginTop="@dimen/small_margin"
+        android:layout_marginBottom="@dimen/small_margin"
+        android:contentDescription="@null" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignTop="@+id/explorer_folder_thumb"
+        android:layout_alignBottom="@+id/explorer_folder_thumb"
+        android:layout_toEndOf="@+id/explorer_folder_thumb"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingStart="@dimen/activity_margin"
+        android:paddingEnd="@dimen/activity_margin">
+
+        <TextView
+            android:id="@+id/explorer_folder_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/explorer_folder_info"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/explorer_folder_divider"
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:layout_below="@+id/explorer_folder_thumb"
+        android:layout_toEndOf="@+id/explorer_folder_thumb" />
+</RelativeLayout>
