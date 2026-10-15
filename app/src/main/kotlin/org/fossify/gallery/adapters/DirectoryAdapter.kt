@@ -201,14 +201,17 @@ class DirectoryAdapter(
             checkHideBtnVisibility(this, selectedPaths)
             checkPinBtnVisibility(this, selectedPaths)
 
-            // MochiPic: 1 つなら 削除・共有・回転、2 つ以上なら 削除・除外・すべて選択（QP-Gallery と同じ）
-            val multi = selectedPaths.size > 1
-            findItem(R.id.cab_share).isVisible = !multi
-            findItem(R.id.cab_rotate).isVisible = !multi
-            val bar = android.view.MenuItem.SHOW_AS_ACTION_ALWAYS
-            val overflow = android.view.MenuItem.SHOW_AS_ACTION_NEVER
-            findItem(R.id.cab_exclude).setShowAsAction(if (multi) bar else overflow)
-            findItem(R.id.cab_select_all).setShowAsAction(if (multi) bar else overflow)
+            // MochiPic: QP-Gallery と同じ項目だけを出す（隠す／表示する・先頭に固定／解除の切り替えは Fossify の判定のまま）
+            val keep = if (isOneItemSelected) {
+                setOf(R.id.cab_delete, R.id.cab_rename, R.id.cab_hide, R.id.cab_unhide, R.id.cab_pin, R.id.cab_unpin, R.id.cab_exclude, R.id.cab_select_all)
+            } else {
+                setOf(R.id.cab_delete, R.id.cab_hide, R.id.cab_unhide, R.id.cab_select_all_multi, R.id.cab_exclude)
+            }
+            for (i in 0 until size()) {
+                val item = getItem(i)
+                if (item.itemId !in keep) item.isVisible = false
+                else if (item.itemId == R.id.cab_select_all || item.itemId == R.id.cab_select_all_multi || item.itemId == R.id.cab_exclude) item.isVisible = true
+            }
         }
     }
 
@@ -235,6 +238,7 @@ class DirectoryAdapter(
             R.id.cab_copy_to -> copyFilesTo()
             R.id.cab_move_to -> moveFilesTo()
             R.id.cab_select_all -> selectAll()
+            R.id.cab_select_all_multi -> selectAll()
             R.id.cab_create_shortcut -> tryCreateShortcut()
             R.id.cab_delete -> askConfirmDelete()
             R.id.cab_share -> shareFolderMedia()

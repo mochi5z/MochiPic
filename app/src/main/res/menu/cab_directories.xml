@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- MochiPic: QP-Gallery と同じく、1 つ選択中は 削除・共有・回転（フォルダの中の画像に対して）、
-     2 つ以上選択中は 削除・除外・すべて選択（DirectoryAdapter.prepareActionMode で切り替え） -->
+<!-- MochiPic: QP-Gallery と同じ選択メニュー（どれを出すかは DirectoryAdapter.prepareActionMode）
+     1 つ選択: [削除][名前の変更] ︙ 隠しフォルダにする・先頭に表示・除外フォルダにする・すべて選択
+     2 つ以上: [削除] ︙ 隠しフォルダにする・すべて選択・除外フォルダにする
+     共有・回転などそれ以外の項目は、ボタンの配置を変えられるようにするときのために残してある（今は出さない） -->
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -12,17 +14,65 @@
         android:showAsAction="always"
         app:showAsAction="always" />
     <item
+        android:id="@+id/cab_rename"
+        android:icon="@drawable/ic_rename_vector"
+        android:title="@string/rename"
+        android:showAsAction="always"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/cab_hide"
+        android:icon="@drawable/ic_hide_vector"
+        android:title="@string/hide_folder"
+        android:showAsAction="never"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/cab_unhide"
+        android:icon="@drawable/ic_unhide_vector"
+        android:title="@string/unhide_folder"
+        android:showAsAction="never"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/cab_pin"
+        android:icon="@drawable/ic_pin_filled_vector"
+        android:title="@string/pin_to_the_top"
+        android:showAsAction="never"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/cab_unpin"
+        android:icon="@drawable/ic_pin_vector"
+        android:title="@string/unpin_folder"
+        android:showAsAction="never"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/cab_select_all_multi"
+        android:icon="@drawable/ic_select_all_vector"
+        android:title="@string/select_all"
+        android:showAsAction="never"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/cab_exclude"
+        android:icon="@drawable/mochipic_ic_exclude"
+        android:title="@string/exclude"
+        android:showAsAction="never"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/cab_select_all"
+        android:icon="@drawable/ic_select_all_vector"
+        android:title="@string/select_all"
+        android:showAsAction="never"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/cab_share"
         android:icon="@drawable/ic_share_vector"
         android:title="@string/share"
-        android:showAsAction="always"
-        app:showAsAction="always" />
+        android:showAsAction="never"
+        app:showAsAction="never" />
     <item
         android:id="@+id/cab_rotate"
         android:icon="@drawable/ic_rotate_right_vector"
         android:title="@string/rotate"
-        android:showAsAction="always"
-        app:showAsAction="always">
+        android:showAsAction="never"
+        app:showAsAction="never">
         <menu>
             <item
                 android:id="@+id/cab_rotate_right"
@@ -42,18 +92,6 @@
         android:showAsAction="never"
         app:showAsAction="never" />
     <item
-        android:id="@+id/cab_pin"
-        android:icon="@drawable/ic_pin_filled_vector"
-        android:title="@string/pin_to_the_top"
-        android:showAsAction="never"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/cab_unpin"
-        android:icon="@drawable/ic_pin_vector"
-        android:title="@string/unpin_folder"
-        android:showAsAction="never"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/cab_move_to_top"
         android:icon="@drawable/ic_move_to_top_vector"
         android:title="@string/move_to_top"
@@ -69,23 +107,6 @@
         android:id="@+id/cab_change_order"
         android:icon="@drawable/ic_drag_handle_vector"
         android:title="@string/reorder_by_dragging"
-        android:showAsAction="never"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/cab_rename"
-        android:title="@string/rename"
-        android:showAsAction="never"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/cab_hide"
-        android:icon="@drawable/ic_hide_vector"
-        android:title="@string/hide_folder"
-        android:showAsAction="never"
-        app:showAsAction="never" />
-    <item
-        android:id="@+id/cab_unhide"
-        android:icon="@drawable/ic_unhide_vector"
-        android:title="@string/unhide_folder"
         android:showAsAction="never"
         app:showAsAction="never" />
     <item
@@ -114,12 +135,6 @@
         android:showAsAction="never"
         app:showAsAction="never" />
     <item
-        android:id="@+id/cab_exclude"
-        android:icon="@drawable/mochipic_ic_exclude"
-        android:title="@string/exclude"
-        android:showAsAction="never"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/cab_lock"
         android:title="@string/lock_folder"
         android:showAsAction="never"
@@ -143,10 +158,4 @@
                 android:title="@string/use_default" />
         </menu>
     </item>
-    <item
-        android:id="@+id/cab_select_all"
-        android:icon="@drawable/ic_select_all_vector"
-        android:title="@string/select_all"
-        android:showAsAction="never"
-        app:showAsAction="never" />
 </menu>
