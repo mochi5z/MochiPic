@@ -45,6 +45,15 @@ object BucketMap {
         return byPath[AlbumMerge.key(path)]
     }
 
+    /**
+     * そのフォルダの画像が Android の一覧に載っていそうか。表が空（「全体」方式など）なら分からないので true。
+     * 載っていない（隠しフォルダなど）なら、Android のサムネイルを探さずに元の画像から作る。
+     */
+    fun mayBeIndexed(context: Context, folder: String): Boolean {
+        ensureLoaded(context)
+        return byId.isEmpty() || byPath.containsKey(AlbumMerge.key(folder))
+    }
+
     /** 全件読み込みのとき: 表を作り直す。 */
     fun replaceAll(context: Context, entries: Map<Long, String>) {
         synchronized(this) {

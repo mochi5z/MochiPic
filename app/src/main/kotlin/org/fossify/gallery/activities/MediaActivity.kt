@@ -695,6 +695,21 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
 
     private fun showSortingDialog() {
         ChangeSortingDialog(this, false, true, mPath) {
+            // MochiPic: 読み込み直さず、今の一覧をその場で並べ替える（すぐ反映され、「見つかりません」も出ない）
+            val current = mMedia.filterIsInstance<Medium>()
+            if (current.isNotEmpty() && !mShowAll) {
+                mCurrAsyncTask?.stopFetching()
+                mIsGettingMedia = true
+                ensureBackgroundThread {
+                    val fetcher = MediaFetcher(applicationContext)
+                    val media = ArrayList(current)
+                    fetcher.sortMedia(media, config.getFolderSorting(mPath))
+                    val grouped = fetcher.groupMedia(media, mPath)
+                    runOnUiThread { binding.mediaGrid.adapter = null }
+                    gotMedia(grouped, true)
+                }
+                return@ChangeSortingDialog
+            }
             mLoadedInitialPhotos = false
             binding.mediaGrid.adapter = null
             getMedia()

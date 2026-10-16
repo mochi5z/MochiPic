@@ -66,6 +66,9 @@ import org.fossify.commons.helpers.PERMISSION_READ_STORAGE
 import org.fossify.commons.helpers.SORT_BY_DATE_MODIFIED
 import org.fossify.commons.helpers.SORT_BY_DATE_TAKEN
 import org.fossify.commons.helpers.SORT_BY_SIZE
+import org.fossify.commons.helpers.SORT_BY_NAME
+import org.fossify.commons.helpers.SORT_BY_PATH
+import org.fossify.commons.helpers.SORT_BY_COUNT
 import org.fossify.commons.helpers.SORT_USE_NUMERIC_VALUE
 import org.fossify.commons.helpers.VIEW_TYPE_GRID
 import org.fossify.commons.helpers.VIEW_TYPE_LIST
@@ -727,13 +730,38 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     }
 
     private fun onDirectorySortingChanged() {
+        // MochiPic: 今の一覧をその場で並べ替える。先に一覧を取っておかないと、表示が空になり「見つかりません」になる
+        val shown = getCurrentlyDisplayedDirs().clone() as ArrayList<Directory>
+        if (
+            shown.isNotEmpty() && mochiPrefs.loadMode == org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_MEDIASTORE
+            && binding.mainMenu.getCurrentQuery().isEmpty()
+        ) {
+            getRecyclerAdapter()?.directorySorting = config.directorySorting
+            binding.directoriesGrid.adapter = null
+            val all = if (config.groupDirectSubfolders) mDirs else shown
+            // 並べ替えのキー（sortValue）は作ったときの並べ替え方のものなので、新しい並べ替え方で作り直す
+            val sorting = config.directorySorting
+            (all + shown).forEach { dir ->
+                dir.sortValue = when {
+                    sorting and SORT_BY_NAME != 0 -> dir.name
+                    sorting and SORT_BY_PATH != 0 -> dir.path
+                    sorting and SORT_BY_SIZE != 0 -> dir.size.toString()
+                    sorting and SORT_BY_COUNT != 0 -> dir.mediaCnt.toString()
+                    sorting and SORT_BY_DATE_MODIFIED != 0 -> dir.modified.toString()
+                    sorting and SORT_BY_DATE_TAKEN != 0 -> dir.taken.toString()
+                    else -> ""
+                }
+            }
+            setupAdapter(all.clone() as ArrayList<Directory>, forceRecreate = true)
+            return
+        }
         run {
             binding.directoriesGrid.adapter = null
             if (config.directorySorting and SORT_BY_DATE_MODIFIED != 0 || config.directorySorting and SORT_BY_DATE_TAKEN != 0) {
                 getDirectories()
             } else {
                 ensureBackgroundThread {
-                    gotDirectories(getCurrentlyDisplayedDirs())
+                    gotDirectories(shown)
                 }
             }
 
@@ -1900,6 +1928,8 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         }
     }
 
+    private var mochiIncompleteRetries = 0
+
     @Volatile
     private var mochiLoading = false
     @Volatile
@@ -1945,7 +1975,14 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         }
         setupAdapter(dirs)
         mLoadedInitialPhotos = true
-        state?.let { mochiPrefs.lastScanState = it.encode() }
+        if (result.incomplete && mochiIncompleteRetries < 5) {
+            // 解凍中などで書き込み途中のファイルがあった: 状態は覚えず、1 秒後にもう一度読む（0 バイトの画像などで続かないよう 5 回まで）
+            mochiIncompleteRetries++
+            mLastMediaHandler.postDelayed({ if (!isDestroyed && !isFinishing) getDirectories() }, 1000)
+        } else {
+            mochiIncompleteRetries = 0
+            state?.let { mochiPrefs.lastScanState = it.encode() }
+        }
         runOnUiThread {
             binding.directoriesRefreshLayout.isRefreshing = false
             checkPlaceholderVisibility(dirs)
@@ -1968,13 +2005,16 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         return true
     }
 
+    /** 読み込み方の作りを変えたら上げる（更新後の最初の 1 回だけ、全件読み直して保存済みの一覧を作り直す）。 */
+    private val MOCHI_LOADER_REVISION = 2
+
     /** 読み込む範囲に関わる設定。変わったら全部調べ直す。 */
     private fun mochiScanSettings(): String {
         val prefs = mochiPrefs
         return listOf(
             config.filterMedia, config.shouldShowHidden, config.showRecycleBinAtFolders,
             config.excludedFolders.sorted(), config.includedFolders.sorted(),
-            prefs.scanFolders.sorted(), prefs.skipAppFolders, prefs.loadMode, isPickIntent(intent) || isGetAnyContentIntent(intent),
+            prefs.scanFolders.sorted(), prefs.skipAppFolders, prefs.loadMode, MOCHI_LOADER_REVISION, isPickIntent(intent) || isGetAnyContentIntent(intent),
         ).joinToString("|").hashCode().toString()
     }
 

@@ -76,6 +76,11 @@ open class SimpleActivity : BaseSimpleActivity() {
     }
 
     protected fun registerFileUpdateListener() {
+        // MochiPic v0.1.1: 高速方式では MediaChangeWatcher と差分読み込みに任せる。
+        // Fossify のこの仕組みはファイル 1 つごとにフォルダ全体を調べ直し、日付のない（1970 年の）アルバムを保存してしまう
+        if (org.fossify.gallery.mochipic.MochiPicPrefs(this).loadMode == org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_MEDIASTORE) {
+            return
+        }
         try {
             contentResolver.registerContentObserver(Images.Media.EXTERNAL_CONTENT_URI, true, observer)
             contentResolver.registerContentObserver(Video.Media.EXTERNAL_CONTENT_URI, true, observer)

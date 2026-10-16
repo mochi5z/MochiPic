@@ -780,6 +780,7 @@ fun Context.loadImageBase(
     val useStoreThumb = org.fossify.gallery.mochipic.MediaStoreThumb.isSupported
             && !(animate && (path.isGif() || path.isWebP()))
             && path.startsWith("/storage/")
+            && org.fossify.gallery.mochipic.BucketMap.mayBeIndexed(this, path.substringBeforeLast('/'))
     if (useStoreThumb) {
         Glide.with(applicationContext)
             .load(org.fossify.gallery.mochipic.MediaStoreThumb(path))

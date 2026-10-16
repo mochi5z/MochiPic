@@ -108,11 +108,17 @@ object AlbumMenus {
 
     private fun kindOf(sorting: Int) = sorting and SORT_OPTIONS.inv()
 
+    /**
+     * 同じ種類をもう一度選ぶと向きが入れ替わる。別の種類を選んだときは、名前・場所は昇順（0→9、A→Z）、
+     * 日時は降順（新しい順）から始める。数値順の設定はそのまま。
+     */
     fun nextSorting(current: Int, chosen: Int): Int =
         if (kindOf(current) == chosen) {
             current xor SORT_DESCENDING
         } else {
-            (current and SORT_OPTIONS) or chosen
+            val numeric = current and SORT_USE_NUMERIC_VALUE
+            val direction = if (chosen == SORT_BY_NAME || chosen == SORT_BY_PATH) 0 else SORT_DESCENDING
+            numeric or direction or chosen
         }
 
     fun showSort(activity: Activity, anchor: View, onDetailed: () -> Unit, onChanged: () -> Unit, detailed: Boolean = true) {

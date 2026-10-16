@@ -43,6 +43,8 @@ object QuickAlbumLoader {
         val dirs: ArrayList<Directory>,
         /** 新しく出てきたフォルダ・中身が変わったフォルダの中身（アプリのデータベースに入れておく）。 */
         val changedMedia: Map<String, ArrayList<Medium>>,
+        /** 書き込み中（解凍中など）のファイルがあった。少し待ってからもう一度読む。 */
+        val incomplete: Boolean = false,
     )
 
     private val PROJECTION = arrayOf(
@@ -76,6 +78,9 @@ object QuickAlbumLoader {
         val albumCovers by lazy { config.parseAlbumCovers() }
         val hiddenString by lazy { context.getString(R.string.hidden) }
 
+        /** 書き込み中のファイル（Android 側の更新日時やサイズがまだ 0 の行）があったか。 */
+        var incomplete = false
+
         fun query(extraSelection: String?, extraArgs: List<String>, uri: android.net.Uri = MediaStore.Files.getContentUri("external"), projection: Array<String> = PROJECTION): Cursor? {
             val sel = if (extraSelection == null) selection else "($selection) AND $extraSelection"
             return context.contentResolver.query(uri, projection, sel, (selectionArgs + extraArgs).toTypedArray(), null)
@@ -95,7 +100,9 @@ object QuickAlbumLoader {
                 if (type == TYPE_GIFS && filterMedia and TYPE_GIFS == 0) continue
                 if (type == TYPE_RAWS && filterMedia and TYPE_RAWS == 0) continue
                 if (type == TYPE_SVGS && filterMedia and TYPE_SVGS == 0) continue
-                val modified = cursor.getLong(1) * 1000
+                // 移動直後などで Android 側の更新日時が空のときは、ファイルの日時を使う（1970 年と表示されないように）
+                if (cursor.getLong(1) <= 0L || cursor.getLong(3) <= 0L) incomplete = true
+                val modified = cursor.getLong(1).takeIf { it > 0L }?.times(1000) ?: File(path).lastModified()
                 // 「日時の修正」で直した日付があればそちらを使う
                 val taken = fixedDates[path] ?: cursor.getLong(2).takeIf { it != 0L } ?: modified
                 val parent = path.substring(0, slash)
@@ -165,7 +172,7 @@ object QuickAlbumLoader {
                 dirs.add(context.createDirectoryFromMedia(special, media, env.albumCovers, env.hiddenString, env.included, false, env.noMediaFolders))
             }
         }
-        return Result(dirs, changed)
+        return Result(dirs, changed, env.incomplete)
     }
 
     // ---------------------------------------------------------------- 差分（v0.1.1）
@@ -213,7 +220,8 @@ object QuickAlbumLoader {
             cached.forEach { dir ->
                 if (dir.path == FAVORITES || dir.path == RECYCLE_BIN) return@forEach
                 val id = BucketMap.idOf(context, dir.path) ?: return@forEach  // Android の一覧に載らないフォルダは対象外
-                if ((counts[id] ?: 0) != dir.mediaCnt) changed[id] = dir.path
+                // 枚数が違う・日付が入っていない（古い仕組みが保存したもの）フォルダは読み直す
+                if ((counts[id] ?: 0) != dir.mediaCnt || dir.modified <= 0L) changed[id] = dir.path
             }
         } catch (e: Exception) {
             return null
@@ -236,7 +244,7 @@ object QuickAlbumLoader {
         } catch (e: Exception) {
             return null
         }
-        return Result(AlbumMerge.merge(cached, rebuilt) { it.path }, changedMedia)
+        return Result(AlbumMerge.merge(cached, rebuilt) { it.path }, changedMedia, env.incomplete)
     }
 
     // ---------------------------------------------------------------- アルバムを開くとき（v0.1.1）

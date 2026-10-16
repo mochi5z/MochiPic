@@ -17,9 +17,15 @@ class AlbumMenusTest {
     }
 
     @Test
-    fun choosingOtherKindKeepsDirectionAndOptions() {
-        val current = SORT_BY_NAME or SORT_DESCENDING or SORT_USE_NUMERIC_VALUE
-        assertEquals(SORT_BY_PATH or SORT_DESCENDING or SORT_USE_NUMERIC_VALUE, AlbumMenus.nextSorting(current, SORT_BY_PATH))
+    fun choosingNameOrPathStartsAscendingAndKeepsNumeric() {
+        val current = SORT_BY_DATE_MODIFIED or SORT_DESCENDING or SORT_USE_NUMERIC_VALUE
+        assertEquals(SORT_BY_NAME or SORT_USE_NUMERIC_VALUE, AlbumMenus.nextSorting(current, SORT_BY_NAME))
+        assertEquals(SORT_BY_PATH or SORT_USE_NUMERIC_VALUE, AlbumMenus.nextSorting(current, SORT_BY_PATH))
+    }
+
+    @Test
+    fun choosingDateStartsDescending() {
+        assertEquals(SORT_BY_DATE_MODIFIED or SORT_DESCENDING, AlbumMenus.nextSorting(SORT_BY_NAME, SORT_BY_DATE_MODIFIED))
     }
 
     @Test

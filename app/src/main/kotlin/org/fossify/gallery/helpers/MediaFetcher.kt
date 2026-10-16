@@ -796,6 +796,10 @@ class MediaFetcher(val context: Context) {
             if (sorting and SORT_DESCENDING != 0) {
                 result *= -1
             }
+            // MochiPic: 日時やサイズが同じもの（zip を解凍したファイルなど）は名前順にして、読み込むたびに順番が変わらないようにする
+            if (result == 0 && sorting and SORT_BY_NAME == 0) {
+                result = AlphanumericComparator().compare(o1.name.lowercase(Locale.getDefault()), o2.name.lowercase(Locale.getDefault()))
+            }
             result
         }
     }

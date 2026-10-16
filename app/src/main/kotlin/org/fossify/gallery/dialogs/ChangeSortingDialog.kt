@@ -31,6 +31,7 @@ class ChangeSortingDialog(
 ) :
     DialogInterface.OnClickListener {
     private var currSorting = 0
+    private var mochiReady = false  // MochiPic: 開いた直後の設定では向きを変えない
     private var config = activity.config
     private var pathToUse = if (!isDirectorySorting && path.isEmpty()) SHOW_ALL else path
     private val binding: DialogChangeSortingBinding
@@ -71,6 +72,7 @@ class ChangeSortingDialog(
 
         setupSortRadio()
         setupOrderRadio()
+        mochiReady = true
     }
 
     private fun setupSortRadio() {
@@ -92,6 +94,12 @@ class ChangeSortingDialog(
 
             binding.sortingDialogRadioOrder.beGoneIf(hideSortOrder)
             binding.sortingDialogSortingDivider.beGoneIf(hideSortOrder)
+
+            // MochiPic: 名前・場所は昇順（0→9、A→Z）、日時・サイズは降順（新しい・大きい順）から始める
+            if (mochiReady && !hideSortOrder) {
+                val ascending = isSortingByNameOrPath
+                (if (ascending) binding.sortingDialogRadioAscending else binding.sortingDialogRadioDescending).isChecked = true
+            }
         }
 
         val sortBtn = when {
