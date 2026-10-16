@@ -42,6 +42,10 @@ class MediaStoreThumbLoader(private val context: Context) : ModelLoader<MediaSto
         override fun teardown() {}
     }
 
+    companion object {
+        private const val TIMEOUT_MS = 3000L
+    }
+
     private class Fetcher(
         private val context: Context,
         private val path: String,
@@ -59,7 +63,15 @@ class MediaStoreThumbLoader(private val context: Context) : ModelLoader<MediaSto
                 val uri = findUri() ?: throw FileNotFoundException(path)
                 // 切り抜いても粗くならないよう、表示の大きさの 2 倍で頼む（大きすぎる指定は 1024 まで）
                 val side = (maxOf(width, height).takeIf { it > 0 } ?: 256).times(2).coerceIn(128, 1024)
-                val bitmap = context.contentResolver.loadThumbnail(uri, Size(side, side), signal)
+                // 時間がかかりすぎるときはあきらめて、元の画像から作る
+                val timeout = android.os.Handler(android.os.Looper.getMainLooper())
+                val giveUp = Runnable { signal.cancel() }
+                timeout.postDelayed(giveUp, TIMEOUT_MS)
+                val bitmap = try {
+                    context.contentResolver.loadThumbnail(uri, Size(side, side), signal)
+                } finally {
+                    timeout.removeCallbacks(giveUp)
+                }
                 callback.onDataReady(bitmap)
             } catch (e: Exception) {
                 callback.onLoadFailed(e)

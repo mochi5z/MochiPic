@@ -758,7 +758,8 @@ fun Context.loadImageBase(
     // MochiPic: まず Android が持っているサムネイルを使い、なければ（隠しフォルダなど）元の画像から作る
     val useStoreThumb = org.fossify.gallery.mochipic.MediaStoreThumb.isSupported
             && !(animate && (path.isGif() || path.isWebP()))
-            && path.startsWith("/storage/")
+            // SD カードは Android のサムネイルが黒いまま返ることがあるので使わない（元の画像から作る）
+            && path.startsWith(internalStoragePath.trimEnd('/') + "/")
             && org.fossify.gallery.mochipic.BucketMap.mayBeIndexed(this, path.substringBeforeLast('/'))
     if (useStoreThumb) {
         Glide.with(applicationContext)
