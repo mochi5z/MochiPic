@@ -2027,7 +2027,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     }
 
     /** 読み込み方の作りを変えたら上げる（更新後の最初の 1 回だけ、全件読み直して保存済みの一覧を作り直す）。 */
-    private val MOCHI_LOADER_REVISION = 3
+    private val MOCHI_LOADER_REVISION = 4
 
     /** 読み込む範囲に関わる設定。変わったら全部調べ直す。 */
     private fun mochiScanSettings(): String {

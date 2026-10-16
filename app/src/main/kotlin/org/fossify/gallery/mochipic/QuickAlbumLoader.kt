@@ -144,20 +144,24 @@ object QuickAlbumLoader {
         } catch (e: Exception) {
             return null  // 読めなければ従来どおりの読み込みに任せる
         }
-        BucketMap.replaceAll(context, buckets)
-
         // 2. 表示するフォルダだけに絞る（除外・隠しフォルダ・探索フォルダーの設定）
         val cachedByPath = cached.associateBy { AlbumMerge.key(it.path) }
         val dirs = ArrayList<Directory>()
         val changed = HashMap<String, ArrayList<Medium>>()
         val seen = HashSet<String>()
+        val hiddenFolders = HashSet<String>()
         for ((folder, media) in byFolder) {
             val key = AlbumMerge.key(folder)
             if (!seen.add(key)) continue
-            val dir = env.buildDir(folder, media) ?: continue
+            val dir = env.buildDir(folder, media)
+            if (dir == null) {
+                hiddenFolders.add(key)
+                continue
+            }
             dirs.add(dir)
             if (cachedByPath[key]?.mediaCnt != media.size) changed[folder] = media
         }
+        BucketMap.replaceAll(context, buckets, buckets.filterValues { AlbumMerge.key(it) in hiddenFolders }.keys)
 
         // 3. Android の一覧に載らないフォルダ（隠しフォルダなど）は、前回までの一覧にあって今もあれば残す
         cached.forEach { dir ->
@@ -224,11 +228,20 @@ object QuickAlbumLoader {
                     counts[id] = (counts[id] ?: 0) + 1
                 }
             }
+            val cachedIds = HashSet<Long>()
             cached.forEach { dir ->
                 if (dir.path == FAVORITES || dir.path == RECYCLE_BIN) return@forEach
                 val id = BucketMap.idOf(context, dir.path) ?: return@forEach  // Android の一覧に載らないフォルダは対象外
+                cachedIds.add(id)
                 // 枚数が違う・日付が入っていない（古い仕組みが保存したもの）フォルダは読み直す
                 if ((counts[id] ?: 0) != dir.mediaCnt || dir.modified <= 0L) changed[id] = dir.path
+            }
+            // 一覧にも「出さないフォルダ」にもないフォルダ = 新しくできたフォルダ。
+            // ファイルマネージャーの解凍は、別の場所に作ってからフォルダごと名前を変えることがあり、その場合は 1 に出てこない
+            counts.keys.forEach { id ->
+                if (id !in cachedIds && id !in changed && !BucketMap.isHidden(context, id)) {
+                    changed[id] = BucketMap.pathOf(context, id).orEmpty()
+                }
             }
         } catch (e: Exception) {
             return null
@@ -240,13 +253,23 @@ object QuickAlbumLoader {
         val rebuilt = HashMap<String, Directory?>()
         val changedMedia = HashMap<String, ArrayList<Medium>>()
         try {
-            for ((id, folder) in changed) {
+            for ((id, knownFolder) in changed) {
                 val byFolder = LinkedHashMap<String, ArrayList<Medium>>()
-                env.query("${MediaStore.MediaColumns.BUCKET_ID} = ?", listOf(id.toString()))?.use { env.readRows(it, byFolder, HashMap()) }
+                val found = HashMap<Long, String>()
+                env.query("${MediaStore.MediaColumns.BUCKET_ID} = ?", listOf(id.toString()))?.use { env.readRows(it, byFolder, found) }
+                // 場所が分からない（新しい）フォルダは、行から場所を取る
+                val folder = if (knownFolder.isNotEmpty()) knownFolder else (found[id] ?: byFolder.keys.firstOrNull())
+                if (folder == null) {
+                    BucketMap.setHidden(context, id, true)  // 表示できる行がない（種類の絞り込みなど）
+                    continue
+                }
                 val media = byFolder.entries.firstOrNull { AlbumMerge.key(it.key) == AlbumMerge.key(folder) }?.value ?: ArrayList()
                 val dir = env.buildDir(folder, media)
                 rebuilt[folder] = dir
                 if (dir != null) changedMedia[folder] = media
+                BucketMap.addAll(context, mapOf(id to folder))
+                // 中身があるのに出さないフォルダは覚えて、次から読み直さない
+                BucketMap.setHidden(context, id, dir == null && media.isNotEmpty())
             }
         } catch (e: Exception) {
             return null
