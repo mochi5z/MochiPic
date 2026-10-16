@@ -47,6 +47,10 @@ object QuickAlbumLoader {
         val incomplete: Boolean = false,
     )
 
+    private const val ALL_TYPES = TYPE_IMAGES or TYPE_VIDEOS or TYPE_GIFS or TYPE_RAWS or TYPE_SVGS
+    private val MIME_SELECTION = "${MediaStore.MediaColumns.MIME_TYPE} LIKE ? OR ${MediaStore.MediaColumns.MIME_TYPE} LIKE ?"
+    private val MIME_ARGS = arrayListOf("image/%", "video/%")
+
     private val PROJECTION = arrayOf(
         MediaStore.MediaColumns.DATA,
         MediaStore.MediaColumns.DATE_MODIFIED,
@@ -62,8 +66,10 @@ object QuickAlbumLoader {
         val fetcher = MediaFetcher(context)
         val showHidden = config.shouldShowHidden
         val favoriteSet = context.getFavoritePaths().toHashSet()
-        val selection = fetcher.getSelectionQuery(filterMedia)
-        val selectionArgs = fetcher.getSelectionArgsQuery(filterMedia)
+        // すべての種類を表示するとき（標準）は、拡張子を 40 個近く並べる代わりに MIME タイプ 2 つで絞る（問い合わせが速い）
+        private val allTypes = (filterMedia and ALL_TYPES) == ALL_TYPES
+        val selection = if (allTypes) MIME_SELECTION else fetcher.getSelectionQuery(filterMedia)
+        val selectionArgs = if (allTypes) MIME_ARGS else fetcher.getSelectionArgsQuery(filterMedia)
         val fixedDates: Map<String, Long> by lazy {
             try {
                 context.dateTakensDB.getAllDateTakens().associate { it.fullPath to it.taken }
@@ -73,7 +79,8 @@ object QuickAlbumLoader {
         }
         val excluded by lazy { if (config.temporarilyShowExcluded) HashSet() else config.excludedFolders }
         val included by lazy { config.includedFolders }
-        val noMediaFolders by lazy { context.getNoMediaFoldersSync() }
+        // 隠しフォルダを表示するときは .nomedia を調べる必要がない（端末全体への問い合わせを省く）
+        val noMediaFolders by lazy { if (showHidden) ArrayList() else context.getNoMediaFoldersSync() }
         val noMediaStatuses by lazy { HashMap<String, Boolean>().also { map -> noMediaFolders.forEach { map["$it/$NOMEDIA"] = true } } }
         val albumCovers by lazy { config.parseAlbumCovers() }
         val hiddenString by lazy { context.getString(R.string.hidden) }

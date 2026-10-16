@@ -688,6 +688,19 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         val getImages = mIsPickImageIntent || mIsGetImageContentIntent
         val getVideos = mIsPickVideoIntent || mIsGetVideoContentIntent
 
+        // MochiPic v0.1.1: 高速方式では、いま表示している一覧（メモリ上）から差分を当てる。
+        // 保存済みの一覧（データベース）を毎回読み直すと、書き込みが終わる前の古い一覧で上書きされ、新しいフォルダが消えることがある
+        val current = mochiCurrentDirs
+        if (
+            current != null && !mochiForceRescan && !mIsThirdPartyIntent
+            && mochiPrefs.loadMode == org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_MEDIASTORE
+            && mochiCurrentSettings == mochiScanSettings()
+        ) {
+            val dirs = ArrayList(current)
+            ensureBackgroundThread { gotDirectories(dirs) }
+            return
+        }
+
         getCachedDirectories(getVideos && !getImages, getImages && !getVideos) {
             gotDirectories(addTempFolderIfNeeded(it))
         }
@@ -1930,6 +1943,12 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
 
     private var mochiIncompleteRetries = 0
 
+    /** 高速方式でいま表示している一覧と、そのときの読み込み範囲の設定。 */
+    @Volatile
+    private var mochiCurrentDirs: ArrayList<Directory>? = null
+    private var mochiCurrentSettings = ""
+    private val MOCHI_DB_LOCK = Any()
+
     @Volatile
     private var mochiLoading = false
     @Volatile
@@ -1973,6 +1992,8 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         if (config.groupDirectSubfolders) {
             mDirs = dirs.clone() as ArrayList<Directory>
         }
+        mochiCurrentDirs = ArrayList(dirs)
+        mochiCurrentSettings = mochiScanSettings()
         setupAdapter(dirs)
         mLoadedInitialPhotos = true
         if (result.incomplete && mochiIncompleteRetries < 5) {
@@ -1988,15 +2009,15 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
             checkPlaceholderVisibility(dirs)
         }
 
-        // 次に開いたときすぐ出せるよう、アプリのデータベースにも入れておく
+        // 次に開いたときすぐ出せるよう、アプリのデータベースにも入れておく（書き込みは順番どおりに 1 つずつ）
         Thread {
-            try {
+            synchronized(MOCHI_DB_LOCK) { try {
                 val keep = dirs.map { it.path.lowercase(java.util.Locale.ROOT) }.toHashSet()
                 cached.filter { it.path.lowercase(java.util.Locale.ROOT) !in keep }.forEach { directoryDB.deleteDirPath(it.path) }
                 directoryDB.insertAll(dirs)
                 result.changedMedia.values.forEach { mediaDB.insertAll(it) }
             } catch (ignored: Exception) {
-            }
+            } }
         }.start()
 
         if (config.appRunCount > 1) {
@@ -2006,7 +2027,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     }
 
     /** 読み込み方の作りを変えたら上げる（更新後の最初の 1 回だけ、全件読み直して保存済みの一覧を作り直す）。 */
-    private val MOCHI_LOADER_REVISION = 2
+    private val MOCHI_LOADER_REVISION = 3
 
     /** 読み込む範囲に関わる設定。変わったら全部調べ直す。 */
     private fun mochiScanSettings(): String {

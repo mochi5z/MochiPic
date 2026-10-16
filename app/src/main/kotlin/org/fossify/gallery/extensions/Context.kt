@@ -199,53 +199,32 @@ fun Context.getSortedDirectories(source: ArrayList<Directory>): ArrayList<Direct
         return newDirsOrdered
     }
 
+    // MochiPic: 保存しておいた並べ替えキー（sortValue）は作ったときの並べ替え方のままなので使わず、フォルダの値そのもので比べる。
+    // （名前順で作った一覧を日時順に戻すと順番が崩れる、といったことが起きないように）
+    val numeric = sorting and SORT_USE_NUMERIC_VALUE != 0
     dirs.sortWith { o1, o2 ->
         o1 as Directory
         o2 as Directory
 
+        fun text(a: String, b: String) =
+            if (numeric) AlphanumericComparator().compare(a, b) else a.compareTo(b)
+
         var result = when {
-            sorting and SORT_BY_NAME != 0 -> {
-                if (o1.sortValue.isEmpty()) {
-                    o1.sortValue = o1.name.lowercase(Locale.getDefault())
-                }
-
-                if (o2.sortValue.isEmpty()) {
-                    o2.sortValue = o2.name.lowercase(Locale.getDefault())
-                }
-
-                if (sorting and SORT_USE_NUMERIC_VALUE != 0) {
-                    AlphanumericComparator().compare(
-                        string1 = o1.sortValue.normalizeString().lowercase(Locale.getDefault()),
-                        string2 = o2.sortValue.normalizeString().lowercase(Locale.getDefault())
-                    )
-                } else {
-                    o1.sortValue.normalizeString().lowercase(Locale.getDefault())
-                        .compareTo(o2.sortValue.normalizeString().lowercase(Locale.getDefault()))
-                }
-            }
-
-            sorting and SORT_BY_PATH != 0 -> {
-                if (o1.sortValue.isEmpty()) {
-                    o1.sortValue = o1.path.lowercase(Locale.getDefault())
-                }
-
-                if (o2.sortValue.isEmpty()) {
-                    o2.sortValue = o2.path.lowercase(Locale.getDefault())
-                }
-
-                if (sorting and SORT_USE_NUMERIC_VALUE != 0) {
-                    AlphanumericComparator().compare(
-                        string1 = o1.sortValue.lowercase(Locale.getDefault()),
-                        string2 = o2.sortValue.lowercase(Locale.getDefault())
-                    )
-                } else {
-                    o1.sortValue.lowercase(Locale.getDefault())
-                        .compareTo(o2.sortValue.lowercase(Locale.getDefault()))
-                }
-            }
-
-            // SORT_BY_SIZE, SORT_BY_COUNT, SORT_BY_DATE_MODIFIED are numerical
+            sorting and SORT_BY_NAME != 0 -> text(
+                o1.name.normalizeString().lowercase(Locale.getDefault()),
+                o2.name.normalizeString().lowercase(Locale.getDefault())
+            )
+            sorting and SORT_BY_PATH != 0 -> text(o1.path.lowercase(Locale.getDefault()), o2.path.lowercase(Locale.getDefault()))
+            sorting and SORT_BY_SIZE != 0 -> o1.size.compareTo(o2.size)
+            sorting and SORT_BY_COUNT != 0 -> o1.mediaCnt.compareTo(o2.mediaCnt)
+            sorting and SORT_BY_DATE_MODIFIED != 0 -> o1.modified.compareTo(o2.modified)
+            sorting and SORT_BY_DATE_TAKEN != 0 -> o1.taken.compareTo(o2.taken)
             else -> (o1.sortValue.toLongOrNull() ?: 0).compareTo(o2.sortValue.toLongOrNull() ?: 0)
+        }
+        // 同じ値どうしは名前順（読み込むたびに順番が変わらないように）
+        if (result == 0 && sorting and SORT_BY_NAME == 0) {
+            result = AlphanumericComparator().compare(o1.name.lowercase(Locale.getDefault()), o2.name.lowercase(Locale.getDefault()))
+            if (sorting and SORT_DESCENDING != 0) result *= -1
         }
 
         if (sorting and SORT_DESCENDING != 0) {
