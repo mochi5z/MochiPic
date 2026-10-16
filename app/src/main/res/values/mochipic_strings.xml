@@ -132,4 +132,7 @@
     <string name="mochipic_load_mode_full">Full (check every folder directly)</string>
     <string name="mochipic_regen_thumbs">Regenerate thumbnails</string>
     <string name="mochipic_regen_thumbs_done">Regenerating thumbnails for this folder</string>
+    <string name="mochipic_sort_taken">Date taken</string>
+    <string name="mochipic_sort_size">Size</string>
+    <string name="mochipic_detailed_media_sort">Choose album sorting on the detailed screen</string>
 </resources>

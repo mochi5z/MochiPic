@@ -220,6 +220,21 @@
             </RelativeLayout>
 
             <RelativeLayout
+                android:id="@+id/settings_mochi_detailed_sort_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_mochi_detailed_sort"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_detailed_media_sort" />
+
+            </RelativeLayout>
+
+            <RelativeLayout
                 android:id="@+id/settings_mochi_skip_app_folders_holder"
                 style="@style/SettingsHolderSwitchStyle"
                 android:layout_width="match_parent"

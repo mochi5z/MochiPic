@@ -38,6 +38,11 @@ class MochiPicPrefs(context: Context) {
         get() = prefs.getInt("load_mode", LOAD_MEDIASTORE)
         set(value) = prefs.edit().putInt("load_mode", value).apply()
 
+    /** オン: アルバムの中身の並べ替えを、従来の詳細な画面で選ぶ。オフ（標準）: QP-Gallery と同じ短いメニュー。 */
+    var detailedMediaSort: Boolean
+        get() = prefs.getBoolean("detailed_media_sort", false)
+        set(value) = prefs.edit().putBoolean("detailed_media_sort", value).apply()
+
     /** 前回フォルダを調べ終えたときの Android の画像の一覧の状態（変化がなければ調べ直さないため）。 */
     var lastScanState: String?
         get() = prefs.getString("last_scan_state", null)

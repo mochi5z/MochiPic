@@ -274,6 +274,11 @@ class SettingsActivity : SimpleActivity() {
                 binding.settingsMochiLoadMode.text = loadModeText()
             }
         }
+        binding.settingsMochiDetailedSort.isChecked = prefs.detailedMediaSort
+        binding.settingsMochiDetailedSortHolder.setOnClickListener {
+            binding.settingsMochiDetailedSort.toggle()
+            prefs.detailedMediaSort = binding.settingsMochiDetailedSort.isChecked
+        }
         binding.settingsMochiSkipAppFolders.isChecked = prefs.skipAppFolders
         binding.settingsMochiSkipAppFoldersHolder.setOnClickListener {
             binding.settingsMochiSkipAppFolders.toggle()

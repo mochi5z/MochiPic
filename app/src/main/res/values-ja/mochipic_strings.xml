@@ -133,4 +133,7 @@
     <string name="mochipic_load_mode_full">全体（フォルダを直接すべて調べる）</string>
     <string name="mochipic_regen_thumbs">サムネイルを再生成</string>
     <string name="mochipic_regen_thumbs_done">このフォルダのサムネイルを作り直しています</string>
+    <string name="mochipic_sort_taken">撮影日時</string>
+    <string name="mochipic_sort_size">サイズ</string>
+    <string name="mochipic_detailed_media_sort">アルバム内の並べ替えを詳細な画面で選ぶ</string>
 </resources>

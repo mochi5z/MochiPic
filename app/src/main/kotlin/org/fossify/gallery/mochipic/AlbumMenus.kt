@@ -121,6 +121,42 @@ object AlbumMenus {
             numeric or direction or chosen
         }
 
+    /** アルバムの中身の並べ替え（QP-Gallery と同じ 4 つ）。 */
+    private val MEDIA_SORTS = listOf(
+        SORT_BY_NAME to R.string.mochipic_sort_name,
+        SORT_BY_DATE_MODIFIED to R.string.mochipic_sort_modified,
+        org.fossify.commons.helpers.SORT_BY_DATE_TAKEN to R.string.mochipic_sort_taken,
+        org.fossify.commons.helpers.SORT_BY_SIZE to R.string.mochipic_sort_size,
+    )
+
+    /**
+     * アルバムの中身の並べ替えメニュー（QP-Gallery と同じ短いメニュー）。選んでいる項目に ▲（昇順）／▼（降順）。
+     * 同じ項目をもう一度選ぶと向きが入れ替わる。このフォルダだけの並べ替えが設定されていれば、それを変える。
+     */
+    fun showMediaSort(activity: Activity, anchor: View, path: String, onChanged: () -> Unit) {
+        val config = activity.config
+        val current = config.getFolderSorting(path)
+        val popup = PopupMenu(themed(activity), anchor, Gravity.END)
+        MEDIA_SORTS.forEachIndexed { i, (kind, title) ->
+            var text = activity.getString(title)
+            if (kindOf(current) == kind) {
+                text += if (current and SORT_DESCENDING != 0) "  ▼" else "  ▲"
+            }
+            popup.menu.add(Menu.NONE, kind, i, text)
+        }
+        popup.setOnMenuItemClickListener { item ->
+            val next = nextSorting(current, item.itemId)
+            if (config.hasCustomSorting(path)) {
+                config.saveCustomSorting(path, next)
+            } else {
+                config.sorting = next
+            }
+            onChanged()
+            true
+        }
+        popup.show()
+    }
+
     fun showSort(activity: Activity, anchor: View, onDetailed: () -> Unit, onChanged: () -> Unit, detailed: Boolean = true) {
         val config = activity.config
         val current = config.directorySorting

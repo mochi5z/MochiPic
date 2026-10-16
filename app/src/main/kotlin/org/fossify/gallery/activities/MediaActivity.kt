@@ -505,7 +505,11 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
                 R.id.mochi_rename_folder -> mochiRenameFolder()
                 R.id.mochi_fix_date -> mochiFixDate()
                 R.id.mochi_regen_thumbs -> mochiRegenThumbs()
-                R.id.sort -> showSortingDialog()
+                R.id.sort -> if (org.fossify.gallery.mochipic.MochiPicPrefs(this).detailedMediaSort) {
+                    showSortingDialog()
+                } else {
+                    org.fossify.gallery.mochipic.AlbumMenus.showMediaSort(this, binding.mediaMenu, mPath) { mochiResortInPlace() }
+                }
                 R.id.filter -> showFilterMediaDialog()
                 R.id.empty_recycle_bin -> emptyRecycleBin()
                 R.id.empty_disable_recycle_bin -> emptyAndDisableRecycleBin()
@@ -707,8 +711,12 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     }
 
     private fun showSortingDialog() {
-        ChangeSortingDialog(this, false, true, mPath) {
-            // MochiPic: 読み込み直さず、今の一覧をその場で並べ替える（すぐ反映され、「見つかりません」も出ない）
+        ChangeSortingDialog(this, false, true, mPath) { mochiResortInPlace() }
+    }
+
+    /** MochiPic: 読み込み直さず、今の一覧をその場で並べ替える（すぐ反映され、「見つかりません」も出ない）。 */
+    private fun mochiResortInPlace() {
+        run {
             val current = mMedia.filterIsInstance<Medium>()
             if (current.isNotEmpty() && !mShowAll) {
                 mCurrAsyncTask?.stopFetching()
@@ -721,7 +729,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
                     runOnUiThread { binding.mediaGrid.adapter = null }
                     gotMedia(grouped, true)
                 }
-                return@ChangeSortingDialog
+                return
             }
             mLoadedInitialPhotos = false
             binding.mediaGrid.adapter = null
