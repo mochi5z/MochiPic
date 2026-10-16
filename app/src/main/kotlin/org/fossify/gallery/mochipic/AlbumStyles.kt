@@ -82,7 +82,7 @@ object AlbumStyles {
             }
         } else {
             v.dirName.gravity = Gravity.CENTER
-            v.dirName.text = AlbumMosaic.label(name, count, textColor)
+            AlbumMosaic.setLabel(v.dirName, name, count, textColor)
             v.dirName.setTextColor(textColor)
             val small = dp(activity, 4)
             v.dirName.setPadding(small, small, small, dp(activity, 8))

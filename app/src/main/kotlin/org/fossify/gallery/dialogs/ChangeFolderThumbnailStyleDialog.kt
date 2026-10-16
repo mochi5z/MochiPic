@@ -128,7 +128,7 @@ class ChangeFolderThumbnailStyleDialog(val activity: BaseSimpleActivity, val cal
                 }
                 b.photoCnt.beGone()
                 b.dirName.setTextColor(activity.getProperTextColor())
-                b.dirName.text = org.fossify.gallery.mochipic.AlbumMosaic.label(folderName, photoCount, activity.getProperTextColor())
+                org.fossify.gallery.mochipic.AlbumMosaic.setLabel(b.dirName, folderName, photoCount, activity.getProperTextColor())
             }
         }
     }

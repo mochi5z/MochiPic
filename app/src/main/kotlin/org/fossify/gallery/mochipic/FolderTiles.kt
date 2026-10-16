@@ -126,7 +126,7 @@ class FolderTileAdapter(
             b.dirPath.setTextColor(textColor)
             b.dirPath.visibility = View.VISIBLE
         }
-        b.dirName.text = AlbumMosaic.label(tile.name, tile.count, textColor)
+        AlbumMosaic.setLabel(b.dirName, tile.name, tile.count, textColor)
         b.dirName.setTextColor(textColor)
         b.dirDate.beVisibleIf(tile.showDate)
         b.dirDate.text = tile.modified.formatDate(activity)

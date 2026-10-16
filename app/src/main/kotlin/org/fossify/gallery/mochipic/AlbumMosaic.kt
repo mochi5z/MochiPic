@@ -85,6 +85,47 @@ object AlbumMosaic {
     }
 
     /** 「名前 枚数」（枚数は少し小さく薄い色）。 */
+    private class LabelState(var name: String, var count: Int, var color: Int, var width: Int = -1, var shown: String = "")
+
+    /**
+     * 「名前 枚数」を 1 行で出す。名前が長いときは、枚数を必ず見せて名前のほうを「…」で縮める。
+     * 幅が決まってから（と幅が変わったとき）縮め直すので、どの表示モードでも使える。
+     */
+    fun setLabel(view: android.widget.TextView, name: String, count: Int, textColor: Int) {
+        val state = view.getTag(org.fossify.gallery.R.id.mochi_label_state) as? LabelState
+        if (state == null) {
+            val created = LabelState(name, count, textColor)
+            view.setTag(org.fossify.gallery.R.id.mochi_label_state, created)
+            view.addOnLayoutChangeListener { v, _, _, _, _, _, _, _, _ ->
+                val s = v.getTag(org.fossify.gallery.R.id.mochi_label_state) as? LabelState ?: return@addOnLayoutChangeListener
+                // ほかの所で文字を変えたあと（使い回された行など）は触らない
+                if (s.width != v.width && (v as android.widget.TextView).text.toString() == s.shown) v.post { fitLabel(v, s) }
+            }
+        } else {
+            state.name = name
+            state.count = count
+            state.color = textColor
+            state.width = -1
+        }
+        fitLabel(view, view.getTag(org.fossify.gallery.R.id.mochi_label_state) as LabelState)
+    }
+
+    private fun fitLabel(view: android.widget.TextView, state: LabelState) {
+        val avail = view.width - view.totalPaddingLeft - view.totalPaddingRight
+        state.width = view.width
+        if (avail <= 0 || state.count <= 0) {
+            view.text = label(state.name, state.count, state.color)
+            state.shown = view.text.toString()
+            return
+        }
+        val countPaint = android.text.TextPaint(view.paint).apply { textSize = view.textSize * 0.85f }
+        val countWidth = countPaint.measureText(" ${state.count}")
+        val nameWidth = (avail - countWidth - 2f).coerceAtLeast(0f)
+        val shortName = android.text.TextUtils.ellipsize(state.name, view.paint, nameWidth, android.text.TextUtils.TruncateAt.END).toString()
+        view.text = label(shortName, state.count, state.color)
+        state.shown = view.text.toString()
+    }
+
     fun label(name: String, count: Int, textColor: Int): CharSequence {
         val sb = SpannableStringBuilder(name)
         if (count > 0) {

@@ -1012,7 +1012,7 @@ class DirectoryAdapter(
                 org.fossify.gallery.mochipic.AlbumStyles.label(activity, this, folderStyle, nameCount, directory.subfoldersMediaCount, textColor)
             } else if (isListViewType) {
                 photoCnt.beGone()
-                dirName.text = AlbumMosaic.label(nameCount, directory.subfoldersMediaCount, textColor)
+                AlbumMosaic.setLabel(dirName, nameCount, directory.subfoldersMediaCount, textColor)
             }
 
             if (isListViewType || folderStyle == FOLDER_STYLE_ROUNDED_CORNERS || org.fossify.gallery.mochipic.AlbumStyles.usesTile(folderStyle)) {
