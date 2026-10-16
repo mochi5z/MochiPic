@@ -131,4 +131,6 @@
     <string name="mochipic_load_mode">アルバムの読み込み方</string>
     <string name="mochipic_load_mode_mediastore">高速（Android の画像一覧を読む）</string>
     <string name="mochipic_load_mode_full">全体（フォルダを直接すべて調べる）</string>
+    <string name="mochipic_regen_thumbs">サムネイルを再生成</string>
+    <string name="mochipic_regen_thumbs_done">このフォルダのサムネイルを作り直しています</string>
 </resources>

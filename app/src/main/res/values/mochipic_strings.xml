@@ -130,4 +130,6 @@
     <string name="mochipic_load_mode">How to load albums</string>
     <string name="mochipic_load_mode_mediastore">Fast (Android media list)</string>
     <string name="mochipic_load_mode_full">Full (check every folder directly)</string>
+    <string name="mochipic_regen_thumbs">Regenerate thumbnails</string>
+    <string name="mochipic_regen_thumbs_done">Regenerating thumbnails for this folder</string>
 </resources>

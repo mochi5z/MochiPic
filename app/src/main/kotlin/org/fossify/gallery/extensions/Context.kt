@@ -680,12 +680,16 @@ fun Context.loadImageBase(
     crossFadeDuration: Int = THUMBNAIL_FADE_DURATION_MS,
     onError: (() -> Unit)? = null
 ) {
+    // MochiPic: 「サムネイルを再生成」したフォルダは、目印を変えて前のサムネイルを使わず、元の画像から作り直す
+    val regen = org.fossify.gallery.mochipic.ThumbRegen.generation(this, path.substringBeforeLast('/'))
     val options = RequestOptions()
-        .signature(signature)
+        .signature(if (regen > 0) ObjectKey(listOf(signature, regen)) else signature)
         .skipMemoryCache(skipMemoryCacheAtPaths?.contains(path) == true)
         .priority(Priority.LOW)
         .diskCacheStrategy(DiskCacheStrategy.RESOURCE)
-        .format(DecodeFormat.PREFER_RGB_565)  // MochiPic: サムネイルは軽い形式で（透過のある画像は Glide が自動で ARGB_8888 にする）
+        // MochiPic: サムネイルは軽い形式で（透過のある画像は Glide が自動で ARGB_8888 にする）。
+        // WebP は使っている WebP 用の読み込み部品が軽い形式に対応しておらず、真っ黒（読めない）になるので ARGB_8888 のまま
+        .format(if (path.isWebP()) DecodeFormat.PREFER_ARGB_8888 else DecodeFormat.PREFER_RGB_565)
 
     if (cropThumbnails) {
         options.optionalTransform(CenterCrop())
@@ -758,8 +762,7 @@ fun Context.loadImageBase(
     // MochiPic: まず Android が持っているサムネイルを使い、なければ（隠しフォルダなど）元の画像から作る
     val useStoreThumb = org.fossify.gallery.mochipic.MediaStoreThumb.isSupported
             && !(animate && (path.isGif() || path.isWebP()))
-            // SD カードは Android のサムネイルが黒いまま返ることがあるので使わない（元の画像から作る）
-            && path.startsWith(internalStoragePath.trimEnd('/') + "/")
+            && regen == 0
             && org.fossify.gallery.mochipic.BucketMap.mayBeIndexed(this, path.substringBeforeLast('/'))
     if (useStoreThumb) {
         Glide.with(applicationContext)

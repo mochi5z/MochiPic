@@ -8,4 +8,5 @@
     <item name="mochi_exclude_folder" type="id" />
     <item name="mochi_rename_folder" type="id" />
     <item name="mochi_fix_date" type="id" />
+    <item name="mochi_regen_thumbs" type="id" />
 </resources>

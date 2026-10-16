@@ -410,6 +410,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
                 val keep = setOf(
                     R.id.sort, R.id.slideshow, R.id.change_view_type,
                     R.id.mochi_hide_folder, R.id.mochi_exclude_folder, R.id.mochi_rename_folder, R.id.mochi_fix_date,
+                    R.id.mochi_regen_thumbs,
                 )
                 for (i in 0 until size()) {
                     val item = getItem(i)
@@ -432,7 +433,18 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
             ).forEachIndexed { i, (id, title) ->
                 add(android.view.Menu.NONE, id, 300 + i, title).setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_NEVER)
             }
+            // いちばん下: このフォルダのサムネイルを作り直す
+            add(android.view.Menu.NONE, R.id.mochi_regen_thumbs, 10000, R.string.mochipic_regen_thumbs)
+                .setShowAsAction(android.view.MenuItem.SHOW_AS_ACTION_NEVER)
         }
+    }
+
+    /** このフォルダのサムネイルだけを作り直す（前のサムネイルは使わず、元の画像から作る）。 */
+    private fun mochiRegenThumbs() {
+        org.fossify.gallery.mochipic.ThumbRegen.bump(this, mPath)
+        binding.mediaGrid.adapter = null
+        setupAdapter()
+        toast(R.string.mochipic_regen_thumbs_done)
     }
 
     private fun mochiHideFolder() {
@@ -492,6 +504,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
                 R.id.mochi_exclude_folder -> ExcludeFolderDialog(this, listOf(mPath)) { finish() }
                 R.id.mochi_rename_folder -> mochiRenameFolder()
                 R.id.mochi_fix_date -> mochiFixDate()
+                R.id.mochi_regen_thumbs -> mochiRegenThumbs()
                 R.id.sort -> showSortingDialog()
                 R.id.filter -> showFilterMediaDialog()
                 R.id.empty_recycle_bin -> emptyRecycleBin()
