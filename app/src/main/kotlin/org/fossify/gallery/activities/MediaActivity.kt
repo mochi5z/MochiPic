@@ -231,6 +231,14 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
     override fun onStart() {
         super.onStart()
         mTempShowHiddenHandler.removeCallbacksAndMessages(null)
+        mochiWatcher.start()
+    }
+
+    /** MochiPic v0.1.1: Android の画像の一覧が変わったら、開いているフォルダを読み直す（数秒おきの確認の代わり）。 */
+    private val mochiWatcher by lazy {
+        org.fossify.gallery.mochipic.MediaChangeWatcher(this) {
+            if (!isDestroyed && !isFinishing && config.getFolderSorting(mPath) and SORT_BY_RANDOM == 0) getMedia()
+        }
     }
 
     override fun onResume() {
@@ -317,6 +325,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
 
     override fun onStop() {
         super.onStop()
+        mochiWatcher.stop()
 
         if (config.temporarilyShowHidden || config.tempSkipDeleteConfirmation) {
             mTempShowHiddenHandler.postDelayed({
@@ -657,7 +666,11 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         binding.mediaFastscroller.setScrollVertically(!scrollHorizontally)
     }
 
-    private fun checkLastMediaChanged() {
+    // MochiPic v0.1.1: 数秒おきの確認はやめ、MediaChangeWatcher の通知で読み直す
+    private fun checkLastMediaChanged() = Unit
+
+    @Suppress("unused")
+    private fun checkLastMediaChangedByPolling() {
         if (isDestroyed || config.getFolderSorting(mPath) and SORT_BY_RANDOM != 0) {
             return
         }

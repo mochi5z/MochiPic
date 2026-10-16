@@ -304,6 +304,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     override fun onStart() {
         super.onStart()
         mTempShowHiddenHandler.removeCallbacksAndMessages(null)
+        mochiWatcher.start()
     }
 
     override fun onResume() {
@@ -379,6 +380,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
 
     override fun onStop() {
         super.onStop()
+        mochiWatcher.stop()
 
         if (config.temporarilyShowHidden || config.tempSkipDeleteConfirmation || config.temporarilyShowExcluded) {
             mTempShowHiddenHandler.postDelayed({
@@ -1222,7 +1224,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         }
 
         // MochiPic: 標準は Android の画像の一覧を 1 回読むだけで一覧を作る（設定で「フォルダを直接読み込む」にすると従来の方式）
-        if (mochiPrefs.loadMode == org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_MEDIASTORE && mochiQuickLoad(dirs, mochiStateNow)) {
+        if (mochiPrefs.loadMode == org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_MEDIASTORE && mochiQuickLoad(dirs, mochiStateNow, mochiStateOld, mochiForce)) {
             return
         }
 
@@ -1734,7 +1736,11 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         }
     }
 
-    private fun checkLastMediaChanged() {
+    // MochiPic v0.1.1: 数秒おきの確認はやめ、MediaChangeWatcher の通知で読み直す
+    private fun checkLastMediaChanged() = Unit
+
+    @Suppress("unused")
+    private fun checkLastMediaChangedByPolling() {
         if (isDestroyed) {
             return
         }
@@ -1883,10 +1889,51 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
      * Android の画像の一覧を 1 回読むだけでアルバム一覧を作る。読めなかったら false（従来の方式で読む）。
      * フォルダの中身（日付など）はフォルダを開いたときに読む。
      */
-    private fun mochiQuickLoad(cached: ArrayList<Directory>, state: MediaFetcher.ScanState?): Boolean {
+    /** Android の画像の一覧が変わったという通知（MediaChangeWatcher）。読み込み中なら、終わってからもう 1 回だけ読む。 */
+    private val mochiWatcher by lazy {
+        org.fossify.gallery.mochipic.MediaChangeWatcher(this) {
+            if (mochiLoading) {
+                mochiReloadPending = true
+            } else if (!isDestroyed && !isFinishing) {
+                getDirectories()
+            }
+        }
+    }
+
+    @Volatile
+    private var mochiLoading = false
+    @Volatile
+    private var mochiReloadPending = false
+
+    private fun mochiQuickLoad(
+        cached: ArrayList<Directory>, state: MediaFetcher.ScanState?, old: MediaFetcher.ScanState?, force: Boolean,
+    ): Boolean {
+        mochiLoading = true
+        try {
+            return mochiQuickLoadInner(cached, state, old, force)
+        } finally {
+            mochiLoading = false
+            if (mochiReloadPending) {
+                mochiReloadPending = false
+                runOnUiThread { if (!isDestroyed && !isFinishing) getDirectories() }
+            }
+        }
+    }
+
+    private fun mochiQuickLoadInner(
+        cached: ArrayList<Directory>, state: MediaFetcher.ScanState?, old: MediaFetcher.ScanState?, force: Boolean,
+    ): Boolean {
         val getImages = mIsPickImageIntent || mIsGetImageContentIntent
         val getVideos = mIsPickVideoIntent || mIsGetVideoContentIntent
-        val result = org.fossify.gallery.mochipic.QuickAlbumLoader.load(this, cached, getImages && !getVideos, getVideos && !getImages)
+        val isPick = getImages || getVideos || mIsThirdPartyIntent
+        // v0.1.1: 変わったフォルダだけ読み直す。できないとき（初回・設定の変更・引っ張って更新など）は全件読み
+        val diff = if (!force && !isPick && state != null && old != null && cached.isNotEmpty()) {
+            org.fossify.gallery.mochipic.QuickAlbumLoader.loadDiff(this, cached, old, state, false, false)
+        } else {
+            null
+        }
+        val result = diff
+            ?: org.fossify.gallery.mochipic.QuickAlbumLoader.load(this, cached, getImages && !getVideos, getVideos && !getImages)
             ?: return false
         if (mShouldStopFetching || isDestroyed || isFinishing) {
             return true

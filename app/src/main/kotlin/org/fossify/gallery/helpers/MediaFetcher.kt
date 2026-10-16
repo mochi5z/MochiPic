@@ -923,9 +923,12 @@ class MediaFetcher(val context: Context) {
     fun currentScanState(settings: String): ScanState? {
         if (!isRPlus()) return null
         return try {
+            // version はボリュームごと（SD カードの一覧が作り直されたときも見落とさない）
+            val names = MediaStore.getExternalVolumeNames(context).sorted()
             val volumes = HashMap<String, Long>()
-            MediaStore.getExternalVolumeNames(context).forEach { volumes[it] = MediaStore.getGeneration(context, it) }
-            ScanState(MediaStore.getVersion(context), settings, volumes)
+            names.forEach { volumes[it] = MediaStore.getGeneration(context, it) }
+            val version = names.joinToString(",") { "$it:${MediaStore.getVersion(context, it)}" }
+            ScanState(version, settings, volumes)
         } catch (e: Exception) {
             null
         }

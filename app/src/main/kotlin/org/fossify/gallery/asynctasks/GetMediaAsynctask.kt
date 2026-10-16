@@ -11,6 +11,7 @@ import org.fossify.gallery.extensions.getFavoritePaths
 import org.fossify.gallery.helpers.*
 import org.fossify.gallery.models.Medium
 import org.fossify.gallery.models.ThumbnailItem
+import org.fossify.gallery.mochipic.mochiPrefs
 
 class GetMediaAsynctask(
     val context: Context, val mPath: String, val isPickImage: Boolean = false, val isPickVideo: Boolean = false,
@@ -36,6 +37,13 @@ class GetMediaAsynctask(
         val getVideoDurations = context.config.showThumbnailVideoDuration
         // MochiPic: 1 つのフォルダを開くときは、そのフォルダの分だけを Android に問い合わせる（端末全体を読まない）
         val singleFolder = !showAll && mPath != FAVORITES && mPath != RECYCLE_BIN
+
+        // MochiPic v0.1.1: 高速方式では、フォルダの中身を番号（BUCKET_ID）で 1 回だけ問い合わせる（日付・サイズも同じ行から）
+        if (singleFolder && context.mochiPrefs.loadMode == org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_MEDIASTORE) {
+            org.fossify.gallery.mochipic.QuickAlbumLoader.loadFolder(context, mPath, isPickImage, isPickVideo, getVideoDurations)?.let {
+                return mediaFetcher.groupMedia(it, pathToUse)
+            }
+        }
         val lastModifieds = when {
             !getProperLastModified -> HashMap()
             singleFolder -> mediaFetcher.getFolderLastModifieds(mPath)
