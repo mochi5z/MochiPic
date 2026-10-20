@@ -45,6 +45,7 @@ data class FolderTile(
     val path: String = key,
     val showDate: Boolean = true,
     val subtitle: String? = null,
+    val pinned: Boolean = false,  // ピン留め（リストの右端にピンを出す）
 )
 
 /**
@@ -133,6 +134,13 @@ class FolderTileAdapter(
         b.dirDate.setTextColor(textColor.adjustAlpha(0.7f))
         b.dirPlay.beVisibleIf(tile.thumb?.isVideoFast() == true)
         b.dirDivider.setBackgroundColor(textColor.adjustAlpha(0.15f))
+        if (tile.pinned) {
+            b.dirIconHolder.visibility = View.VISIBLE
+            b.dirLocation.beGone()
+            b.dirDragHandle.beGone()
+            b.dirPin.visibility = View.VISIBLE
+            b.dirPin.setColorFilter(textColor)
+        }
         loadThumb(b.dirThumbnail, tile, big = false)
     }
 

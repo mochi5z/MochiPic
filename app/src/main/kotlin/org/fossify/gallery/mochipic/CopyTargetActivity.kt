@@ -12,11 +12,14 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import org.fossify.commons.extensions.beVisibleIf
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.toast
+import org.fossify.commons.helpers.AlphanumericComparator
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.gallery.R
 import org.fossify.gallery.activities.SimpleActivity
 import org.fossify.gallery.databinding.ActivityMochiExplorerBinding
+import org.fossify.gallery.extensions.config
 import org.fossify.gallery.extensions.getCachedDirectories
+import org.fossify.gallery.extensions.movePinnedDirectoriesToFront
 import org.fossify.gallery.models.Directory
 import java.io.File
 
@@ -27,6 +30,7 @@ import java.io.File
  *  - アルバムを押すと、確認なしですぐにコピー・移動を始める
  *  - ＋ はシステムのエクスプローラーを開く（新しいフォルダも作れる。SD カードも選べる）。選んだらすぐに始める
  *  - ︙ の中は隠しフォルダの表示切り替えだけ
+ *  - ピン留めしたアルバムは、アルバム一覧と同じく並べ替えに関係なく一番上
  */
 class CopyTargetActivity : SimpleActivity() {
 
@@ -98,7 +102,7 @@ class CopyTargetActivity : SimpleActivity() {
                 MENU_HIDDEN -> {
                     showHidden = !showHidden
                     item.isChecked = showHidden
-                    show()
+                    showList()
                 }
                 else -> return@setOnMenuItemClickListener false
             }
@@ -114,7 +118,8 @@ class CopyTargetActivity : SimpleActivity() {
             menu.findItem(sortMode)?.isChecked = true
             setOnMenuItemClickListener {
                 sortMode = it.itemId
-                show()
+                // ここは PopupMenu.apply の中なので、show() と書くとメニューを開き直すだけで一覧が並び替わらなかった
+                showList()
                 true
             }
             show()
@@ -129,7 +134,7 @@ class CopyTargetActivity : SimpleActivity() {
             runOnUiThread {
                 if (isDestroyed) return@runOnUiThread
                 dirs = result
-                show()
+                showList()
             }
         }
     }
@@ -137,16 +142,21 @@ class CopyTargetActivity : SimpleActivity() {
     private fun isHidden(path: String): Boolean =
         path.split('/').any { it.startsWith('.') } || File(path, ".nomedia").exists()
 
-    private fun show() {
+    private fun showList() {
         val visible = dirs.filter { showHidden || !it.second }.map { it.first }
-        val sorted = when (sortMode) {
-            SORT_DATE_ASC -> visible.sortedBy { it.modified }
-            SORT_NAME_ASC -> visible.sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.name })
-            SORT_NAME_DESC -> visible.sortedWith(compareByDescending(String.CASE_INSENSITIVE_ORDER) { it.name })
-            else -> visible.sortedByDescending { it.modified }
+        // 名前はアルバム一覧と同じ正準の順（0→9、A→Z。数字は値の大きさで比べる）。同じ日付どうしも名前順
+        val byName = Comparator<Directory> { a, b -> AlphanumericComparator().compare(a.name.lowercase(), b.name.lowercase()) }
+        val ordered = when (sortMode) {
+            SORT_DATE_ASC -> visible.sortedWith(compareBy<Directory> { it.modified }.then(byName))
+            SORT_NAME_ASC -> visible.sortedWith(byName)
+            SORT_NAME_DESC -> visible.sortedWith(byName.reversed())
+            else -> visible.sortedWith(compareByDescending<Directory> { it.modified }.then(byName))
         }
+        // ピン留めしたアルバムを上に（アルバム一覧と同じ処理）
+        val sorted = movePinnedDirectoriesToFront(ArrayList(ordered))
+        val pinned = config.pinnedFolders
         adapter.items = sorted.map {
-            FolderTile(it.path, it.name, it.mediaCnt, it.tmb.takeIf { t -> t.isNotEmpty() }, it.modified, it.path, showDate = true, subtitle = it.path)
+            FolderTile(it.path, it.name, it.mediaCnt, it.tmb.takeIf { t -> t.isNotEmpty() }, it.modified, it.path, showDate = true, subtitle = it.path, pinned = pinned.contains(it.path))
         }
         binding.explorerEmpty.beVisibleIf(sorted.isEmpty())
     }
