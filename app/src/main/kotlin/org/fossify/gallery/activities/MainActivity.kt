@@ -283,7 +283,8 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
             config.sorting = config.sorting or SORT_USE_NUMERIC_VALUE
         }
 
-        updateWidgets()
+        // MochiPic v0.1.2: ウィジェットの更新は一覧を出したあと（起動直後の処理を減らす）。ごみ箱の確認はもともと 1 日 1 回で、少し遅らせて行う
+        mLastMediaHandler.postDelayed({ if (!isDestroyed) ensureBackgroundThread { updateWidgets() } }, 3000)
         registerFileUpdateListener()
 
         binding.directoriesSwitchSearching.setOnClickListener {
@@ -577,6 +578,11 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
 
     private fun startNewPhotoFetcher() {
         val photoFetcher = NewPhotoFetcher()
+        // MochiPic: 高速方式では、アプリを閉じている間に新しい画像のたびに起きる処理を使わない
+        if (mochiPrefs.loadMode == org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_MEDIASTORE) {
+            if (photoFetcher.isScheduled(applicationContext)) photoFetcher.cancel(applicationContext)
+            return
+        }
         if (!photoFetcher.isScheduled(applicationContext)) {
             photoFetcher.scheduleJob(applicationContext)
         }
@@ -1253,6 +1259,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         if (!mochiForce && mochiStateNow != null && mochiStateOld != null && dirs.isNotEmpty()) {
             if (mochiStateNow == mochiStateOld) {
                 mLoadedInitialPhotos = true
+                org.fossify.gallery.mochipic.LoadCache.markDirsSaved(this)  // 保存済みの一覧は今の Android の一覧と同じ
                 runOnUiThread {
                     binding.directoriesRefreshLayout.isRefreshing = false
                     checkPlaceholderVisibility(dirs)
@@ -1988,6 +1995,19 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
             return true
         }
 
+        if (result.unchanged) {
+            // v0.1.2: 画像・動画は変わっていない（画像以外のファイルの変化だけ）。一覧も保存済みのデータもそのまま
+            mLoadedInitialPhotos = true
+            mochiIncompleteRetries = 0
+            state?.let { mochiPrefs.lastScanState = it.encode() }
+            org.fossify.gallery.mochipic.LoadCache.markDirsSaved(this)
+            runOnUiThread {
+                binding.directoriesRefreshLayout.isRefreshing = false
+                checkPlaceholderVisibility(cached)
+            }
+            return true
+        }
+
         val dirs = result.dirs
         if (config.groupDirectSubfolders) {
             mDirs = dirs.clone() as ArrayList<Directory>
@@ -2016,6 +2036,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
                 cached.filter { it.path.lowercase(java.util.Locale.ROOT) !in keep }.forEach { directoryDB.deleteDirPath(it.path) }
                 directoryDB.insertAll(dirs)
                 result.changedMedia.values.forEach { mediaDB.insertAll(it) }
+                if (!result.incomplete) org.fossify.gallery.mochipic.LoadCache.markDirsSaved(this)
             } catch (ignored: Exception) {
             } }
         }.start()

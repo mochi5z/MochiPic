@@ -90,18 +90,16 @@ fun String.shouldFolderBeVisible(
 // recognize /sdcard/DCIM as the same folder as /storage/emulated/0/DCIM
 fun String.getDistinctPath(): String {
     // MochiPic: 一覧を作り直すたびにファイルシステムへ問い合わせないよう、結果を覚えておく
-    distinctPathCache[this]?.let { return it }
+    // （v0.1.2: 結果は保存して次の起動でも使う。調べるのは新しいフォルダだけ）
+    org.fossify.gallery.mochipic.LoadCache.getDistinct(this)?.let { return it }
     val distinct = try {
         File(this).canonicalPath.lowercase(Locale.getDefault())
     } catch (e: IOException) {
         lowercase(Locale.getDefault())
     }
-    if (distinctPathCache.size > 5000) distinctPathCache.clear()
-    distinctPathCache[this] = distinct
+    org.fossify.gallery.mochipic.LoadCache.putDistinct(this, distinct)
     return distinct
 }
-
-private val distinctPathCache = java.util.concurrent.ConcurrentHashMap<String, String>()
 
 fun String.isDownloadsFolder() = equals(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString(), true)
 

@@ -45,6 +45,8 @@ object QuickAlbumLoader {
         val changedMedia: Map<String, ArrayList<Medium>>,
         /** 書き込み中（解凍中など）のファイルがあった。少し待ってからもう一度読む。 */
         val incomplete: Boolean = false,
+        /** 画像・動画は何も変わっていなかった（画像以外のファイルの変化だけ）。一覧を作り直さなくてよい。v0.1.2 */
+        val unchanged: Boolean = false,
     )
 
     private const val ALL_TYPES = TYPE_IMAGES or TYPE_VIDEOS or TYPE_GIFS or TYPE_RAWS or TYPE_SVGS
@@ -57,6 +59,8 @@ object QuickAlbumLoader {
         MediaStore.MediaColumns.DATE_TAKEN,
         MediaStore.MediaColumns.SIZE,
         MediaStore.MediaColumns.BUCKET_ID,
+        MediaStore.MediaColumns._ID,  // v0.1.2: サムネイルを取るときに番号を問い合わせ直さないため
+        MediaStore.Files.FileColumns.MEDIA_TYPE,
     )
 
     /** 1 回の読み込みで使い回す設定など。 */
@@ -88,6 +92,25 @@ object QuickAlbumLoader {
         /** 書き込み中のファイル（Android 側の更新日時やサイズがまだ 0 の行）があったか。 */
         var incomplete = false
 
+        /**
+         * そのボリュームの画像・動画の枚数（一覧と同じ絞り込み）。v0.1.2
+         * まず 1 件だけ取って Android が返す総数を使い、返さない端末では件数を数える。
+         */
+        fun totalCount(volume: String): Int? {
+            val uri = MediaStore.Files.getContentUri(volume)
+            val args = selectionArgs.toTypedArray()
+            val bundle = android.os.Bundle().apply {
+                putString(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION, selection)
+                putStringArray(android.content.ContentResolver.QUERY_ARG_SQL_SELECTION_ARGS, args)
+                putInt(android.content.ContentResolver.QUERY_ARG_LIMIT, 1)
+            }
+            context.contentResolver.query(uri, arrayOf(android.provider.BaseColumns._ID), bundle, null)?.use { cursor ->
+                val total = cursor.extras?.getInt(android.content.ContentResolver.EXTRA_TOTAL_COUNT, -1) ?: -1
+                if (total >= 0) return total
+            }
+            return context.contentResolver.query(uri, arrayOf(android.provider.BaseColumns._ID), selection, args, null)?.use { it.count }
+        }
+
         fun query(extraSelection: String?, extraArgs: List<String>, uri: android.net.Uri = MediaStore.Files.getContentUri("external"), projection: Array<String> = PROJECTION): Cursor? {
             val sel = if (extraSelection == null) selection else "($selection) AND $extraSelection"
             return context.contentResolver.query(uri, projection, sel, (selectionArgs + extraArgs).toTypedArray(), null)
@@ -115,8 +138,10 @@ object QuickAlbumLoader {
                 val parent = path.substring(0, slash)
                 buckets[cursor.getLong(4)] = parent
                 val duration = if (withDurations && type == TYPE_VIDEOS) context.getDuration(path) ?: 0 else 0
+                val mediaStoreId = cursor.getLong(5)
+                MediaIds.put(path, mediaStoreId, cursor.getInt(6))
                 byFolder.getOrPut(parent) { ArrayList() }.add(
-                    Medium(null, filename, path, parent, modified, taken, cursor.getLong(3), type, duration, favoriteSet.contains(path), 0L, 0L)
+                    Medium(null, filename, path, parent, modified, taken, cursor.getLong(3), type, duration, favoriteSet.contains(path), 0L, mediaStoreId)
                 )
             }
         }
@@ -133,6 +158,7 @@ object QuickAlbumLoader {
     // ---------------------------------------------------------------- 全件
 
     fun load(context: Context, cached: List<Directory>, isPickImage: Boolean, isPickVideo: Boolean): Result? {
+        LoadCache.clearMediaCounts(context)  // 全件読みのあとは、次の差分読み込みで数え直す
         val env = Env(context, isPickImage, isPickVideo)
         if (env.filterMedia == 0) return Result(ArrayList(), emptyMap())
 
@@ -202,6 +228,8 @@ object QuickAlbumLoader {
         val env = Env(context, isPickImage, isPickVideo)
         if (env.filterMedia == 0) return null
         val changed = LinkedHashMap<Long, String>()  // 番号 → フォルダの場所
+        // v0.1.2: 状態が変わったボリューム（内部ストレージ・SD カード）だけを調べる
+        val changedVolumes = now.volumes.filter { (volume, generation) -> old.volumes[volume] != generation }.keys
         try {
             // 1. 追加・変更された行
             for ((volume, generation) in now.volumes) {
@@ -220,19 +248,37 @@ object QuickAlbumLoader {
             }
             BucketMap.addAll(context, changed)
 
-            // 2. フォルダごとの枚数（番号だけの軽い問い合わせ）
-            val counts = HashMap<Long, Int>()
-            env.query(null, emptyList(), projection = arrayOf(MediaStore.MediaColumns.BUCKET_ID))?.use { cursor ->
-                while (cursor.moveToNext()) {
-                    val id = cursor.getLong(0)
-                    counts[id] = (counts[id] ?: 0) + 1
-                }
+            // v0.1.2: 画像・動画の行が 1 つも変わっていなければ、枚数だけ確かめる。
+            // 同じなら画像以外のファイル（ダウンロード中のファイルなど）が変わっただけなので、一覧は作り直さない
+            val storedTotals = LoadCache.mediaCounts(context)
+            if (changed.isEmpty() && changedVolumes.isNotEmpty() && changedVolumes.all { v -> storedTotals[v] != null && storedTotals[v] == env.totalCount(v) }) {
+                return Result(ArrayList(cached), emptyMap(), unchanged = true)
             }
+
+            // 2. フォルダごとの枚数（番号だけの軽い問い合わせ）。v0.1.2: 変わったボリュームだけ数える
+            // （場所からボリュームが分からないフォルダがあるときは、すべてのボリュームを数える）
+            val countAll = cached.any { it.path != FAVORITES && it.path != RECYCLE_BIN && volumeOf(it.path) !in now.volumes.keys }
+            val countVolumes = if (countAll) now.volumes.keys else changedVolumes
+            val counts = HashMap<Long, Int>()
+            val totals = HashMap<String, Int>()
+            for (volume in countVolumes) {
+                var total = 0
+                env.query(null, emptyList(), uri = MediaStore.Files.getContentUri(volume), projection = arrayOf(MediaStore.MediaColumns.BUCKET_ID))?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(0)
+                        counts[id] = (counts[id] ?: 0) + 1
+                        total++
+                    }
+                }
+                totals[volume] = total
+            }
+            LoadCache.saveMediaCounts(context, storedTotals + totals)
             val cachedIds = HashSet<Long>()
             cached.forEach { dir ->
                 if (dir.path == FAVORITES || dir.path == RECYCLE_BIN) return@forEach
                 val id = BucketMap.idOf(context, dir.path) ?: return@forEach  // Android の一覧に載らないフォルダは対象外
                 cachedIds.add(id)
+                if (!countAll && volumeOf(dir.path) !in countVolumes) return@forEach  // 変わっていないボリュームのフォルダ
                 // 枚数が違う・日付が入っていない（古い仕組みが保存したもの）フォルダは読み直す
                 if ((counts[id] ?: 0) != dir.mediaCnt || dir.modified <= 0L) changed[id] = dir.path
             }
@@ -296,6 +342,13 @@ object QuickAlbumLoader {
         } catch (e: Exception) {
             null
         }
+    }
+
+    /** フォルダの場所から MediaStore のボリューム名を求める（内部ストレージは external_primary、SD カードは小文字の番号）。 */
+    fun volumeOf(path: String): String {
+        if (path.startsWith("/storage/emulated/")) return MediaStore.VOLUME_EXTERNAL_PRIMARY
+        val parts = path.split('/')
+        return if (parts.size > 2 && parts[1] == "storage") parts[2].lowercase(java.util.Locale.ROOT) else ""
     }
 
     private fun typeOf(path: String) = when {

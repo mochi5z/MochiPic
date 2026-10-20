@@ -22,10 +22,29 @@ object DateIndex {
     @Volatile
     private var cache: List<Month> = emptyList()
 
+    /** cache を作ったときの Android の一覧の状態と設定。同じなら読み直さない（v0.1.2） */
+    @Volatile
+    private var cacheKey: String? = null
+
+    private fun keyOf(context: Context): String? {
+        val stamp = LoadCache.fullStamp(context) ?: return null
+        val config = context.config
+        val prefs = context.mochiPrefs
+        return listOf(
+            stamp, config.shouldShowHidden, config.excludedFolders.sorted(), prefs.scanFolders.sorted(), prefs.skipAppFolders,
+            Locale.getDefault().toLanguageTag(),
+        ).joinToString("|")
+    }
+
     fun cached(key: String) = cache.firstOrNull { it.key == key }
 
-    /** 重い（端末の全メディアを読む）ので裏のスレッドで呼ぶ。 */
+    /**
+     * 重い（端末の全メディアを読む）ので裏のスレッドで呼ぶ。
+     * v0.1.2: 前回から Android の一覧も設定も変わっていなければ、前回の結果をそのまま返す（月を開いたとき・戻ったときに全件を読み直さない）
+     */
     fun load(context: Context): List<Month> {
+        val key = keyOf(context)
+        if (key != null && key == cacheKey && cache.isNotEmpty()) return cache
         val items = query(context)
         val format = SimpleDateFormat(DateFormat.getBestDateTimePattern(Locale.getDefault(), "yMMMM"), Locale.getDefault())
         val cal = Calendar.getInstance()
@@ -37,6 +56,7 @@ object DateIndex {
             Month(key, format.format(sorted.first().time), sorted.map { it.path }, sorted.first().time)
         }.sortedByDescending { it.key }
         cache = months
+        cacheKey = key
         return months
     }
 

@@ -20,6 +20,7 @@ import org.fossify.gallery.activities.MediaActivity
 import org.fossify.gallery.activities.SimpleActivity
 import org.fossify.gallery.databinding.ActivityMochiExplorerBinding
 import org.fossify.gallery.extensions.config
+import org.fossify.gallery.extensions.directoryDB
 import org.fossify.gallery.extensions.launchSettings
 import org.fossify.gallery.helpers.DIRECTORY
 import java.io.File
@@ -213,19 +214,40 @@ class ExplorerActivity : SimpleActivity() {
         return Scan(media.size, media.maxByOrNull { it.lastModified() }, children.any { it.isDirectory })
     }
 
+    /**
+     * v0.1.2: アルバム一覧の保存済みの情報（枚数・表紙）があって、保存したあとにフォルダの中身が変わっていなければ
+     * それを使う（フォルダの中の画像を 1 枚ずつ調べない）。中身が変わったフォルダ・一覧にないフォルダは今までどおり調べる。
+     */
+    private fun scanWithKnown(dir: File, showHidden: Boolean, known: Map<String, org.fossify.gallery.models.Directory>, savedAt: Long, knownPaths: List<String>): Scan {
+        val k = known[dir.path.lowercase(java.util.Locale.ROOT)]
+        if (k == null || k.tmb.isEmpty() || savedAt <= 0L || dir.lastModified() > savedAt) return scan(dir, showHidden)
+        val prefix = dir.path.lowercase(java.util.Locale.ROOT) + "/"
+        // サブフォルダがあるか: 一覧にあるフォルダの下か、画像以外の名前のものだけ確かめる
+        val hasSub = knownPaths.any { it.startsWith(prefix) } ||
+            dir.list()?.any { (showHidden || !it.startsWith(".")) && !it.isMediaFile() && File(dir, it).isDirectory } == true
+        return Scan(k.mediaCnt, File(k.tmb), hasSub)
+    }
+
     private fun listFolder(path: String): List<Entry> {
         val showHidden = config.shouldShowHidden
         val dir = File(path)
         val subdirs = dir.listFiles()?.filter { it.isDirectory && (showHidden || !it.name.startsWith(".")) }.orEmpty().toMutableList()
         if (path == rootPath()) externalVolumes.forEach { subdirs.add(File(it)) }
+        val known = try {
+            directoryDB.getAll().filter { it.mediaCnt > 0 }.associateBy { it.path.lowercase(java.util.Locale.ROOT) }
+        } catch (e: Exception) {
+            emptyMap()
+        }
+        val knownPaths = known.keys.toList()
+        val savedAt = LoadCache.dirsSavedAt(this)
 
         val list = subdirs.map { sub ->
-            val s = scan(sub, showHidden)
+            val s = scanWithKnown(sub, showHidden, known, savedAt, knownPaths)
             Entry(FolderTile(sub.path, sub.name, s.mediaCount, s.newest?.path, sub.lastModified()), s.hasSubfolders, isSelf = false)
         }.toMutableList()
 
         // 直下にも画像があるフォルダは、そのフォルダ自身を 1 項目として加える（QP-Gallery と同じ）
-        val self = scan(dir, showHidden)
+        val self = scanWithKnown(dir, showHidden, known, savedAt, knownPaths)
         if (self.mediaCount > 0) {
             list.add(Entry(FolderTile(SELF_PREFIX + dir.path, dir.name, self.mediaCount, self.newest?.path, dir.lastModified(), path = dir.path), false, isSelf = true))
         }

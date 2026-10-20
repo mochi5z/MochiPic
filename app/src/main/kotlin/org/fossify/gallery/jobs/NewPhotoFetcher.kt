@@ -18,6 +18,8 @@ import org.fossify.commons.extensions.getStringValue
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.gallery.extensions.addPathToDB
 import org.fossify.gallery.extensions.updateDirectoryPath
+import org.fossify.gallery.mochipic.MochiPicPrefs
+import org.fossify.gallery.mochipic.mochiPrefs
 
 // based on https://developer.android.com/reference/android/app/job/JobInfo.Builder.html#addTriggerContentUri(android.app.job.JobInfo.TriggerContentUri)
 class NewPhotoFetcher : JobService() {
@@ -52,6 +54,14 @@ class NewPhotoFetcher : JobService() {
         }
     }
 
+    /** MochiPic: 高速方式では使わないので取り消す。 */
+    fun cancel(context: Context) {
+        try {
+            context.getSystemService(JobScheduler::class.java)?.cancel(PHOTO_VIDEO_CONTENT_JOB)
+        } catch (ignored: Exception) {
+        }
+    }
+
     fun isScheduled(context: Context): Boolean {
         val jobScheduler = context.getSystemService(JobScheduler::class.java)
         val jobs = jobScheduler.allPendingJobs
@@ -59,6 +69,12 @@ class NewPhotoFetcher : JobService() {
     }
 
     override fun onStartJob(params: JobParameters): Boolean {
+        // MochiPic: 高速方式では、アプリを閉じている間はフォルダを読み直さない（電池と発熱のため）。
+        // 次に開いたときの差分読み込みと、開いている間の変化の通知で足りる。予約も取り消して二度と起きないようにする
+        if (applicationContext.mochiPrefs.loadMode == MochiPicPrefs.LOAD_MEDIASTORE) {
+            cancel(applicationContext)
+            return false
+        }
         mRunningParams = params
         ensureBackgroundThread {
             val affectedFolderPaths = HashSet<String>()

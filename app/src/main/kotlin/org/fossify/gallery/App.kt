@@ -14,6 +14,8 @@ class App : FossifyApp() {
     override fun onCreate() {
         super.onCreate()
         org.fossify.gallery.mochipic.ScanRules.load(this)
+        // MochiPic: 前回までに調べたフォルダの「実際の場所」を裏で読んでおく
+        org.fossify.commons.helpers.ensureBackgroundThread { org.fossify.gallery.mochipic.LoadCache.loadDistinct(this) }
         Reprint.initialize(this)
         Picasso.setSingletonInstance(Picasso.Builder(this).downloader(object : Downloader {
             override fun load(request: Request) = Response.Builder().build()

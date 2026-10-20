@@ -22,6 +22,64 @@ import java.io.FileNotFoundException
  * 元の画像を開いて縮小するより速い。Android の一覧に載っていない画像（隠しフォルダなど）は読み込めないので、
  * 呼び出し側で元の画像からの読み込みに切り替える。
  */
+/**
+ * MochiPic v0.1.2: 画像の場所 → MediaStore の番号。一覧を読んだときに覚えておき、サムネイルを取るたびに
+ * 番号を問い合わせ直さない。覚えていない画像は、そのフォルダの番号をまとめて 1 回で取る（1 枚ずつ問い合わせない）。
+ */
+object MediaIds {
+    private val ids = java.util.concurrent.ConcurrentHashMap<String, Long>()  // 動画は負の数
+    private val loadedFolders = java.util.concurrent.ConcurrentHashMap.newKeySet<String>()
+    private const val MAX = 50000
+
+    fun put(path: String, id: Long, mediaType: Int) {
+        if (id <= 0L) return
+        val value = when (mediaType) {
+            MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE -> id
+            MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO -> -id
+            else -> return
+        }
+        if (ids.size > MAX) {
+            ids.clear()
+            loadedFolders.clear()
+        }
+        ids[path] = value
+    }
+
+    fun forget(path: String) {
+        ids.remove(path)
+    }
+
+    private fun uriOf(value: Long): android.net.Uri =
+        if (value > 0) ContentUris.withAppendedId(MediaStore.Images.Media.getContentUri("external"), value)
+        else ContentUris.withAppendedId(MediaStore.Video.Media.getContentUri("external"), -value)
+
+    /** 覚えていればその場で返す。なければフォルダの分をまとめて取ってから探す。それでもなければ null。 */
+    fun find(context: Context, path: String): android.net.Uri? {
+        ids[path]?.let { return uriOf(it) }
+        val folder = path.substringBeforeLast('/')
+        if (loadedFolders.add(folder.lowercase(java.util.Locale.ROOT))) {
+            val bucket = BucketMap.idOf(context, folder)
+            if (bucket != null) {
+                try {
+                    context.contentResolver.query(
+                        MediaStore.Files.getContentUri("external"),
+                        arrayOf(MediaStore.Files.FileColumns.DATA, MediaStore.Files.FileColumns._ID, MediaStore.Files.FileColumns.MEDIA_TYPE),
+                        "${MediaStore.MediaColumns.BUCKET_ID} = ?", arrayOf(bucket.toString()), null
+                    )?.use { cursor ->
+                        while (cursor.moveToNext()) {
+                            val p = cursor.getString(0) ?: continue
+                            put(p, cursor.getLong(1), cursor.getInt(2))
+                        }
+                    }
+                } catch (ignored: Exception) {
+                }
+                ids[path]?.let { return uriOf(it) }
+            }
+        }
+        return null
+    }
+}
+
 data class MediaStoreThumb(val path: String) {
     companion object {
         val isSupported get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
@@ -60,7 +118,7 @@ class MediaStoreThumbLoader(private val context: Context) : ModelLoader<MediaSto
                 return
             }
             try {
-                val uri = findUri() ?: throw FileNotFoundException(path)
+                val uri = MediaIds.find(context, path) ?: findUri() ?: throw FileNotFoundException(path)
                 // 切り抜いても粗くならないよう、表示の大きさの 2 倍で頼む（大きすぎる指定は 1024 まで）
                 val side = (maxOf(width, height).takeIf { it > 0 } ?: 256).times(2).coerceIn(128, 1024)
                 // 時間がかかりすぎるときはあきらめて、元の画像から作る
@@ -74,6 +132,7 @@ class MediaStoreThumbLoader(private val context: Context) : ModelLoader<MediaSto
                 }
                 callback.onDataReady(bitmap)
             } catch (e: Exception) {
+                MediaIds.forget(path)  // 番号が古かったかもしれない。次は問い合わせ直す
                 callback.onLoadFailed(e)
             }
         }
@@ -86,6 +145,7 @@ class MediaStoreThumbLoader(private val context: Context) : ModelLoader<MediaSto
             )?.use { cursor ->
                 if (!cursor.moveToFirst()) return null
                 val id = cursor.getLong(0)
+                MediaIds.put(path, id, cursor.getInt(1))
                 return when (cursor.getInt(1)) {
                     MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE -> ContentUris.withAppendedId(MediaStore.Images.Media.getContentUri("external"), id)
                     MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO -> ContentUris.withAppendedId(MediaStore.Video.Media.getContentUri("external"), id)

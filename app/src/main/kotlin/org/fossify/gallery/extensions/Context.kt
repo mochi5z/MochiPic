@@ -476,9 +476,13 @@ fun Context.getNoMediaFolders(callback: (folders: ArrayList<String>) -> Unit) {
 @Volatile
 private var noMediaCache: Pair<Long, ArrayList<String>>? = null
 
+@Volatile
+private var noMediaForceRefresh = false
+
 /** フォルダを隠した・戻したときに呼ぶ。 */
 fun invalidateNoMediaCache() {
     noMediaCache = null
+    noMediaForceRefresh = true  // 保存しておいた結果も使わない（Android の一覧への反映が遅れることがあるため）
 }
 
 fun Context.getNoMediaFoldersSync(): ArrayList<String> {
@@ -486,8 +490,18 @@ fun Context.getNoMediaFoldersSync(): ArrayList<String> {
     noMediaCache?.let { (time, folders) ->
         if (now - time < 5000) return ArrayList(folders)
     }
+    // MochiPic: 端末の全ファイルから探す重い問い合わせなので、Android の一覧の状態が前回と同じなら保存しておいた結果を使う
+    val stamp = org.fossify.gallery.mochipic.LoadCache.fullStamp(this)
+    if (!noMediaForceRefresh) {
+        org.fossify.gallery.mochipic.LoadCache.loadNoMedia(this, stamp)?.let {
+            noMediaCache = now to ArrayList(it)
+            return it
+        }
+    }
+    noMediaForceRefresh = false
     val result = getNoMediaFoldersUncached()
     noMediaCache = now to ArrayList(result)
+    org.fossify.gallery.mochipic.LoadCache.saveNoMedia(this, stamp, result)
     return result
 }
 
@@ -878,21 +892,25 @@ fun Context.getCachedDirectories(
 
         val includedPaths = config.includedFolders
 
+        // MochiPic: 隠しフォルダを表示しているときは .nomedia の場所は要らない（端末の全ファイルを探す問い合わせをしない）
         val folderNoMediaStatuses = HashMap<String, Boolean>()
-        val noMediaFolders = getNoMediaFoldersSync()
+        val noMediaFolders = if (shouldShowHidden) ArrayList() else getNoMediaFoldersSync()
         noMediaFolders.forEach { folder ->
             folderNoMediaStatuses["$folder/$NOMEDIA"] = true
         }
 
+        // MochiPic: 表示してよいかの判定は保存しておき、前提（設定・.nomedia の場所・日付）が同じなら新しいフォルダだけ判定する
+        val visibilityKey = org.fossify.gallery.mochipic.LoadCache.visibilityKey(this, shouldShowHidden, excludedPaths, includedPaths, noMediaFolders)
+        val knownVisibility = org.fossify.gallery.mochipic.LoadCache.visibility(this, visibilityKey)
         var filteredDirectories = directories.filter {
-            it.path.shouldFolderBeVisible(
+            knownVisibility[it.path] ?: it.path.shouldFolderBeVisible(
                 excludedPaths = excludedPaths,
                 includedPaths = includedPaths,
                 showHidden = shouldShowHidden,
                 folderNoMediaStatuses = folderNoMediaStatuses
             ) { path, hasNoMedia ->
                 folderNoMediaStatuses[path] = hasNoMedia
-            }
+            }.also { visible -> org.fossify.gallery.mochipic.LoadCache.remember(visibilityKey, it.path, visible) }
         } as ArrayList<Directory>
 
         val filterMedia = config.filterMedia
@@ -910,29 +928,24 @@ fun Context.getCachedDirectories(
         }) as ArrayList<Directory>
 
         if (shouldShowHidden) {
+            // MochiPic: 隠しフォルダを表示している間は名前に「(非表示)」を付けない（高速方式の一覧と同じ。
+            // 付けるにはフォルダごとに親まで .nomedia を確かめる必要があり、端末の負担になる）
             val hiddenString = resources.getString(R.string.hidden)
             filteredDirectories.forEach {
-                val noMediaPath = "${it.path}/$NOMEDIA"
-                val hasNoMedia = if (folderNoMediaStatuses.keys.contains(noMediaPath)) {
-                    folderNoMediaStatuses[noMediaPath]!!
-                } else {
-                    it.path.doesThisOrParentHaveNoMedia(folderNoMediaStatuses) { path, hasNoMedia ->
-                        val newPath = "$path/$NOMEDIA"
-                        folderNoMediaStatuses[newPath] = hasNoMedia
-                    }
-                }
-
-                it.name = if (hasNoMedia && !it.path.isThisOrParentIncluded(includedPaths)) {
-                    "${it.name.removeSuffix(hiddenString).trim()} $hiddenString"
-                } else {
-                    it.name.removeSuffix(hiddenString).trim()
-                }
+                if (it.name.endsWith(hiddenString)) it.name = it.name.removeSuffix(hiddenString).trim()
             }
         }
 
         val clone = filteredDirectories.clone() as ArrayList<Directory>
         callback(clone.distinctBy { it.path.getDistinctPath() } as ArrayList<Directory>)
-        removeInvalidDBDirectories(filteredDirectories)
+        org.fossify.gallery.mochipic.LoadCache.saveVisibility(this, visibilityKey)
+        org.fossify.gallery.mochipic.LoadCache.saveDistinct(this)
+        // MochiPic: 消えたフォルダの確認（フォルダごとにあるか調べる）は、Android の一覧が変わったときだけ
+        val stamp = org.fossify.gallery.mochipic.LoadCache.fullStamp(this)
+        if (org.fossify.gallery.mochipic.LoadCache.needsInvalidCheck(this, stamp)) {
+            removeInvalidDBDirectories(filteredDirectories)
+            org.fossify.gallery.mochipic.LoadCache.invalidChecked(this, stamp)
+        }
     }
 }
 
