@@ -7,6 +7,7 @@ import android.view.Menu
 import android.view.MenuItem
 import androidx.recyclerview.widget.GridLayoutManager
 import org.fossify.commons.extensions.beVisibleIf
+import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.gallery.R
@@ -57,6 +58,7 @@ class DateAlbumsActivity : SimpleActivity() {
         super.onResume()
         config.showAll = false  // 表示画面を「全部の写真」で開いたのを元に戻す（DateViewer を参照）
         binding.explorerMenu.updateColors()
+        binding.explorerFastscroller.updateColors(getProperPrimaryColor())
         QpTopBar.updateColors(this, binding.explorerMenu)
         sideMenu.updateColors()
         binding.explorerEmpty.setTextColor(getProperTextColor())

@@ -129,6 +129,7 @@ class SettingsActivity : SimpleActivity() {
         setupHideExtendedDetails()
         setupManageExtendedDetails()
         setupSkipDeleteConfirmation()
+        setupKeepBothOnConflict()
         setupManageBottomActions()
         setupUseRecycleBin()
         setupShowRecycleBin()
@@ -805,6 +806,14 @@ class SettingsActivity : SimpleActivity() {
     private fun updateExtendedDetailsButtons() {
         binding.settingsManageExtendedDetailsHolder.beVisibleIf(config.showExtendedDetails)
         binding.settingsHideExtendedDetailsHolder.beVisibleIf(config.showExtendedDetails)
+    }
+
+    private fun setupKeepBothOnConflict() {
+        binding.settingsMochiKeepBoth.isChecked = config.keepBothOnConflict
+        binding.settingsMochiKeepBothHolder.setOnClickListener {
+            binding.settingsMochiKeepBoth.toggle()
+            config.keepBothOnConflict = binding.settingsMochiKeepBoth.isChecked
+        }
     }
 
     private fun setupSkipDeleteConfirmation() {

@@ -217,7 +217,9 @@ fun Context.getSortedDirectories(source: ArrayList<Directory>): ArrayList<Direct
             sorting and SORT_BY_PATH != 0 -> text(o1.path.lowercase(Locale.getDefault()), o2.path.lowercase(Locale.getDefault()))
             sorting and SORT_BY_SIZE != 0 -> o1.size.compareTo(o2.size)
             sorting and SORT_BY_COUNT != 0 -> o1.mediaCnt.compareTo(o2.mediaCnt)
-            sorting and SORT_BY_DATE_MODIFIED != 0 -> o1.modified.compareTo(o2.modified)
+            // v0.1.3: 移動・コピーしたアルバムは、ファイルの日時が古くても、触った時刻で上に来る
+            sorting and SORT_BY_DATE_MODIFIED != 0 -> org.fossify.gallery.mochipic.MoveTouch.effectiveModified(this, o1)
+                .compareTo(org.fossify.gallery.mochipic.MoveTouch.effectiveModified(this, o2))
             sorting and SORT_BY_DATE_TAKEN != 0 -> o1.taken.compareTo(o2.taken)
             else -> (o1.sortValue.toLongOrNull() ?: 0).compareTo(o2.sortValue.toLongOrNull() ?: 0)
         }

@@ -127,6 +127,7 @@
     <string name="mochipic_scan_folders_all">ストレージ全体</string>
     <string name="mochipic_scan_folders_count">%d 個のフォルダ</string>
     <string name="mochipic_scan_folders_empty">フォルダがないので、ストレージ全体を探します。\n＋ でフォルダを足すと、その中だけを探します。</string>
+    <string name="mochipic_keep_both_on_conflict">コピー・移動先に同名のファイルがあるときは、確認せずにどちらも残す</string>
     <string name="mochipic_skip_app_folders">アプリ用のフォルダ（Android/data など）とキャッシュを読み込まない</string>
     <string name="mochipic_load_mode">アルバムの読み込み方</string>
     <string name="mochipic_load_mode_mediastore">高速（Android の画像一覧を読む）</string>

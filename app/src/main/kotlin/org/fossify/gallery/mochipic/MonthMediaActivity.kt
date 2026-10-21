@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import org.fossify.commons.extensions.beVisibleIf
+import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.isVideoFast
 import org.fossify.commons.helpers.ensureBackgroundThread
 import org.fossify.gallery.R

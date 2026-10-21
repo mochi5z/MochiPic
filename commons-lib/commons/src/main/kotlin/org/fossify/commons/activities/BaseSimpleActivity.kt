@@ -1100,6 +1100,14 @@ abstract class BaseSimpleActivity : EdgeToEdgeActivity() {
             return
         }
 
+        // MochiPic: 同名のファイルがあってもダイアログは出さず、どちらも残す（設定でオフにすると従来どおり確認する）
+        if (index == 0 && baseConfig.keepBothOnConflict) {
+            conflictResolutions.clear()
+            conflictResolutions[""] = CONFLICT_KEEP_BOTH
+            callback(conflictResolutions)
+            return
+        }
+
         val file = files[index]
         val newFileDirItem = FileDirItem(
             path = "$destinationPath/${file.name}",

@@ -992,6 +992,21 @@
 
             </RelativeLayout>
 
+            <RelativeLayout
+                android:id="@+id/settings_mochi_keep_both_holder"
+                style="@style/SettingsHolderSwitchStyle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <org.fossify.commons.views.MyMaterialSwitch
+                    android:id="@+id/settings_mochi_keep_both"
+                    style="@style/SettingsSwitchStyle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/mochipic_keep_both_on_conflict" />
+
+            </RelativeLayout>
+
             <include
                 android:id="@+id/settings_file_operations_divider"
                 layout="@layout/divider" />

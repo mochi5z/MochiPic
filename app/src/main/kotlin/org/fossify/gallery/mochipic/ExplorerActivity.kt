@@ -6,6 +6,7 @@ import android.os.Parcelable
 import android.view.Menu
 import androidx.recyclerview.widget.GridLayoutManager
 import org.fossify.commons.extensions.beVisibleIf
+import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.internalStoragePath
 import org.fossify.commons.extensions.isMediaFile
@@ -78,6 +79,7 @@ class ExplorerActivity : SimpleActivity() {
     override fun onResume() {
         super.onResume()
         binding.explorerMenu.updateColors()
+        binding.explorerFastscroller.updateColors(getProperPrimaryColor())
         QpTopBar.updateColors(this, binding.explorerMenu)
         sideMenu.updateColors()
         binding.explorerEmpty.setTextColor(getProperTextColor())

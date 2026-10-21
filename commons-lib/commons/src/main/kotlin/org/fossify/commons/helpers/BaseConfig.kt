@@ -228,6 +228,11 @@ open class BaseConfig(val context: Context) {
         get() = prefs.getString(LAST_COPY_PATH, "")!!
         set(lastCopyPath) = prefs.edit().putString(LAST_COPY_PATH, lastCopyPath).apply()
 
+    /** MochiPic: コピー・移動先に同名のファイルがあるとき、確認せずにどちらも残す（名前に (1) を付ける）。標準はオン。 */
+    var keepBothOnConflict: Boolean
+        get() = prefs.getBoolean("keep_both_on_conflict", true)
+        set(value) = prefs.edit().putBoolean("keep_both_on_conflict", value).apply()
+
     var keepLastModified: Boolean
         get() = prefs.getBoolean(KEEP_LAST_MODIFIED, true)
         set(keepLastModified) = prefs.edit().putBoolean(KEEP_LAST_MODIFIED, keepLastModified).apply()
@@ -297,7 +302,7 @@ open class BaseConfig(val context: Context) {
         set(hadThankYouInstalled) = prefs.edit().putBoolean(HAD_THANK_YOU_INSTALLED, hadThankYouInstalled).apply()
 
     var skipDeleteConfirmation: Boolean
-        get() = prefs.getBoolean(SKIP_DELETE_CONFIRMATION, false)
+        get() = prefs.getBoolean(SKIP_DELETE_CONFIRMATION, true)  // MochiPic: 削除の確認は出さないのが標準（削除はごみ箱に入る）
         set(skipDeleteConfirmation) = prefs.edit().putBoolean(SKIP_DELETE_CONFIRMATION, skipDeleteConfirmation).apply()
 
     var enablePullToRefresh: Boolean

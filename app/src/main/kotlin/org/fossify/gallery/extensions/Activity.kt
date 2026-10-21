@@ -322,7 +322,11 @@ fun BaseSimpleActivity.tryCopyMoveFilesTo(fileDirItems: ArrayList<FileDirItem>, 
         val destination = it
         handleSAFDialog(source) {
             if (it) {
-                copyMoveFilesTo(fileDirItems, source.trimEnd('/'), destination, isCopyOperation, true, config.shouldShowHidden, callback)
+                copyMoveFilesTo(fileDirItems, source.trimEnd('/'), destination, isCopyOperation, true, config.shouldShowHidden) { destinationPath ->
+                    // v0.1.3: 移動先を「今触った」と覚える（更新順で一番上に出すため）
+                    org.fossify.gallery.mochipic.MoveTouch.touch(this, destinationPath)
+                    callback(destinationPath)
+                }
             }
         }
     }

@@ -10,6 +10,7 @@ import android.view.MenuItem
 import android.widget.PopupMenu
 import androidx.recyclerview.widget.LinearLayoutManager
 import org.fossify.commons.extensions.beVisibleIf
+import org.fossify.commons.extensions.getProperPrimaryColor
 import org.fossify.commons.extensions.getProperTextColor
 import org.fossify.commons.extensions.toast
 import org.fossify.commons.helpers.AlphanumericComparator
@@ -40,6 +41,8 @@ class CopyTargetActivity : SimpleActivity() {
     private var dirs: List<Pair<Directory, Boolean>> = emptyList()  // アルバムと、隠しフォルダか
     private var showHidden = true
     private var delivered = false
+    private var deliveredPath: String? = null  // 選んだアルバム。次に開いたときの表示位置の目印にはしない（移動先は上に移るため）
+    private var scrollRestored = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -67,8 +70,35 @@ class CopyTargetActivity : SimpleActivity() {
         super.onResume()
         if (!::binding.isInitialized) return
         binding.explorerMenu.updateColors()
+        binding.explorerFastscroller.updateColors(getProperPrimaryColor())
         QpTopBar.updateColors(this, binding.explorerMenu)
         binding.explorerEmpty.setTextColor(getProperTextColor())
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (::binding.isInitialized) saveScroll()
+        // 位置は（開き直しても残る）下の companion に覚える
+    }
+
+    /** 一番上に見えているアルバムと、その位置のずれを覚える（選んだアルバム自身は目印にしない）。 */
+    private fun saveScroll() {
+        val lm = binding.explorerList.layoutManager as? LinearLayoutManager ?: return
+        val items = adapter.items
+        var pos = lm.findFirstVisibleItemPosition()
+        if (pos < 0 || items.isEmpty()) return
+        if (items.getOrNull(pos)?.key?.trimEnd('/') == deliveredPath && pos + 1 < items.size) pos++
+        val top = lm.findViewByPosition(pos)?.top ?: 0
+        anchorKey = items.getOrNull(pos)?.key
+        anchorPos = pos
+        anchorOffset = if (pos == lm.findFirstVisibleItemPosition()) top - binding.explorerList.paddingTop else 0
+    }
+
+    /** 前回の表示位置に戻す（アルバムの並びが変わっていても、目印のアルバムの今の場所へ）。 */
+    private fun restoreScroll(items: List<FolderTile>) {
+        if (items.isEmpty() || anchorPos < 0) return
+        val index = items.indexOfFirst { it.key == anchorKey }.takeIf { it >= 0 } ?: anchorPos.coerceIn(0, items.lastIndex)
+        (binding.explorerList.layoutManager as? LinearLayoutManager)?.scrollToPositionWithOffset(index, anchorOffset)
     }
 
     override fun onDestroy() {
@@ -147,10 +177,10 @@ class CopyTargetActivity : SimpleActivity() {
         // 名前はアルバム一覧と同じ正準の順（0→9、A→Z。数字は値の大きさで比べる）。同じ日付どうしも名前順
         val byName = Comparator<Directory> { a, b -> AlphanumericComparator().compare(a.name.lowercase(), b.name.lowercase()) }
         val ordered = when (sortMode) {
-            SORT_DATE_ASC -> visible.sortedWith(compareBy<Directory> { it.modified }.then(byName))
+            SORT_DATE_ASC -> visible.sortedWith(compareBy<Directory> { MoveTouch.effectiveModified(this, it) }.then(byName))
             SORT_NAME_ASC -> visible.sortedWith(byName)
             SORT_NAME_DESC -> visible.sortedWith(byName.reversed())
-            else -> visible.sortedWith(compareByDescending<Directory> { it.modified }.then(byName))
+            else -> visible.sortedWith(compareByDescending<Directory> { MoveTouch.effectiveModified(this, it) }.then(byName))
         }
         // ピン留めしたアルバムを上に（アルバム一覧と同じ処理）
         val sorted = movePinnedDirectoriesToFront(ArrayList(ordered))
@@ -159,6 +189,10 @@ class CopyTargetActivity : SimpleActivity() {
             FolderTile(it.path, it.name, it.mediaCnt, it.tmb.takeIf { t -> t.isNotEmpty() }, it.modified, it.path, showDate = true, subtitle = it.path, pinned = pinned.contains(it.path))
         }
         binding.explorerEmpty.beVisibleIf(sorted.isEmpty())
+        if (!scrollRestored && sorted.isNotEmpty()) {
+            scrollRestored = true
+            restoreScroll(adapter.items)
+        }
     }
 
     private fun deliver(path: String) {
@@ -169,6 +203,7 @@ class CopyTargetActivity : SimpleActivity() {
             return
         }
         delivered = true
+        deliveredPath = destination
         val callback = pending
         pending = null
         finish()
@@ -193,6 +228,11 @@ class CopyTargetActivity : SimpleActivity() {
             R.string.mochipic_sort_name_asc,
             R.string.mochipic_sort_name_desc,
         )
+
+        /** 一覧の表示位置（アプリを閉じるまで覚えておく）。目印のアルバム・その並びの番号・上端からのずれ。 */
+        private var anchorKey: String? = null
+        private var anchorPos = -1
+        private var anchorOffset = 0
 
         /** 並べ替え（アプリを閉じるまで覚えておく）。初めは新しい順。 */
         private var sortMode = SORT_DATE_DESC
