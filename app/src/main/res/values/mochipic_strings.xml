@@ -127,6 +127,7 @@
     <string name="mochipic_scan_folders_count">%d folders</string>
     <string name="mochipic_scan_folders_empty">No folders added, so the whole storage is scanned.\nAdd folders with + to scan only them.</string>
     <string name="mochipic_keep_both_on_conflict">Keep both files without asking when the destination has the same name</string>
+    <string name="mochipic_skip_delete_confirmation">Delete files and folders right away, without a confirmation dialog</string>
     <string name="mochipic_skip_app_folders">Skip app folders (Android/data etc.) and cache folders</string>
     <string name="mochipic_load_mode">How to load albums</string>
     <string name="mochipic_load_mode_mediastore">Fast (Android media list)</string>

@@ -988,7 +988,7 @@
                     style="@style/SettingsSwitchStyle"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/skip_delete_confirmation" />
+                    android:text="@string/mochipic_skip_delete_confirmation" />
 
             </RelativeLayout>
 

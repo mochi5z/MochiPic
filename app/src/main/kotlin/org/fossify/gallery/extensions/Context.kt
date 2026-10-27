@@ -867,6 +867,7 @@ fun Context.getCachedDirectories(
     getImagesOnly: Boolean = false,
     forceShowHidden: Boolean = false,
     forceShowExcluded: Boolean = false,
+    runMaintenance: Boolean = true,  // MochiPic: false なら、一覧を出した後の「消えたフォルダの確認」を行わない（コピー・移動先の画面用）
     callback: (ArrayList<Directory>) -> Unit,
 ) {
     ensureBackgroundThread {
@@ -943,6 +944,7 @@ fun Context.getCachedDirectories(
         org.fossify.gallery.mochipic.LoadCache.saveVisibility(this, visibilityKey)
         org.fossify.gallery.mochipic.LoadCache.saveDistinct(this)
         // MochiPic: 消えたフォルダの確認（フォルダごとにあるか調べる）は、Android の一覧が変わったときだけ
+        if (!runMaintenance) return@ensureBackgroundThread
         val stamp = org.fossify.gallery.mochipic.LoadCache.fullStamp(this)
         if (org.fossify.gallery.mochipic.LoadCache.needsInvalidCheck(this, stamp)) {
             removeInvalidDBDirectories(filteredDirectories)

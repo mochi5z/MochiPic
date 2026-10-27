@@ -38,11 +38,13 @@ class CopyTargetActivity : SimpleActivity() {
     private lateinit var binding: ActivityMochiExplorerBinding
     private lateinit var adapter: FolderTileAdapter
     private var source = ""
-    private var dirs: List<Pair<Directory, Boolean>> = emptyList()  // アルバムと、隠しフォルダか
+    private var dirs: List<Directory> = emptyList()
     private var showHidden = true
     private var delivered = false
     private var deliveredPath: String? = null  // 選んだアルバム。次に開いたときの表示位置の目印にはしない（移動先は上に移るため）
     private var scrollRestored = false
+    private var renderToken = 0  // 古い並べ替えの結果で画面を上書きしないための番号
+    private var rendered = false  // 一覧を 1 度でも画面に出したか
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -62,7 +64,14 @@ class CopyTargetActivity : SimpleActivity() {
         )
         adapter = FolderTileAdapter(this, mosaic = false, labelAtStart = false, forceList = true) { deliver(it.path) }
         binding.explorerList.layoutManager = LinearLayoutManager(this)
+        binding.explorerList.setHasFixedSize(true)
+        binding.explorerList.setItemViewCacheSize(12)
         binding.explorerList.adapter = adapter
+        // v0.1.4: 前回の一覧を覚えているときは、開いた瞬間にそれを出す（裏で最新を読んで、変わっていれば差し替える）
+        cachedDirs?.let {
+            dirs = withoutSource(it)
+            showList()
+        }
         load()
     }
 
@@ -157,31 +166,74 @@ class CopyTargetActivity : SimpleActivity() {
     }
 
     private fun load() {
-        getCachedDirectories(forceShowHidden = true) { list ->
-            val result = list
-                .filter { !it.areFavorites() && !it.isRecycleBin() && !it.path.equals(source, ignoreCase = true) }
-                .map { it to isHidden(it.path) }
+        // 後片付け（消えたフォルダの確認）はアルバム一覧の読み込みに任せ、この画面では行わない
+        getCachedDirectories(forceShowHidden = true, runMaintenance = false) { list ->
+            val base = list.filter { !it.areFavorites() && !it.isRecycleBin() }
+            cachedDirs = base  // 移動元で絞る前の一覧を覚える（次に開くときの移動元は別のフォルダかもしれない）
+            val result = withoutSource(base)
             runOnUiThread {
                 if (isDestroyed) return@runOnUiThread
+                if (rendered && dirs == result) return@runOnUiThread  // 覚えていた一覧と同じなら、何もしない（画面を動かさない）
+                // 表示中の位置を覚えて、差し替えたあとに戻す（並びが変わっても、見ていたアルバムの今の場所へ）
+                if (scrollRestored) {
+                    saveScroll()
+                    scrollRestored = false
+                }
                 dirs = result
                 showList()
             }
         }
     }
 
+    private fun withoutSource(list: List<Directory>) = list.filter { !it.path.equals(source, ignoreCase = true) }
+
+    /** 隠しフォルダか（名前が . で始まる・.nomedia がある）。フォルダごとにファイルシステムへ問い合わせるので、結果は覚えておく。 */
     private fun isHidden(path: String): Boolean =
         path.split('/').any { it.startsWith('.') } || File(path, ".nomedia").exists()
 
     private fun showList() {
-        val visible = dirs.filter { showHidden || !it.second }.map { it.first }
-        // 名前はアルバム一覧と同じ正準の順（0→9、A→Z。数字は値の大きさで比べる）。同じ日付どうしも名前順
-        val byName = Comparator<Directory> { a, b -> AlphanumericComparator().compare(a.name.lowercase(), b.name.lowercase()) }
-        val ordered = when (sortMode) {
-            SORT_DATE_ASC -> visible.sortedWith(compareBy<Directory> { MoveTouch.effectiveModified(this, it) }.then(byName))
-            SORT_NAME_ASC -> visible.sortedWith(byName)
-            SORT_NAME_DESC -> visible.sortedWith(byName.reversed())
-            else -> visible.sortedWith(compareByDescending<Directory> { MoveTouch.effectiveModified(this, it) }.then(byName))
+        // 隠しフォルダも表示しているとき（標準）は、隠しかどうかを調べる必要がない（フォルダごとの問い合わせを省く）
+        if (showHidden) {
+            render()
+            return
         }
+        val snapshot = dirs
+        val now = System.currentTimeMillis()
+        if (now - hiddenCheckedAt > HIDDEN_CACHE_MS) {
+            hiddenFlags.clear()
+            hiddenCheckedAt = now
+        }
+        if (snapshot.all { hiddenFlags.containsKey(it.path) }) {
+            render()
+            return
+        }
+        // 問い合わせは裏で行い、終わったら表示する
+        val token = ++renderToken
+        ensureBackgroundThread {
+            snapshot.forEach { d -> hiddenFlags.getOrPut(d.path) { isHidden(d.path) } }
+            runOnUiThread {
+                if (!isDestroyed && token == renderToken) render()
+            }
+        }
+    }
+
+    private class Row(val dir: Directory, val nameKey: String, val modified: Long)
+
+    private fun render() {
+        renderToken++
+        rendered = true
+        val visible = if (showHidden) dirs else dirs.filter { hiddenFlags[it.path] != true }
+        // 並べ替えに使う値（小文字の名前・更新日時）は最初に 1 回だけ作る（比較のたびに作り直さない）
+        val rows = visible.map { Row(it, it.name.lowercase(), MoveTouch.effectiveModified(this, it)) }
+        // 名前はアルバム一覧と同じ正準の順（0→9、A→Z。数字は値の大きさで比べる）。同じ日付どうしも名前順
+        val alnum = AlphanumericComparator()
+        val byName = Comparator<Row> { a, b -> alnum.compare(a.nameKey, b.nameKey) }
+        val ordered = when (sortMode) {
+            SORT_DATE_ASC -> rows.sortedWith(compareBy<Row> { it.modified }.then(byName))
+            SORT_NAME_ASC -> rows.sortedWith(byName)
+            SORT_NAME_DESC -> rows.sortedWith(byName.reversed())
+            else -> rows.sortedWith(compareByDescending<Row> { it.modified }.then(byName))
+        }.map { it.dir }
         // ピン留めしたアルバムを上に（アルバム一覧と同じ処理）
         val sorted = movePinnedDirectoriesToFront(ArrayList(ordered))
         val pinned = config.pinnedFolders
@@ -236,6 +288,15 @@ class CopyTargetActivity : SimpleActivity() {
 
         /** 並べ替え（アプリを閉じるまで覚えておく）。初めは新しい順。 */
         private var sortMode = SORT_DATE_DESC
+
+        /** 前回読んだアルバムの一覧（アプリを閉じるまで覚えておく）。次に開いたとき、読み込みを待たずに先に出す。 */
+        @Volatile
+        private var cachedDirs: List<Directory>? = null
+
+        /** 隠しフォルダか（「隠しフォルダを表示」をオフにしたときだけ使う）。10 分たったら調べ直す。 */
+        private val hiddenFlags = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
+        private var hiddenCheckedAt = 0L
+        private const val HIDDEN_CACHE_MS = 10 * 60 * 1000L
 
         /** 選んだ先を受け取る処理（元の画面のもの）。 */
         private var pending: ((String) -> Unit)? = null
