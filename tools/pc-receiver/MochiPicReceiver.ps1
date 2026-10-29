@@ -157,7 +157,14 @@ public class MochiReceiver
             }
             else if (method == "PUT" && path == "/file")
             {
-                string dir = SafeName(q.ContainsKey("dir") ? q["dir"] : "");
+                string dirRaw = q.ContainsKey("dir") ? q["dir"] : "";
+                List<string> segs = new List<string>();
+                foreach (string seg in dirRaw.Split('/'))
+                {
+                    string sn = SafeName(seg);
+                    if (sn.Length > 0) segs.Add(sn);
+                }
+                string dir = string.Join("\\", segs.ToArray());
                 string name = SafeName(q.ContainsKey("name") ? q["name"] : "");
                 if (name.Length == 0) { Reply(s, 400, "bad name"); return; }
                 string folder = dir.Length == 0 ? root : Path.Combine(root, dir);

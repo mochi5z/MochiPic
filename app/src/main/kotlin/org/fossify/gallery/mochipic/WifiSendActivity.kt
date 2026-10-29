@@ -209,15 +209,19 @@ class WifiSendActivity : SimpleActivity() {
         updateDirText()
     }
 
-    /** 選択したパス（ファイルまたはフォルダ）を、送るファイルの一覧にする。フォルダは直下の画像・動画だけ。 */
-    private fun expand(paths: List<String>): List<File> {
-        val out = ArrayList<File>()
+    /**
+     * 選択したパス（ファイルまたはフォルダ）を、送るファイルの一覧にする。各ファイルに「送り先フォルダの下の置き場所」を付ける。
+     * フォルダを選んだときは、そのフォルダ名と同じ名前のフォルダを PC に作ってそこへ送る（中身は直下の画像・動画だけ）。
+     * ファイルを直接選んだときは、送り先フォルダにそのまま置く（置き場所は空）。
+     */
+    private fun expand(paths: List<String>): List<Pair<File, String>> {
+        val out = ArrayList<Pair<File, String>>()
         for (p in paths) {
             val f = File(p)
             if (f.isDirectory) {
-                f.listFiles()?.filter { it.isFile && it.name.isMediaFile() }?.sortedBy { it.name.lowercase() }?.let { out.addAll(it) }
+                f.listFiles()?.filter { it.isFile && it.name.isMediaFile() }?.sortedBy { it.name.lowercase() }?.forEach { out.add(it to f.name) }
             } else if (f.isFile) {
-                out.add(f)
+                out.add(f to "")
             }
         }
         return out
@@ -235,15 +239,17 @@ class WifiSendActivity : SimpleActivity() {
         val sendDir = dir
         Thread {
             val files = expand(sources)
-            val total = files.sumOf { it.length() }.coerceAtLeast(1L)
+            val total = files.sumOf { it.first.length() }.coerceAtLeast(1L)
             var done = 0L
             var ok = 0
             var failed = 0
-            for ((i, f) in files.withIndex()) {
+            for ((i, entry) in files.withIndex()) {
+                val f = entry.first
+                val subDir = listOf(sendDir, entry.second).filter { it.isNotEmpty() }.joinToString("/")
                 if (cancelled) break
                 runOnUiThread { progressText.text = getString(R.string.mochipic_wifi_progress, i + 1, files.size, f.name) }
                 val base = done
-                val success = WifiTransfer.upload(target, sendDir, f, { cancelled }) { sent ->
+                val success = WifiTransfer.upload(target, subDir, f, { cancelled }) { sent ->
                     val p = ((base + sent) * 1000L / total).toInt()
                     runOnUiThread { progressBar.progress = p }
                 }
