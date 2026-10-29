@@ -43,6 +43,19 @@ class MochiPicPrefs(context: Context) {
         get() = prefs.getBoolean("detailed_media_sort", false)
         set(value) = prefs.edit().putBoolean("detailed_media_sort", value).apply()
 
+    /** Wi-Fi 送信: 前回使った PC のアドレス・名前と、送り先のフォルダ名（PC の受信フォルダの直下）。 */
+    var wifiHost: String
+        get() = prefs.getString("wifi_host", "") ?: ""
+        set(value) = prefs.edit().putString("wifi_host", value).apply()
+
+    var wifiName: String
+        get() = prefs.getString("wifi_name", "") ?: ""
+        set(value) = prefs.edit().putString("wifi_name", value).apply()
+
+    var wifiDir: String
+        get() = prefs.getString("wifi_dir", "") ?: ""
+        set(value) = prefs.edit().putString("wifi_dir", value).apply()
+
     /** 前回フォルダを調べ終えたときの Android の画像の一覧の状態（変化がなければ調べ直さないため）。 */
     var lastScanState: String?
         get() = prefs.getString("last_scan_state", null)

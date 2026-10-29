@@ -189,7 +189,7 @@ class SideMenu(
                 restartWith(Intent(activity, ExplorerActivity::class.java))
             }
             Item.CAMERA -> activity.launchCamera()
-            Item.WIFI -> activity.toast(R.string.mochipic_menu_wifi_later)
+            Item.WIFI -> WifiSendActivity.start(activity, emptyList())
             Item.SETTINGS -> activity.startActivity(Intent(activity, SettingsCategoriesActivity::class.java))
         }
     }

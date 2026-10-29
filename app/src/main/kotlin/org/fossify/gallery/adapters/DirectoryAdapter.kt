@@ -203,9 +203,9 @@ class DirectoryAdapter(
 
             // MochiPic: QP-Gallery と同じ項目だけを出す（隠す／表示する・先頭に固定／解除の切り替えは Fossify の判定のまま）
             val keep = if (isOneItemSelected) {
-                setOf(R.id.cab_delete, R.id.cab_rename, R.id.cab_hide, R.id.cab_unhide, R.id.cab_pin, R.id.cab_unpin, R.id.cab_exclude, R.id.cab_select_all)
+                setOf(R.id.cab_delete, R.id.cab_rename, R.id.cab_hide, R.id.cab_unhide, R.id.cab_pin, R.id.cab_unpin, R.id.cab_exclude, R.id.cab_select_all, R.id.cab_send_pc)
             } else {
-                setOf(R.id.cab_delete, R.id.cab_hide, R.id.cab_unhide, R.id.cab_select_all_multi, R.id.cab_exclude)
+                setOf(R.id.cab_delete, R.id.cab_hide, R.id.cab_unhide, R.id.cab_select_all_multi, R.id.cab_exclude, R.id.cab_send_pc)
             }
             for (i in 0 until size()) {
                 val item = getItem(i)
@@ -242,6 +242,7 @@ class DirectoryAdapter(
             R.id.cab_create_shortcut -> tryCreateShortcut()
             R.id.cab_delete -> askConfirmDelete()
             R.id.cab_share -> shareFolderMedia()
+            R.id.cab_send_pc -> org.fossify.gallery.mochipic.WifiSendActivity.start(activity, getSelectedPaths()) // MochiPic: Wi-Fi 送信
             R.id.cab_rotate_right -> rotateFolderMedia(90)
             R.id.cab_rotate_left -> rotateFolderMedia(270)
             R.id.cab_rotate_one_eighty -> rotateFolderMedia(180)

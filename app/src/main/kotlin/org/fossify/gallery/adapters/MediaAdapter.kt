@@ -220,6 +220,7 @@ class MediaAdapter(
             R.id.cab_remove_from_favorites -> toggleFavorites(false)
             R.id.cab_restore_recycle_bin_files -> restoreFiles()
             R.id.cab_share -> shareMedia()
+            R.id.cab_send_pc -> org.fossify.gallery.mochipic.WifiSendActivity.start(activity, getSelectedPaths()) // MochiPic: Wi-Fi 送信
             R.id.cab_rotate_right -> rotateSelection(90)
             R.id.cab_rotate_left -> rotateSelection(270)
             R.id.cab_rotate_one_eighty -> rotateSelection(180)

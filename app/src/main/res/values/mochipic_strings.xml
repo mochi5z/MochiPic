@@ -137,4 +137,27 @@
     <string name="mochipic_sort_taken">Date taken</string>
     <string name="mochipic_sort_size">Size</string>
     <string name="mochipic_detailed_media_sort">Choose album sorting on the detailed screen</string>
+    <string name="mochipic_wifi_send_to_pc">Send to PC (Wi-Fi)</string>
+    <string name="mochipic_wifi_nothing_selected">Nothing selected. Select photos, videos or albums and choose \"Send to PC (Wi-Fi)\" from the ⋮ menu. Run the PC receiver (Wi-Fi receiver .bat) first.</string>
+    <string name="mochipic_wifi_selected">%1$d item(s) to send</string>
+    <string name="mochipic_wifi_searching">Searching for the PC receiver…</string>
+    <string name="mochipic_wifi_connecting">Connecting…</string>
+    <string name="mochipic_wifi_not_found">PC receiver not found. Start it on the PC and tap Find PC, or enter the PC address below.</string>
+    <string name="mochipic_wifi_pc">PC: %1$s (%2$s)</string>
+    <string name="mochipic_wifi_find">Find PC</string>
+    <string name="mochipic_wifi_manual_hint">PC address (e.g. 192.168.1.10)</string>
+    <string name="mochipic_wifi_connect_ip">Connect to this address</string>
+    <string name="mochipic_wifi_connect_failed">Could not connect to %1$s</string>
+    <string name="mochipic_wifi_choose_pc">Choose a PC</string>
+    <string name="mochipic_wifi_need_pc">Connect to a PC first</string>
+    <string name="mochipic_wifi_choose_dir">Choose destination folder</string>
+    <string name="mochipic_wifi_dir">Destination folder: %1$s</string>
+    <string name="mochipic_wifi_dir_root">(receive folder itself)</string>
+    <string name="mochipic_wifi_dir_new">New folder…</string>
+    <string name="mochipic_wifi_list_failed">Could not get the folder list from the PC</string>
+    <string name="mochipic_wifi_send">Send</string>
+    <string name="mochipic_wifi_cancel">Cancel</string>
+    <string name="mochipic_wifi_progress">Sending %1$d / %2$d: %3$s</string>
+    <string name="mochipic_wifi_done">Done: %1$d sent, %2$d failed</string>
+    <string name="mochipic_wifi_cancelled">Cancelled (%1$d sent)</string>
 </resources>

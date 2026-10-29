@@ -129,4 +129,10 @@
         android:title="@string/select_all"
         android:showAsAction="never"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/cab_send_pc"
+        android:icon="@drawable/mochipic_ic_wifi"
+        android:title="@string/mochipic_wifi_send_to_pc"
+        android:showAsAction="never"
+        app:showAsAction="never" />
 </menu>

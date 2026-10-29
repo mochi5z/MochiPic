@@ -9,6 +9,9 @@
         android:maxSdkVersion="40"
         tools:replace="android:maxSdkVersion" />
 
+    <!-- MochiPic: Wi-Fi 送信（同じ Wi-Fi 内の PC への HTTP 通信）に使う -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
@@ -50,6 +53,7 @@
         android:requestLegacyExternalStorage="true"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
+        android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme"
         tools:replace="android:label">
 
@@ -211,6 +215,12 @@
             android:name=".mochipic.CopyTargetActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:exported="false" />
+
+        <activity
+            android:name=".mochipic.WifiSendActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:exported="false"
+            android:label="@string/mochipic_menu_wifi" />
 
         <activity
             android:name=".mochipic.ScanFoldersActivity"
