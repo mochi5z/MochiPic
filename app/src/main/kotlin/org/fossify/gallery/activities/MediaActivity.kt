@@ -1199,8 +1199,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
             setupAdapter()
         }
 
-        mLatestMediaId = getLatestMediaId()
-        mLatestMediaDateId = getLatestMediaByDateId()
+        // MochiPic v0.1.5: 数秒おきの確認をやめたので、最新の画像の番号は使わない（アルバムを開くたびの Android への問い合わせ 2 回を省く）
         if (!isFromCache) {
             val mediaToInsert = mMedia
                 .filter { it is Medium && it.deletedTS == 0L }.map { it as Medium }

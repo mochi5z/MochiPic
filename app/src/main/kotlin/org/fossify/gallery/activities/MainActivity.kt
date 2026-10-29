@@ -1776,12 +1776,8 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     private fun getCurrentlyDisplayedDirs() = getRecyclerAdapter()?.dirs ?: ArrayList()
 
     private fun setupLatestMediaId() {
-        ensureBackgroundThread {
-            if (hasPermission(PERMISSION_READ_STORAGE)) {
-                mLatestMediaId = getLatestMediaId()
-                mLatestMediaDateId = getLatestMediaByDateId()
-            }
-        }
+        // MochiPic v0.1.5: 数秒おきの確認をやめ、変化は MediaChangeWatcher の通知で見るので、最新の画像の番号は取らない
+        // （起動のたびの Android への問い合わせ 2 回を省く）
     }
 
     // MochiPic v0.1.1: 数秒おきの確認はやめ、MediaChangeWatcher の通知で読み直す

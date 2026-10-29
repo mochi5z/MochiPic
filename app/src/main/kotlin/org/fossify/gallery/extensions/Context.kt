@@ -1018,6 +1018,11 @@ fun Context.getCachedMedia(
         mediaFetcher.sortMedia(media, config.getFolderSorting(pathToUse))
         val grouped = mediaFetcher.groupMedia(media, pathToUse)
         callback(grouped.clone() as ArrayList<ThumbnailItem>)
+        // MochiPic v0.1.5: 高速方式では、この後すぐ Android の最新の一覧で置き換わり、なくなった画像の記録もそちらで消すので、
+        // 保存済みの全画像について「ファイルがあるか」を 1 枚ずつ調べる処理は行わない（枚数が多いフォルダほど無駄が大きい）
+        if (org.fossify.gallery.mochipic.MochiPicPrefs(this).loadMode == org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_MEDIASTORE) {
+            return@ensureBackgroundThread
+        }
         val OTGPath = config.OTGPath
 
         try {
