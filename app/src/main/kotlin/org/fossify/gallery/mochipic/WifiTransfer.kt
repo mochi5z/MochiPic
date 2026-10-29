@@ -38,7 +38,12 @@ object WifiTransfer {
                 val buf = ByteArray(512)
                 while (System.currentTimeMillis() < deadline) {
                     if (System.currentTimeMillis() - lastSend > 800) {
-                        socket.send(DatagramPacket(msg, msg.size, InetAddress.getByName("255.255.255.255"), PORT))
+                        for (addr in broadcastAddresses()) {
+                            try {
+                                socket.send(DatagramPacket(msg, msg.size, addr, PORT))
+                            } catch (_: Exception) {
+                            }
+                        }
                         lastSend = System.currentTimeMillis()
                     }
                     try {
@@ -56,6 +61,24 @@ object WifiTransfer {
         } catch (_: Exception) {
         }
         return found.values.toList()
+    }
+
+    /** 呼びかけの送り先: 端末の各ネットワークのブロードキャスト（192.168.x.255 など）と 255.255.255.255。 */
+    private fun broadcastAddresses(): List<InetAddress> {
+        val list = LinkedHashSet<InetAddress>()
+        try {
+            java.net.NetworkInterface.getNetworkInterfaces()?.toList()?.forEach { nif ->
+                if (nif.isUp && !nif.isLoopback) {
+                    nif.interfaceAddresses.forEach { ia -> ia.broadcast?.let { list.add(it) } }
+                }
+            }
+        } catch (_: Exception) {
+        }
+        try {
+            list.add(InetAddress.getByName("255.255.255.255"))
+        } catch (_: Exception) {
+        }
+        return list.toList()
     }
 
     /** 指定の PC に繋がるか確かめ、繋がれば PC の名前を返す。 */
