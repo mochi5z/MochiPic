@@ -21,6 +21,9 @@ object WifiTransfer {
     private const val READ_TIMEOUT_MS = 60000
     private const val BUFFER_SIZE = 64 * 1024
 
+    /** 直近の接続失敗の理由（画面に出して原因を調べやすくする）。 */
+    @Volatile var lastError: String = ""
+
     data class Pc(val name: String, val host: String, val port: Int = PORT)
 
     private fun enc(s: String) = URLEncoder.encode(s, "UTF-8")
@@ -85,8 +88,12 @@ object WifiTransfer {
     fun ping(host: String, port: Int = PORT): Pc? = try {
         val text = get(host, port, "/ping", 2500)
         val parts = text.trim().split("|")
-        if (parts.size >= 3 && parts[0] == "MOCHIPIC") Pc(parts[1], host, port) else null
-    } catch (_: Exception) {
+        if (parts.size >= 3 && parts[0] == "MOCHIPIC") Pc(parts[1], host, port) else {
+            lastError = "bad reply: ${text.take(40)}"
+            null
+        }
+    } catch (e: Exception) {
+        lastError = "${e.javaClass.simpleName}: ${e.message}"
         null
     }
 

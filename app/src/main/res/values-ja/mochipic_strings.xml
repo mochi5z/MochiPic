@@ -148,7 +148,7 @@
     <string name="mochipic_wifi_find">PC を探す</string>
     <string name="mochipic_wifi_manual_hint">PC のアドレス（例 192.168.1.10）</string>
     <string name="mochipic_wifi_connect_ip">このアドレスに接続</string>
-    <string name="mochipic_wifi_connect_failed">%1$s に接続できませんでした</string>
+    <string name="mochipic_wifi_connect_failed">%1$s に接続できませんでした（%2$s）</string>
     <string name="mochipic_wifi_choose_pc">PC を選んでください</string>
     <string name="mochipic_wifi_need_pc">先に PC に接続してください</string>
     <string name="mochipic_wifi_choose_dir">送り先フォルダを選ぶ</string>

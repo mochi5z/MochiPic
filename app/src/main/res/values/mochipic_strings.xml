@@ -147,7 +147,7 @@
     <string name="mochipic_wifi_find">Find PC</string>
     <string name="mochipic_wifi_manual_hint">PC address (e.g. 192.168.1.10)</string>
     <string name="mochipic_wifi_connect_ip">Connect to this address</string>
-    <string name="mochipic_wifi_connect_failed">Could not connect to %1$s</string>
+    <string name="mochipic_wifi_connect_failed">Could not connect to %1$s (%2$s)</string>
     <string name="mochipic_wifi_choose_pc">Choose a PC</string>
     <string name="mochipic_wifi_need_pc">Connect to a PC first</string>
     <string name="mochipic_wifi_choose_dir">Choose destination folder</string>

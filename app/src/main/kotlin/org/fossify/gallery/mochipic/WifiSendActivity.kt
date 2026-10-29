@@ -163,7 +163,7 @@ class WifiSendActivity : SimpleActivity() {
                 if (isDestroyed) return@runOnUiThread
                 if (ok != null) setPc(ok) else {
                     pc = null
-                    pcText.text = getString(R.string.mochipic_wifi_connect_failed, host)
+                    pcText.text = getString(R.string.mochipic_wifi_connect_failed, host, WifiTransfer.lastError)
                 }
             }
         }.start()
