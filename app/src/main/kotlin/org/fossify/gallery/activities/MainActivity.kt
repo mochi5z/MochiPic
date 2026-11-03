@@ -110,6 +110,7 @@ import org.fossify.gallery.mochipic.mochiPrefs
 import org.fossify.gallery.extensions.launchSettings
 import org.fossify.gallery.extensions.mediaDB
 import org.fossify.gallery.extensions.movePathsInRecycleBin
+import org.fossify.gallery.mochipic.FolderDelete
 import org.fossify.gallery.extensions.movePinnedDirectoriesToFront
 import org.fossify.gallery.extensions.openRecycleBin
 import org.fossify.gallery.extensions.removeInvalidDBDirectories
@@ -863,6 +864,32 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     }
 
     override fun deleteFolders(folders: ArrayList<File>) {
+        // MochiPic: 2026-11-03 普通のフォルダは中の画像を 1 枚ずつではなく、フォルダごと削除する（ごみ箱は通さない）。
+        // ストレージ直下の標準フォルダ（Download など）や、全ファイルへのアクセスが無いときは従来どおり画像だけを削除する。
+        val whole = folders.filter { FolderDelete.canDeleteWhole(this, it.absolutePath) }
+        val rest = folders.filter { it !in whole }
+        if (whole.isNotEmpty()) {
+            toast(
+                if (whole.size == 1) String.format(getString(org.fossify.commons.R.string.deleting_folder), whole.first().name)
+                else resources.getQuantityString(org.fossify.commons.R.plurals.delete_items, whole.size, whole.size)
+            )
+            ensureBackgroundThread {
+                val failed = whole.sumOf { FolderDelete.deleteWhole(this, it.absolutePath) }
+                runOnUiThread {
+                    if (failed > 0) {
+                        toast(String.format(getString(R.string.mochipic_folder_delete_partial), failed))
+                    }
+                    refreshItems()
+                }
+            }
+        }
+        if (rest.isNotEmpty()) {
+            deleteFolderMediaOnly(ArrayList(rest))
+        }
+    }
+
+    /** Fossify 本来の動き: フォルダの中の画像・動画だけを（ごみ箱が有効ならごみ箱へ移して）削除する。 */
+    private fun deleteFolderMediaOnly(folders: ArrayList<File>) {
         val fileDirItems = folders
             .asSequence()
             .filter { it.isDirectory }

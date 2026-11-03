@@ -77,6 +77,7 @@ import org.fossify.gallery.databinding.DirectoryItemGridMosaicBinding
 import org.fossify.gallery.mochipic.AlbumMosaic
 import org.fossify.gallery.mochipic.FOLDER_STYLE_MOSAIC
 import org.fossify.gallery.dialogs.ConfirmDeleteFolderDialog
+import org.fossify.gallery.mochipic.FolderDelete
 import org.fossify.gallery.dialogs.ExcludeFolderDialog
 import org.fossify.gallery.dialogs.PickMediumDialog
 import org.fossify.gallery.extensions.addNoMedia
@@ -711,7 +712,15 @@ class DirectoryAdapter(
                     org.fossify.commons.R.string.move_to_recycle_bin_confirmation
                 }
 
-                val question = String.format(resources.getString(baseString), items)
+                // MochiPic: 2026-11-03 普通のフォルダはフォルダごと完全に削除する（MainActivity.deleteFolders）ので、そう伝える
+                val wholeDelete = getSelectedItems().all {
+                    !it.areFavorites() && !it.isRecycleBin() && FolderDelete.canDeleteWhole(activity, it.path)
+                }
+                val question = if (wholeDelete) {
+                    String.format(resources.getString(R.string.mochipic_folder_delete_confirm), items)
+                } else {
+                    String.format(resources.getString(baseString), items)
+                }
                 val warning = resources.getQuantityString(org.fossify.commons.R.plurals.delete_warning, itemsCnt, itemsCnt)
                 ConfirmDeleteFolderDialog(activity, question, warning) {
                     deleteFolders()

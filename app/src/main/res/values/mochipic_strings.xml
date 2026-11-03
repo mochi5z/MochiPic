@@ -160,4 +160,6 @@
     <string name="mochipic_wifi_progress">Sending %1$d / %2$d: %3$s</string>
     <string name="mochipic_wifi_done">Done: %1$d sent, %2$d failed</string>
     <string name="mochipic_wifi_cancelled">Cancelled (%1$d sent)</string>
+    <string name="mochipic_folder_delete_partial">%1$d files or folders could not be deleted</string>
+    <string name="mochipic_folder_delete_confirm">Delete %1$s together with the folder? Every file in it (including subfolders) will be permanently deleted and will not go to the recycle bin.</string>
 </resources>

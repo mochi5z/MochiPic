@@ -350,64 +350,85 @@ fun BaseSimpleActivity.tryDeleteFileDirItem(
     }
 }
 
+// MochiPic: 2026-11-03 ごみ箱への移動を同時に 1 つずつにする（同じファイルを 2 つの処理が同時にコピーすると、
+// 片方がコピー先を上書きしている間にもう片方が大きさを比べて「Source file wasn't copied completely」になるため）
+private val mochiRecycleBinLock = Any()
+
 fun BaseSimpleActivity.movePathsInRecycleBin(paths: ArrayList<String>, callback: ((wasSuccess: Boolean) -> Unit)?) {
     ensureBackgroundThread {
-        var pathsCnt = paths.size
-        val OTGPath = config.OTGPath
+        val ok = synchronized(mochiRecycleBinLock) { movePathsInRecycleBinSync(paths.distinct()) }
+        callback?.invoke(ok)
+    }
+}
 
-        for (source in paths) {
-            if (OTGPath.isNotEmpty() && source.startsWith(OTGPath)) {
-                var inputStream: InputStream? = null
-                var out: OutputStream? = null
-                try {
-                    val destination = "$recycleBinPath/$source"
-                    val fileDocument = getSomeDocumentFile(source)
-                    inputStream = applicationContext.contentResolver.openInputStream(fileDocument?.uri!!)
-                    out = getFileOutputStreamSync(destination, source.getMimeType())
+/** MochiPic: 1 件失敗しても残りは続け、最後に失敗の有無を返す（以前は 1 件目の失敗で止まり、callback も呼ばれなかった）。 */
+private fun BaseSimpleActivity.movePathsInRecycleBinSync(paths: List<String>): Boolean {
+    var pathsCnt = paths.size
+    val OTGPath = config.OTGPath
+    var lastError: Exception? = null
 
-                    var copiedSize = 0L
-                    val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
-                    var bytes = inputStream!!.read(buffer)
-                    while (bytes >= 0) {
-                        out!!.write(buffer, 0, bytes)
-                        copiedSize += bytes
-                        bytes = inputStream.read(buffer)
-                    }
+    for (source in paths) {
+        if (OTGPath.isNotEmpty() && source.startsWith(OTGPath)) {
+            var inputStream: InputStream? = null
+            var out: OutputStream? = null
+            try {
+                val destination = "$recycleBinPath/$source"
+                val fileDocument = getSomeDocumentFile(source)
+                inputStream = applicationContext.contentResolver.openInputStream(fileDocument?.uri!!)
+                out = getFileOutputStreamSync(destination, source.getMimeType())
 
-                    out?.flush()
-
-                    if (fileDocument.getItemSize(true) == copiedSize && getDoesFilePathExist(destination)) {
-                        mediaDB.updateDeleted("$RECYCLE_BIN$source", System.currentTimeMillis(), source)
-                        pathsCnt--
-                    }
-                } catch (e: Exception) {
-                    showErrorToast(e)
-                    return@ensureBackgroundThread
-                } finally {
-                    inputStream?.close()
-                    out?.close()
+                var copiedSize = 0L
+                val buffer = ByteArray(DEFAULT_BUFFER_SIZE)
+                var bytes = inputStream!!.read(buffer)
+                while (bytes >= 0) {
+                    out!!.write(buffer, 0, bytes)
+                    copiedSize += bytes
+                    bytes = inputStream.read(buffer)
                 }
-            } else {
-                val file = File(source)
-                val internalFile = File(recycleBinPath, source)
-                val lastModified = file.lastModified()
-                try {
-                    if (file.copyRecursively(internalFile, true)) {
-                        mediaDB.updateDeleted("$RECYCLE_BIN$source", System.currentTimeMillis(), source)
-                        pathsCnt--
 
-                        if (config.keepLastModified && lastModified != 0L) {
-                            internalFile.setLastModified(lastModified)
-                        }
-                    }
-                } catch (e: Exception) {
-                    showErrorToast(e)
-                    return@ensureBackgroundThread
+                out?.flush()
+
+                if (fileDocument.getItemSize(true) == copiedSize && getDoesFilePathExist(destination)) {
+                    mediaDB.updateDeleted("$RECYCLE_BIN$source", System.currentTimeMillis(), source)
+                    pathsCnt--
                 }
+            } catch (e: Exception) {
+                lastError = e
+            } finally {
+                inputStream?.close()
+                out?.close()
+            }
+        } else {
+            val file = File(source)
+            if (!file.exists()) {                 // MochiPic: すでに消えている（別の処理で削除済み）なら成功扱い
+                pathsCnt--
+                continue
+            }
+            val internalFile = File(recycleBinPath, source)
+            val lastModified = file.lastModified()
+            try {
+                // MochiPic: 大きさが合わないときは 1 回だけやり直す（コピー中に書き換わった場合など）
+                val copied = try {
+                    file.copyRecursively(internalFile, true)
+                } catch (e: java.io.IOException) {
+                    Thread.sleep(300)
+                    file.copyRecursively(internalFile, true)
+                }
+                if (copied) {
+                    mediaDB.updateDeleted("$RECYCLE_BIN$source", System.currentTimeMillis(), source)
+                    pathsCnt--
+
+                    if (config.keepLastModified && lastModified != 0L) {
+                        internalFile.setLastModified(lastModified)
+                    }
+                }
+            } catch (e: Exception) {
+                lastError = e
             }
         }
-        callback?.invoke(pathsCnt == 0)
     }
+    lastError?.let { showErrorToast(it) }
+    return pathsCnt == 0
 }
 
 fun BaseSimpleActivity.restoreRecycleBinPath(path: String, callback: () -> Unit) {
