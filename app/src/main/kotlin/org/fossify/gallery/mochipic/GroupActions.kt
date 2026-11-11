@@ -56,7 +56,7 @@ object GroupActions {
         val parents = folders.mapNotNull { File(it).parent }.distinct()
         val items = ArrayList<RadioItem>()
         val parent = parents.singleOrNull()
-        if (parent != null && !FolderDelete.isProtected(activity, parent) && !AuthorGroup.isGroup(parent)) {
+        if (parent != null && canBeGroup(activity, parent)) {
             items.add(RadioItem(OPT_PARENT, activity.getString(R.string.mochipic_group_use_parent, File(parent).name)))
         }
         items.add(RadioItem(OPT_NEW, activity.getString(R.string.mochipic_group_new)))
@@ -70,6 +70,17 @@ object GroupActions {
                 else -> moveInto(activity, groups[id - OPT_EXISTING], folders, done)
             }
         }
+    }
+
+    /**
+     * グループにしてよいフォルダか。グループの中のグループは作らない（親がグループ・直下のフォルダがグループなら不可）。
+     * ストレージ直下の標準フォルダ（Download など）も不可。
+     */
+    fun canBeGroup(activity: Activity, path: String): Boolean {
+        if (FolderDelete.isProtected(activity, path) || AuthorGroup.isGroup(path)) return false
+        val parent = File(path).parent
+        if (parent != null && AuthorGroup.isGroup(parent)) return false
+        return File(path).listFiles()?.none { it.isDirectory && File(it, AuthorGroup.MARKER).exists() } ?: true
     }
 
     /** フォルダをグループに指定する（目印ファイルを置く。今ある巻の並びは名前の数字順で書いておく）。 */
@@ -130,7 +141,11 @@ object GroupActions {
     /** 新しいグループ（[parent] の下に [name]）を作って、[folders] をその中へ移動する。同じ名前のフォルダがあればそれを使う。 */
     private fun createAndMove(activity: Activity, parent: String, name: String, folders: List<String>, done: () -> Unit) {
         val group = File(parent, name)
-        if (group.exists() && !group.isDirectory) {
+        if (AuthorGroup.isGroup(parent)) {      // グループの中にグループは作らない
+            activity.toast(R.string.mochipic_group_failed)
+            return
+        }
+        if (folders.any { AuthorGroup.key(it) == AuthorGroup.key(group.path) } || (group.exists() && !group.isDirectory)) {
             activity.toast(org.fossify.commons.R.string.name_taken)
             return
         }
@@ -280,7 +295,7 @@ object GroupActions {
     fun showExplorerMenu(activity: Activity, anchor: View, path: String, openAsAlbum: (String) -> Unit, done: () -> Unit) {
         if (!canUse()) return
         val isGroup = AuthorGroup.isGroup(path)
-        if (!isGroup && FolderDelete.isProtected(activity, path)) return
+        if (!isGroup && !canBeGroup(activity, path)) return
         val popup = androidx.appcompat.widget.PopupMenu(
             androidx.appcompat.view.ContextThemeWrapper(activity, activity.getPopupMenuTheme()), anchor, Gravity.END,
         )

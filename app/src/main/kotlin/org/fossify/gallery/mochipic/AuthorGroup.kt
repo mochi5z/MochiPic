@@ -33,7 +33,7 @@ object AuthorGroup {
     const val HEADER = "# MochiPic group"
     const val EXTRA_GROUP = "mochipic_group"
 
-    private class Info(val order: List<String>, val stamp: Long)
+    private class Info(val order: List<String>, val stamp: Long, val checkedAt: Long = System.currentTimeMillis())
 
     /** 目印ファイルの中身（場所の小文字 → 並び順）。目印ファイルの更新日時が変わったら読み直す。 */
     private val infos = ConcurrentHashMap<String, Info>()
@@ -41,6 +41,7 @@ object AuthorGroup {
     /** グループではないと分かったフォルダ（場所の小文字 → 確かめた時刻）。[NEGATIVE_TTL_MS] の間は確かめ直さない。 */
     private val notGroups = ConcurrentHashMap<String, Long>()
     private const val NEGATIVE_TTL_MS = 60_000L
+    private const val POSITIVE_TTL_MS = 5_000L
 
     /** 一覧に出したグループの表紙（巻ごとの表紙、巻の順）。モザイク表示で使う。 */
     private val covers = ConcurrentHashMap<String, List<String>>()
@@ -57,6 +58,7 @@ object AuthorGroup {
     fun clearCache() {
         notGroups.clear()
         infos.clear()
+        covers.clear()
     }
 
     // ---------------------------------------------------------------- 判定・目印ファイル
@@ -64,7 +66,9 @@ object AuthorGroup {
     fun isGroup(path: String): Boolean {
         if (path.isEmpty() || path == FAVORITES || path == RECYCLE_BIN) return false
         val k = key(path)
-        notGroups[k]?.let { if (System.currentTimeMillis() - it < NEGATIVE_TTL_MS) return false }
+        val now = System.currentTimeMillis()
+        notGroups[k]?.let { if (now - it < NEGATIVE_TTL_MS) return false }
+        infos[k]?.let { if (now - it.checkedAt < POSITIVE_TTL_MS) return true }   // 画面の更新のたびにファイルを調べない
         val marker = File(path, MARKER)
         val stamp = marker.lastModified()     // 無ければ 0
         if (stamp == 0L && !marker.exists()) {
@@ -73,9 +77,8 @@ object AuthorGroup {
             return false
         }
         notGroups.remove(k)
-        if (infos[k]?.stamp != stamp) {
-            infos[k] = Info(parseMarker(readText(marker)), stamp)
-        }
+        val old = infos[k]
+        infos[k] = if (old?.stamp == stamp) Info(old.order, stamp) else Info(parseMarker(readText(marker)), stamp)
         return true
     }
 
@@ -106,6 +109,7 @@ object AuthorGroup {
         val f = File(groupPath, MARKER)
         val ok = !f.exists() || f.delete()
         infos.remove(key(groupPath))
+        covers.remove(key(groupPath))
         notGroups.remove(key(groupPath))
         return ok
     }
@@ -162,8 +166,9 @@ object AuthorGroup {
             if (dir.path == FAVORITES || dir.path == RECYCLE_BIN) continue
             val parent = File(dir.path).parent ?: continue
             when {
-                isGroup(parent) -> groupOf[dir] = parent
+                // 自分がグループならそちらを先に（グループの中のグループでも、まとめ方が毎回同じになるように）
                 isGroup(dir.path) -> groupOf[dir] = dir.path
+                isGroup(parent) -> groupOf[dir] = parent
             }
         }
         if (groupOf.isEmpty()) return ArrayList(dirs)
@@ -206,7 +211,7 @@ object AuthorGroup {
     }
 
     /** モザイク表示用: グループの各巻の表紙（巻の順）。グループでなければ null。 */
-    fun coversOf(path: String): List<String>? = covers[key(path)]
+    fun coversOf(path: String): List<String>? = covers[key(path)]?.takeIf { isGroup(path) }
 
     // ---------------------------------------------------------------- グループを開く
 
@@ -217,8 +222,10 @@ object AuthorGroup {
         val fetcher = MediaFetcher(context)
         val folders = listOf(File(groupPath)) + volumes(groupPath, config.shouldShowHidden)
         val result = ArrayList<Medium>()
+        val showHidden = config.shouldShowHidden
         for (folder in folders) {
             if (key(folder.path) in excluded) continue
+            if (!showHidden && File(folder, ".nomedia").exists()) continue   // 非表示（.nomedia）の巻は出さない
             val media = loadFolder(context, fetcher, folder.path, isPickImage, isPickVideo, withDurations)
             media.sortWith { a, b -> naturalOrder.compare(a.name, b.name) }
             result.addAll(media)

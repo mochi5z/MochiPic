@@ -1452,6 +1452,18 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
     }
 
     private fun deleteDirectoryIfEmpty() {
+        // MochiPic: グループを見ているときは、空になった巻フォルダを消す（グループのフォルダには目印ファイルがあるので空にならない）
+        if (config.deleteEmptyFolders && org.fossify.gallery.mochipic.AuthorGroup.isGroup(mDirectory)) {
+            ensureBackgroundThread {
+                org.fossify.gallery.mochipic.AuthorGroup.volumes(mDirectory, true).forEach { vol ->
+                    val item = FileDirItem(vol.path, vol.name, true)
+                    if (!item.isDownloadsFolder() && item.getProperFileCount(this, true) == 0) {
+                        tryDeleteFileDirItem(item, true, true)
+                    }
+                }
+            }
+            return
+        }
         if (config.deleteEmptyFolders) {
             val fileDirItem = FileDirItem(mDirectory, mDirectory.getFilenameFromPath(), File(mDirectory).isDirectory)
             if (!fileDirItem.isDownloadsFolder() && fileDirItem.isDirectory) {
