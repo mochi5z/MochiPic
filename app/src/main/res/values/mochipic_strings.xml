@@ -162,4 +162,18 @@
     <string name="mochipic_wifi_cancelled">Cancelled (%1$d sent)</string>
     <string name="mochipic_folder_delete_partial">%1$d files or folders could not be deleted</string>
     <string name="mochipic_folder_delete_confirm">Delete %1$s together with the folder? Every file in it (including subfolders) will be permanently deleted and will not go to the recycle bin.</string>
+    <string name="mochipic_group_into">Group by author</string>
+    <string name="mochipic_group_use_parent">Make “%1$s” (parent folder) a group</string>
+    <string name="mochipic_group_new">Create a new group</string>
+    <string name="mochipic_group_move_to">Move into “%1$s”</string>
+    <string name="mochipic_group_name_hint">Author name (group folder name)</string>
+    <string name="mochipic_group_done">Done</string>
+    <string name="mochipic_group_failed">Could not change the group (all files access is required)</string>
+    <string name="mochipic_group_move_partial">%1$d folders could not be moved (same name exists or on another storage)</string>
+    <string name="mochipic_group_order">Reorder volumes</string>
+    <string name="mochipic_group_order_few">This group has fewer than 2 volumes</string>
+    <string name="mochipic_group_set">Make this a group</string>
+    <string name="mochipic_group_unset">Ungroup</string>
+    <string name="mochipic_group_unset_confirm">Ungroup “%1$s”? The folders and images stay as they are.</string>
+    <string name="mochipic_group_open">Open as one album</string>
 </resources>

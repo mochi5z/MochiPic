@@ -543,6 +543,7 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
                 putExtra(SKIP_AUTHENTICATION, shouldSkipAuthentication())
                 putExtra(PATH, item.path)
                 putExtra(SHOW_ALL, mShowAll)
+                mochiGroupExtra()?.let { putExtra(org.fossify.gallery.mochipic.AuthorGroup.EXTRA_GROUP, it) }
                 putExtra(SLIDESHOW_START_ON_ENTER, true)
                 startActivity(this)
             }
@@ -1154,11 +1155,16 @@ class MediaActivity : SimpleActivity(), MediaOperationsListener {
         }
     }
 
+    /** MochiPic: 作者ごとのグループを開いているときは、ビューアでも全巻を続けてめくれるようにグループの場所を渡す。 */
+    private fun mochiGroupExtra(): String? =
+        mPath.takeIf { !mShowAll && org.fossify.gallery.mochipic.AuthorGroup.isGroup(it) }
+
     private fun openInViewPager(path: String) {
         Intent(this, ViewPagerActivity::class.java).apply {
             putExtra(SKIP_AUTHENTICATION, shouldSkipAuthentication())
             putExtra(PATH, path)
             putExtra(SHOW_ALL, mShowAll)
+            mochiGroupExtra()?.let { putExtra(org.fossify.gallery.mochipic.AuthorGroup.EXTRA_GROUP, it) }
             putExtra(SHOW_FAVORITES, mPath == FAVORITES)
             putExtra(SHOW_RECYCLE_BIN, mPath == RECYCLE_BIN)
             putExtra(IS_FROM_GALLERY, true)

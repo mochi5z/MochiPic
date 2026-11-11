@@ -60,6 +60,9 @@ class FolderTileAdapter(
     private val onClick: (FolderTile) -> Unit,
 ) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
+    /** MochiPic: 長押ししたときの処理（エクスプローラーのグループのメニュー）。 */
+    var onLongClick: ((View, FolderTile) -> Unit)? = null
+
     var items: List<FolderTile> = emptyList()
         set(value) {
             field = value
@@ -90,6 +93,13 @@ class FolderTileAdapter(
             bindList(DirectoryItemListBinding.bind(holder.itemView), tile)
         }
         holder.itemView.setOnClickListener { onClick(tile) }
+        val longClick = onLongClick
+        if (longClick != null) {
+            holder.itemView.setOnLongClickListener { longClick(it, tile); true }
+        } else {
+            holder.itemView.setOnLongClickListener(null)
+            holder.itemView.isLongClickable = false
+        }
     }
 
     private val textColor get() = activity.getProperTextColor()

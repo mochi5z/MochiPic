@@ -38,6 +38,12 @@ class GetMediaAsynctask(
         // MochiPic: 1 つのフォルダを開くときは、そのフォルダの分だけを Android に問い合わせる（端末全体を読まない）
         val singleFolder = !showAll && mPath != FAVORITES && mPath != RECYCLE_BIN
 
+        // MochiPic: 2026-11-11 作者ごとのグループは、全巻の画像を巻の順に並べる
+        if (singleFolder && org.fossify.gallery.mochipic.AuthorGroup.isGroup(mPath)) {
+            val media = org.fossify.gallery.mochipic.AuthorGroup.loadMedia(context, mPath, isPickImage, isPickVideo, getVideoDurations)
+            return ArrayList<ThumbnailItem>(media)  // 日付ごとの区切りなどはしない（巻の順を崩さない）
+        }
+
         // MochiPic v0.1.1: 高速方式では、フォルダの中身を番号（BUCKET_ID）で 1 回だけ問い合わせる（日付・サイズも同じ行から）
         if (singleFolder && context.mochiPrefs.loadMode == org.fossify.gallery.mochipic.MochiPicPrefs.LOAD_MEDIASTORE) {
             org.fossify.gallery.mochipic.QuickAlbumLoader.loadFolder(context, mPath, isPickImage, isPickVideo, getVideoDurations)?.let {

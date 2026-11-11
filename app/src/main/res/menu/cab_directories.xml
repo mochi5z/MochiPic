@@ -164,4 +164,20 @@
         android:title="@string/mochipic_wifi_send_to_pc"
         android:showAsAction="never"
         app:showAsAction="never" />
+    <!-- MochiPic 2026-11-11: 作者ごとのグループ（AuthorGroup・GroupActions） -->
+    <item
+        android:id="@+id/cab_mochi_group_into"
+        android:title="@string/mochipic_group_into"
+        android:showAsAction="never"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/cab_mochi_group_order"
+        android:title="@string/mochipic_group_order"
+        android:showAsAction="never"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/cab_mochi_group_unset"
+        android:title="@string/mochipic_group_unset"
+        android:showAsAction="never"
+        app:showAsAction="never" />
 </menu>

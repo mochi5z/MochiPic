@@ -112,6 +112,8 @@ class MediaAdapter(
     private val config = activity.config
     private val viewType = config.getFolderViewType(if (config.showAll) SHOW_ALL else path)
     private val isListViewType = viewType == VIEW_TYPE_LIST
+    // MochiPic: 2026-11-11 作者ごとのグループでは「巻フォルダ名_ファイル名」で見せる（実際の名前は変えない）
+    private val mochiGroup = path.takeIf { org.fossify.gallery.mochipic.AuthorGroup.isGroup(it) }
     private var rotatedImagePaths = ArrayList<String>()
     private var currentMediaHash = media.hashCode()
     private val hasOTGConnected = activity.hasOTGConnected()
@@ -698,7 +700,7 @@ class MediaAdapter(
             }
 
             mediumName.beVisibleIf(displayFilenames || isListViewType)
-            mediumName.text = medium.name
+            mediumName.text = mochiGroup?.let { org.fossify.gallery.mochipic.AuthorGroup.displayName(it, medium.path) } ?: medium.name
             mediumName.tag = medium.path
 
             val showVideoDuration = medium.isVideo() && config.showThumbnailVideoDuration

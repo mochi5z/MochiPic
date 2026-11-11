@@ -111,6 +111,7 @@ import org.fossify.gallery.extensions.launchSettings
 import org.fossify.gallery.extensions.mediaDB
 import org.fossify.gallery.extensions.movePathsInRecycleBin
 import org.fossify.gallery.mochipic.FolderDelete
+import org.fossify.gallery.mochipic.AuthorGroup
 import org.fossify.gallery.extensions.movePinnedDirectoriesToFront
 import org.fossify.gallery.extensions.openRecycleBin
 import org.fossify.gallery.extensions.removeInvalidDBDirectories
@@ -1673,9 +1674,10 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
         forceRecreate: Boolean = false
     ) {
         val currAdapter = binding.directoriesGrid.adapter
-        val distinctDirs = dirs
-            .distinctBy { it.path.getDistinctPath() }
-            .toMutableList() as ArrayList<Directory>
+        // MochiPic: 2026-11-11 作者ごとのグループは、巻フォルダをまとめて 1 項目にする（AuthorGroup）
+        val distinctDirs = AuthorGroup.collapse(
+            dirs.distinctBy { it.path.getDistinctPath() }
+        )
 
         val sortedDirs = getSortedDirectories(distinctDirs)
         var dirsToShow = getDirsToShow(
@@ -1924,6 +1926,7 @@ class MainActivity : SimpleActivity(), DirectoryOperationsListener {
     }
 
     override fun refreshItems() {
+        AuthorGroup.clearCache()  // MochiPic: グループの指定・並び順を確かめ直す
         mochiForceRescan = true  // ファイルを操作した後は必ず調べ直す
         getDirectories()
     }

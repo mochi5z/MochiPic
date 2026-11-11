@@ -52,6 +52,8 @@ object AlbumMosaic {
      * 保存済みの画像の一覧（アプリのデータベース）から取る。まだ入っていないフォルダだけ、フォルダの中身を直接見る。
      */
     fun pickPaths(context: android.content.Context, dir: Directory): List<String> {
+        // 作者ごとのグループは、各巻の表紙を巻の順に（AuthorGroup.collapse で集めたもの）
+        AuthorGroup.coversOf(dir.path)?.takeIf { it.isNotEmpty() }?.let { return it.take(CELLS) }
         val fromDb = try {
             context.mediaDB.getLatestPaths(dir.path, CELLS + 1)
                 .filter { it != dir.tmb && !it.substringAfterLast('/').startsWith(".") }

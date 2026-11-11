@@ -64,6 +64,13 @@ class ExplorerActivity : SimpleActivity() {
         adapter = FolderTileAdapter(this, mosaic = true, labelAtStart = false) { tile ->
             entries.firstOrNull { it.tile.key == tile.key }?.let { onEntry(it) }
         }
+        // 2026-11-11 長押しで作者ごとのグループの操作（グループに指定・解除・巻の並べ替え・アルバムとして開く）
+        adapter.onLongClick = { view, tile ->
+            val entry = entries.firstOrNull { it.tile.key == tile.key }
+            if (entry != null && !entry.isSelf) {
+                GroupActions.showExplorerMenu(this, view, tile.path, ::openAlbum) { load(keepScroll = true) }
+            }
+        }
         binding.explorerList.layoutManager = GridLayoutManager(this, FolderTileAdapter.spanCount(this))
         binding.explorerList.adapter = adapter
         MochiCache.attachLazyLoad(this, binding.explorerList)

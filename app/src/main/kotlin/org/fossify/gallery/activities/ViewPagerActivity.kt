@@ -248,8 +248,7 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
         setupOrientation()
         refreshMenuItems()
 
-        val filename = getCurrentMedium()?.name ?: mPath.getFilenameFromPath()
-        binding.mediumViewerToolbar.title = filename
+        binding.mediumViewerToolbar.title = mochiTitle(getCurrentMedium()?.path ?: mPath)
     }
 
     override fun onPause() {
@@ -510,12 +509,15 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
 
         val isShowingFavorites = intent.getBooleanExtra(SHOW_FAVORITES, false)
         val isShowingRecycleBin = intent.getBooleanExtra(SHOW_RECYCLE_BIN, false)
+        // MochiPic: 2026-11-11 作者ごとのグループから開いたときは、全巻を続けてめくる
+        val mochiGroup = intent.getStringExtra(org.fossify.gallery.mochipic.AuthorGroup.EXTRA_GROUP).orEmpty()
         mDirectory = when {
             isShowingFavorites -> FAVORITES
             isShowingRecycleBin -> RECYCLE_BIN
+            mochiGroup.isNotEmpty() -> mochiGroup
             else -> mPath.getParentPath()
         }
-        binding.mediumViewerToolbar.title = mPath.getFilenameFromPath()
+        binding.mediumViewerToolbar.title = mochiTitle(mPath)
 
         binding.viewPager.onGlobalLayout {
             if (!isDestroyed) {
@@ -1567,11 +1569,21 @@ class ViewPagerActivity : BaseViewerActivity(), ViewPager.OnPageChangeListener, 
         }
     }
 
+    /** MochiPic: タイトルの名前。グループの中では「巻フォルダ名_ファイル名」。 */
+    private fun mochiTitle(path: String): String =
+        if (mDirectory.isNotEmpty() && mDirectory != FAVORITES && mDirectory != RECYCLE_BIN && path.getParentPath() != mDirectory &&
+            org.fossify.gallery.mochipic.AuthorGroup.isGroup(mDirectory)
+        ) {
+            org.fossify.gallery.mochipic.AuthorGroup.displayName(mDirectory, path)
+        } else {
+            path.getFilenameFromPath()
+        }
+
     private fun updateActionbarTitle() {
         runOnUiThread {
             val medium = getCurrentMedium()
             if (medium != null) {
-                binding.mediumViewerToolbar.title = medium.path.getFilenameFromPath()
+                binding.mediumViewerToolbar.title = mochiTitle(medium.path)
             }
         }
     }

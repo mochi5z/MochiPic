@@ -78,6 +78,8 @@ import org.fossify.gallery.mochipic.AlbumMosaic
 import org.fossify.gallery.mochipic.FOLDER_STYLE_MOSAIC
 import org.fossify.gallery.dialogs.ConfirmDeleteFolderDialog
 import org.fossify.gallery.mochipic.FolderDelete
+import org.fossify.gallery.mochipic.AuthorGroup
+import org.fossify.gallery.mochipic.GroupActions
 import org.fossify.gallery.dialogs.ExcludeFolderDialog
 import org.fossify.gallery.dialogs.PickMediumDialog
 import org.fossify.gallery.extensions.addNoMedia
@@ -202,12 +204,24 @@ class DirectoryAdapter(
             checkHideBtnVisibility(this, selectedPaths)
             checkPinBtnVisibility(this, selectedPaths)
 
+            // MochiPic 2026-11-11: 作者ごとのグループ（まとめる・巻の並べ替え・解除）
+            val special = selectedPaths.any { it == FAVORITES || it == RECYCLE_BIN }
+            val groupUsable = GroupActions.canUse() && !special
+            val oneGroup = groupUsable && isOneItemSelected && AuthorGroup.isGroup(selectedPaths.first())
+            findItem(R.id.cab_mochi_group_into).isVisible = groupUsable && selectedPaths.none { AuthorGroup.isGroup(it) }
+            findItem(R.id.cab_mochi_group_order).isVisible = oneGroup
+            findItem(R.id.cab_mochi_group_unset).isVisible = oneGroup
+            // グループを Wi-Fi で丸ごと送る機能はまだ無い（送信はフォルダの中のフォルダを送らない）ので、グループを選んだときは出さない
+            findItem(R.id.cab_send_pc).isVisible = selectedPaths.none { AuthorGroup.isGroup(it) }
+            val groupItems = setOf(R.id.cab_mochi_group_into, R.id.cab_mochi_group_order, R.id.cab_mochi_group_unset)
+
             // MochiPic: QP-Gallery と同じ項目だけを出す（隠す／表示する・先頭に固定／解除の切り替えは Fossify の判定のまま）
-            val keep = if (isOneItemSelected) {
+            val base = if (isOneItemSelected) {
                 setOf(R.id.cab_delete, R.id.cab_rename, R.id.cab_hide, R.id.cab_unhide, R.id.cab_pin, R.id.cab_unpin, R.id.cab_exclude, R.id.cab_select_all, R.id.cab_send_pc)
             } else {
                 setOf(R.id.cab_delete, R.id.cab_hide, R.id.cab_unhide, R.id.cab_select_all_multi, R.id.cab_exclude, R.id.cab_send_pc)
             }
+            val keep = base + groupItems
             for (i in 0 until size()) {
                 val item = getItem(i)
                 if (item.itemId !in keep) item.isVisible = false
@@ -244,6 +258,9 @@ class DirectoryAdapter(
             R.id.cab_delete -> askConfirmDelete()
             R.id.cab_share -> shareFolderMedia()
             R.id.cab_send_pc -> org.fossify.gallery.mochipic.WifiSendActivity.start(activity, getSelectedPaths()) // MochiPic: Wi-Fi 送信
+            R.id.cab_mochi_group_into -> GroupActions.groupInto(activity, getSelectedPaths()) { finishActMode(); listener?.refreshItems() }
+            R.id.cab_mochi_group_order -> getFirstSelectedItemPath()?.let { GroupActions.showOrder(activity, it) { finishActMode(); listener?.refreshItems() } }
+            R.id.cab_mochi_group_unset -> getFirstSelectedItemPath()?.let { GroupActions.unmarkGroup(activity, it) { finishActMode(); listener?.refreshItems() } }
             R.id.cab_rotate_right -> rotateFolderMedia(90)
             R.id.cab_rotate_left -> rotateFolderMedia(270)
             R.id.cab_rotate_one_eighty -> rotateFolderMedia(180)
